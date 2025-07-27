@@ -1,0 +1,98 @@
+services:
+  core:
+    build:
+      context: ./backend
+    container_name: pharsy_backend
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - mynetwork
+    volumes:
+      - ./backend:/app:z
+      - ./staticfiles:/app/staticfiles:z
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  celery:
+    build:
+      context: ./backend
+      dockerfile: ../infrastructure/celery/celery-worker/Dockerfile
+    container_name: pharsy_celery
+    env_file: .env
+    depends_on:
+      - db
+      - redis
+      - core
+    networks:
+      - mynetwork
+    volumes:
+      - ./backend:/app:z
+    command: ["celery", "-A", "core", "worker", "--loglevel=info"]
+
+  redis:
+    image: redis:latest
+    container_name: pharsy_redis
+    networks:
+      - mynetwork
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: postgres:latest
+    container_name: pharsy_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    networks:
+      - mynetwork
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:z
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pharsy_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pharsy.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - mynetwork
+
+  nginx:
+    image: nginx:latest
+    container_name: pharsy_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    command: ["nginx", "-g", "daemon off;"]
+    depends_on:
+      - core
+    networks:
+      - mynetwork
+      
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

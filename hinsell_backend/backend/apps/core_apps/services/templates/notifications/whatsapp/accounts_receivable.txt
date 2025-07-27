@@ -1,0 +1,21 @@
+🏥 *{{ company.company_name }}*
+📍 {{ branch.branch_name }}
+
+💰 *Payment Reminder*
+
+Dear *{{ account.account_name }}*,
+
+Your account has an outstanding balance of:
+*{{ currency.currency_code|default:"" }} {{ outstanding_balance|floatformat:2 }}*
+
+{% if aging_data %}
+📊 *Aging Summary:*
+{% for period, amount in aging_data.items %}• {{ period }}: {{ currency.currency_code|default:"" }} {{ amount|floatformat:2 }}
+{% endfor %}{% endif %}
+
+Please settle this amount at your earliest convenience. If payment has been made, please disregard this message.
+
+📞 Contact us: {{ branch.phone|default:"N/A" }}
+📧 Email: {{ branch.email|default:"N/A" }}
+
+Thank you for your business! 🙏

@@ -1,0 +1,1 @@
+{{ company.company_name }}: Payment reminder for {{ account.account_name }}. Outstanding balance: {{ currency.currency_code|default:"" }} {{ outstanding_balance|floatformat:2 }}. Please settle at your earliest convenience. Contact: {{ branch.phone|default:"N/A" }}
