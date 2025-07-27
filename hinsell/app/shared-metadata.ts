@@ -1,17 +1,17 @@
 import { env } from "env.mjs"
 
 export const sharedMetadata = {
-  metadataBase: new URL(env.LIVE_URL || "https://commerce.blazity.com"),
+  metadataBase: new URL(env.LIVE_URL || "https://commerce.hinsell.com"),
   openGraph: {
-    title: "Next.js Enterprise Commerce | Blazity",
-    description: "Enterprise-grade Shopify storefront with Algolia middle layer, built on Next.js",
+    title: "HINSELL | Smarter Electronic Commerce",
+    description: "HINSELL is an advanced e-commerce platform tailored for modern retailers, powered by AI and built on Next.js.",
     images: ["/opengraph-image.jpg"],
   },
   twitter: {
     card: "summary_large_image" as const,
-    title: "Next.js Enterprise Commerce | Blazity",
-    description: "Enterprise-grade Shopify storefront with Algolia middle layer, built on Next.js",
-    creator: "@blazity",
+    title: "HINSELL | Smarter Electronic Commerce",
+    description: "Experience HINSELL – your intelligent commerce solution for high-performance online stores.",
+    creator: "@hinsell_commerce",
     images: ["/opengraph-image.jpg"],
   },
 }

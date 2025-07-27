@@ -263,7 +263,6 @@ export function HomepageCarousel({ slides = [], className }: HomepageCarouselPro
                         </Button>
                       </div>
                     </div>
-
                     {}
                     <div className="relative hidden lg:block lg:px-4">
                       <div className="relative h-[400px] w-full overflow-hidden rounded-lg bg-white lg:h-[500px] xl:h-[600px]">
@@ -283,7 +282,6 @@ export function HomepageCarousel({ slides = [], className }: HomepageCarouselPro
                             transition: "opacity 0.3s ease-in-out",
                           }}
                         />
-
                         {}
                         {slide.product && (
                           <div className="absolute bottom-4 right-4 hidden w-[200px] md:block lg:bottom-8 lg:right-8 lg:w-[240px]">
@@ -306,7 +304,6 @@ export function HomepageCarousel({ slides = [], className }: HomepageCarouselPro
           })}
         </div>
       </div>
-
       {}
       <div className="absolute inset-x-0 bottom-8 hidden lg:block">
         <div className="container mx-auto px-4">
@@ -325,7 +322,6 @@ export function HomepageCarousel({ slides = [], className }: HomepageCarouselPro
                 />
               ))}
             </div>
-
             {}
             <div className="flex gap-2">
               <button
@@ -362,7 +358,6 @@ export function HomepageCarousel({ slides = [], className }: HomepageCarouselPro
           </div>
         </div>
       </div>
-
       {}
       <div className="absolute inset-x-0 bottom-6 flex justify-center gap-3 lg:hidden">
         {slides.map((_, index) => (

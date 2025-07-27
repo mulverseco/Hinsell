@@ -11,12 +11,12 @@ from apps.core_apps.views import health_check
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="Pharsy API",
+      title="Hinsell API",
       default_version='v1',
-      description="Test description",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@snippets.local"),
-      license=openapi.License(name="BSD License"),
+      description="Hinsell e-commerce System",
+      terms_of_service="https://mulverse.com/policies/terms/",
+      contact=openapi.Contact(email="contact@mulverse.com"),
+      license=openapi.License(name="MUV License"),
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),

@@ -1,7 +1,6 @@
 import { Suspense } from "react"
 import { createSearchParamsCache, parseAsArrayOf, parseAsInteger, parseAsString } from "nuqs/server"
 
-import type { PlatformCollection } from "lib/shopify/types"
 import { getCategories, getFilteredProducts } from "lib/algolia/rate-limited"
 
 import { buildSearchFilter } from "utils/build-search-filter"
@@ -22,7 +21,7 @@ import { slugToName } from "utils/slug-name"
 interface SearchViewProps {
   searchParams: SearchParamsType
   params?: { slug: string; page?: string }
-  collection?: PlatformCollection
+  collection?: any
   disabledFacets?: string[]
   basePath?: string
 }
@@ -39,7 +38,7 @@ export const searchParamsCache = createSearchParamsCache({
   rating: parseAsInteger,
 })
 
-function makePageTitle(collection: PlatformCollection | undefined, query: string) {
+function makePageTitle(collection: any | undefined, query: string) {
   if (!!collection) {
     return `${collection.title}`
   }
@@ -51,7 +50,7 @@ function makePageTitle(collection: PlatformCollection | undefined, query: string
   return "Search"
 }
 
-function makeBreadcrumbs(collection?: PlatformCollection) {
+function makeBreadcrumbs(collection?: any) {
   if (collection) {
     return {
       Home: "/",
