@@ -2,7 +2,7 @@ services:
   core:
     build:
       context: ./backend
-    container_name: pharsy_backend
+    container_name: hinsell_backend
     env_file: .env
     ports:
       - "8000:8000"
@@ -24,7 +24,7 @@ services:
     build:
       context: ./backend
       dockerfile: ../infrastructure/celery/celery-worker/Dockerfile
-    container_name: pharsy_celery
+    container_name: hinsell_celery
     env_file: .env
     depends_on:
       - db
@@ -38,7 +38,7 @@ services:
 
   redis:
     image: redis:latest
-    container_name: pharsy_redis
+    container_name: hinsell_redis
     networks:
       - mynetwork
     volumes:
@@ -51,7 +51,7 @@ services:
 
   db:
     image: postgres:latest
-    container_name: pharsy_postgres
+    container_name: hinsell_postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -65,9 +65,9 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pharsy_pgadmin
+    container_name: hinsell_pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@pharsy.com
+      PGADMIN_DEFAULT_EMAIL: admin@hinsell.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
@@ -78,7 +78,7 @@ services:
 
   nginx:
     image: nginx:latest
-    container_name: pharsy_nginx
+    container_name: hinsell_nginx
     ports:
       - "80:80"
     volumes:
