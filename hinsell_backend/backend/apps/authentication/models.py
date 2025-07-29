@@ -1,105 +1,112 @@
-"""
-Authentication and user management models.
-Handles user accounts, profiles, permissions, and audit logging.
-"""
 import uuid
-import logging
-from typing import Optional, Dict
+from typing import Optional
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.core.validators import EmailValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from apps.core_apps.utils import Logger, generate_unique_code
+from apps.core_apps.general import AuditableModel
 from phonenumber_field.modelfields import PhoneNumberField
-from apps.core_apps.general import  AuditableModel
-from apps.core_apps.validators import  validate_percentage
-
-logger = logging.getLogger(__name__)
+from decimal import Decimal
+from apps.core_apps.validators import validate_percentage
+from apps.inventory.models import Media
 
 
 def upload_avatar(instance, filename):
     """Generate unique avatar upload path."""
     random_uuid = uuid.uuid4().hex
-    extension = filename.split('.')[-1] if '.' in filename else 'jpg'
+    extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
     return f'avatars/{instance.user.username}/{random_uuid}.{extension}'
 
+def generate_unique_username(email: str) -> str:
+    """Generate a unique username from email address."""
+    base_username = email.split('@')[0].replace('.', '').replace('_', '').lower()[:30]
+    username = base_username
+    counter = 1
+    while User.objects.filter(username=username).exists():
+        username = f"{base_username}{counter}"
+        counter += 1
+        if len(username) > 50:
+            username = f"{base_username[:45]}{counter}"
+    return username
 
 class UserManager(BaseUserManager):
-    """
-    Custom user manager with enhanced security and error handling.
-    """
-    
-    def create_user(self, username, email=None, password=None, **extra_fields):
-        """Create and return a regular user with enhanced validation."""
+    """Custom user manager with enhanced security and error handling."""
+    def create_user(self, email, password=None, user_type='customer', **extra_fields):
+        logger = Logger(__name__)
         try:
-            if not username:
-                raise ValueError(_("The Username field must be set"))
- 
-            if not username.replace('_', '').replace('-', '').isalnum():
-                raise ValueError(_("Username can only contain letters, numbers, underscores, and hyphens"))
-            
-            if email:
-                email = self.normalize_email(email)
-                self._validate_email(email)
-            
+            if not email:
+                raise ValueError(_("The Email field must be set"))
+            email = self.normalize_email(email)
+            self._validate_email(email)
+            username = generate_unique_username(email)
             extra_fields.setdefault('is_active', True)
-            extra_fields.setdefault('is_staff', False)
-            extra_fields.setdefault('is_superuser', False)
+            extra_fields.setdefault('is_staff', user_type in ['manager', 'admin'])
+            extra_fields.setdefault('is_superuser', user_type == 'admin')
+            extra_fields.setdefault('user_type', user_type)
             
-            user = self.model(username=username, **extra_fields)
-            
+            user = self.model(username=username, email=email, **extra_fields)
             if password:
                 user.set_password(password)
                 user.password_changed_at = timezone.now()
             else:
                 user.set_unusable_password()
-            
             user.full_clean()
             user.save(using=self._db)
-            
-            logger.info(f"User created successfully: {username}")
+            logger.info(f"User created successfully: {username}", 
+                       extra={'user_type': user_type, 'email': email})
             return user
-            
         except Exception as e:
-            logger.error(f"Error creating user {username}: {str(e)}", exc_info=True)
+            logger.error(f"Error creating user with email {email}: {str(e)}", 
+                        extra={'user_type': user_type}, exc_info=True)
             raise
-    
+
     def create_superuser(self, username, email=None, password=None, **extra_fields):
-        """Create and return a superuser with enhanced validation."""
+        logger = Logger(__name__)
         try:
             extra_fields.setdefault("is_staff", True)
             extra_fields.setdefault("is_superuser", True)
             extra_fields.setdefault("is_active", True)
             extra_fields.setdefault("use_control_panel", True)
-            
+            extra_fields.setdefault("user_type", 'admin')
             if not extra_fields.get("is_staff"):
                 raise ValueError(_("Superuser must have is_staff=True."))
             if not extra_fields.get("is_superuser"):
                 raise ValueError(_("Superuser must have is_superuser=True."))
             if not password:
                 raise ValueError(_("Superuser must have a password."))
-            
-            return self.create_user(username, email, password, **extra_fields)
-            
+            user = self.create_user(email=email or f"{username}@example.com", 
+                                  password=password, 
+                                  username=username,
+                                  **extra_fields)
+            logger.info(f"Superuser created successfully: {username}", 
+                       extra={'user_type': 'admin'})
+            return user
         except Exception as e:
-            logger.error(f"Error creating superuser {username}: {str(e)}", exc_info=True)
+            logger.error(f"Error creating superuser {username}: {str(e)}", 
+                        extra={'user_type': 'admin'}, exc_info=True)
             raise
-    
+
     def _validate_email(self, email: str) -> bool:
-        """Validate email format."""
         try:
             EmailValidator()(email)
             return True
         except ValidationError:
             raise ValueError(_("Invalid email address format"))
 
-
 class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
-    """
-    Enhanced custom user model with comprehensive security features.
-    """
-    
+    """Custom user model with e-commerce and security features."""
+    class UserType(models.TextChoices):
+        CUSTOMER = 'customer', _('Customer')
+        VIP = 'vip', _('VIP Customer')
+        GUEST = 'guest', _('Guest')
+        PARTNER = 'partner', _('Partner')
+        EMPLOYEE = 'employee', _('Employee')
+        MANAGER = 'manager', _('Manager')
+        ADMIN = 'admin', _('Admin')
+
     username = models.CharField(
         unique=True,
         max_length=50,
@@ -109,456 +116,474 @@ class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
                 regex=r'^[a-zA-Z0-9_-]+$',
                 message=_('Username can only contain letters, numbers, underscores, and hyphens.')
             )
-        ],
-        help_text=_("Required. 50 characters or fewer. Letters, digits, underscores, and hyphens only.")
+        ]
     )
-    
+    email = models.EmailField(
+        unique=True,
+        max_length=255,
+        validators=[EmailValidator()],
+        verbose_name=_("Email Address")
+    )
+    user_type = models.CharField(
+        max_length=20,
+        choices=UserType.choices,
+        default=UserType.CUSTOMER,
+        verbose_name=_("User Type"),
+        help_text=_("Type of user account")
+    )
     first_name = models.CharField(
         max_length=30,
         blank=True,
-        verbose_name=_("First Name"),
-        help_text=_("User's first name")
+        verbose_name=_("First Name")
     )
-    
     last_name = models.CharField(
         max_length=30,
         blank=True,
-        verbose_name=_("Last Name"),
-        help_text=_("User's last name")
+        verbose_name=_("Last Name")
     )
-    
-    employee_id = models.CharField(
+    code = models.CharField(
         max_length=50,
         blank=True,
         null=True,
         unique=True,
-        verbose_name=_("Employee ID"),
-        help_text=_("Unique employee identifier")
+        verbose_name=_("Employee Code"),
+        default=lambda: generate_unique_code('EMP')
     )
-    
-    is_staff = models.BooleanField(
-        default=False,
-        verbose_name=_("Staff Status"),
-        help_text=_("Designates whether the user can log into the admin site.")
-    )
-    
-    is_superuser = models.BooleanField(
-        default=False,
-        verbose_name=_("Superuser Status"),
-        help_text=_("Designates that this user has all permissions without explicitly assigning them.")
-    )
-    
     is_two_factor_enabled = models.BooleanField(
         default=False,
-        verbose_name=_("Two-Factor Authentication Enabled"),
-        help_text=_("Whether two-factor authentication is enabled for this user")
+        verbose_name=_("Two-Factor Authentication Enabled")
     )
-    
     failed_login_attempts = models.PositiveIntegerField(
         default=0,
-        help_text=_("Number of consecutive failed login attempts")
+        verbose_name=_("Failed Login Attempts")
     )
-    
     account_locked_until = models.DateTimeField(
         blank=True,
         null=True,
-        help_text=_("Timestamp until which the account is locked")
+        verbose_name=_("Account Locked Until")
     )
-    
     password_changed_at = models.DateTimeField(
         auto_now_add=True,
-        help_text=_("Timestamp when password was last changed")
+        verbose_name=_("Password Changed At")
     )
-    
     last_login_device = models.CharField(
         max_length=255,
         blank=True,
         null=True,
-        verbose_name=_("Last Login Device"),
-        help_text=_("Device information from last login")
+        verbose_name=_("Last Login Device")
     )
-    
     last_login_ip = models.GenericIPAddressField(
         blank=True,
         null=True,
-        verbose_name=_("Last Login IP Address"),
-        help_text=_("IP address from last login")
-    )
-    
-    use_control_panel = models.BooleanField(
-        default=False,
-        verbose_name=_("Control Panel Access"),
-        help_text=_("Can access administrative control panel")
-    )
-    
-    use_reports = models.BooleanField(
-        default=False,
-        verbose_name=_("Reports Access"),
-        help_text=_("Can access and generate reports")
-    )
-    
-    use_ledger_system = models.BooleanField(
-        default=False,
-        verbose_name=_("Ledger System Access"),
-        help_text=_("Can access financial ledger system")
-    )
-    
-    use_inventory_system = models.BooleanField(
-        default=False,
-        verbose_name=_("Inventory System Access"),
-        help_text=_("Can access inventory management system")
-    )
-    
-    use_purchase_system = models.BooleanField(
-        default=False,
-        verbose_name=_("Purchase System Access"),
-        help_text=_("Can access purchase management system")
-    )
-    
-    use_sales_system = models.BooleanField(
-        default=False,
-        verbose_name=_("Sales System Access"),
-        help_text=_("Can access sales management system")
-    )
-    use_medical_management = models.BooleanField(
-        default=False,
-        verbose_name=_("Medical Management Access"),
-        help_text=_("Can access medical management system")
+        verbose_name=_("Last Login IP Address")
     )
     hide_cost = models.BooleanField(
         default=False,
-        verbose_name=_("Hide Cost Information"),
-        help_text=_("Hide cost information in user interface")
+        verbose_name=_("Hide Cost Information")
     )
-    
     hide_comment = models.BooleanField(
         default=False,
-        verbose_name=_("Hide Comments"),
-        help_text=_("Hide comments in user interface")
+        verbose_name=_("Hide Comments")
     )
-    
     user_discount_ratio = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=0,
+        default=Decimal('0.00'),
         validators=[validate_percentage],
-        verbose_name=_("User Discount Ratio"),
-        help_text=_("Maximum discount percentage this user can apply")
+        verbose_name=_("User Discount Ratio")
     )
-    
+    loyalty_points = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Loyalty Points")
+    )
     default_branch = models.ForeignKey(
         'organization.Branch',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='default_users',
-        verbose_name=_("Default Branch"),
-        help_text=_("Default branch for this user")
+        verbose_name=_("Default Branch")
     )
-    
+
     objects = UserManager()
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
-    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['user_type']
+
     class Meta:
         verbose_name = _("User")
         verbose_name_plural = _("Users")
         indexes = [
-            models.Index(fields=['username']),
-            models.Index(fields=['employee_id']),
+            models.Index(fields=['username', 'email']),
+            models.Index(fields=['code']),
             models.Index(fields=['is_active', 'is_staff']),
-            models.Index(fields=['last_login']),
-            models.Index(fields=['failed_login_attempts']),
-            models.Index(fields=['account_locked_until']),
+            models.Index(fields=['failed_login_attempts', 'account_locked_until']),
+            models.Index(fields=['user_type']),
         ]
         constraints = [
             models.CheckConstraint(
                 check=models.Q(user_discount_ratio__gte=0) & models.Q(user_discount_ratio__lte=100),
                 name='valid_user_discount_ratio'
-            ),
-            models.CheckConstraint(
-                check=models.Q(failed_login_attempts__gte=0),
-                name='non_negative_failed_attempts'
             )
         ]
-    
+
     def clean(self):
-        """Custom validation for user model."""
         super().clean()
-        
-        if self.employee_id and not self.employee_id.strip():
-            raise ValidationError({
-                'employee_id': _('Employee ID cannot be empty if provided.')
-            })
-        
-        if self.user_discount_ratio < 0 or self.user_discount_ratio > 100:
-            raise ValidationError({
-                'user_discount_ratio': _('Discount ratio must be between 0 and 100.')
-            })
-    
+        if self.code and not self.code.strip():
+            raise ValidationError({'code': _('Employee code cannot be empty if provided.')})
+        if self.user_type in [self.UserType.EMPLOYEE, self.UserType.MANAGER, self.UserType.ADMIN] and not self.code:
+            raise ValidationError({'code': _('Employee code is required for employee, manager, or admin users.')})
+        if self.user_type == self.UserType.GUEST and (self.first_name or self.last_name):
+            raise ValidationError({'first_name': _('Guest users should not have personal information.'),
+                                 'last_name': _('Guest users should not have personal information.')})
+
     def get_full_name(self) -> str:
-        """Return the full name or username if names are not available."""
         full_name = f"{self.first_name} {self.last_name}".strip()
         return full_name or self.username
-    
+
     def get_short_name(self) -> str:
-        """Return the short name."""
         return self.first_name or self.username
-    
+
     def is_account_locked(self) -> bool:
-        """Check if account is currently locked."""
         if self.account_locked_until:
             return timezone.now() < self.account_locked_until
         return False
-    
+
     def lock_account(self, duration_minutes: int = 30):
-        """Lock account for specified duration."""
+        logger = Logger(__name__, user=self)
         self.account_locked_until = timezone.now() + timezone.timedelta(minutes=duration_minutes)
         self.save(update_fields=['account_locked_until'])
-        logger.warning(f"Account locked for user: {self.username}")
-    
+        logger.warning(f"Account locked for user: {self.username}", 
+                      extra={'user_type': self.user_type})
+
     def unlock_account(self):
-        """Unlock account and reset failed attempts."""
+        logger = Logger(__name__, user=self)
         self.account_locked_until = None
         self.failed_login_attempts = 0
         self.save(update_fields=['account_locked_until', 'failed_login_attempts'])
-        logger.info(f"Account unlocked for user: {self.username}")
-    
+        logger.info(f"Account unlocked for user: {self.username}", 
+                   extra={'user_type': self.user_type})
+
     def increment_failed_login(self):
-        """Increment failed login attempts and lock if threshold reached."""
+        logger = Logger(__name__, user=self)
         self.failed_login_attempts += 1
-        
         if self.failed_login_attempts >= 5:
             self.lock_account(30)
-        
         self.save(update_fields=['failed_login_attempts'])
-    
+        logger.warning(f"Incremented failed login attempts for user: {self.username}", 
+                      extra={'failed_attempts': self.failed_login_attempts, 'user_type': self.user_type})
+
     def reset_failed_login(self):
-        """Reset failed login attempts on successful login."""
+        logger = Logger(__name__, user=self)
         if self.failed_login_attempts > 0:
             self.failed_login_attempts = 0
             self.save(update_fields=['failed_login_attempts'])
-    
-    def has_contact_info(self) -> bool:
-        """Check if user has any contact information."""
-        if hasattr(self, 'profile'):
-            return bool(self.profile.email or self.profile.phone_number)
-        return False
-    
-    def get_notification_preferences(self) -> Dict[str, bool]:
-        """Get user's notification preferences."""
-        if hasattr(self, 'profile'):
-            return {
-                'email': self.profile.enable_email_notifications and bool(self.profile.email),
-                'whatsapp': self.profile.enable_whatsapp_notifications and bool(self.profile.phone_number),
-                'sms': self.profile.enable_sms_notifications and bool(self.profile.phone_number),
-            }
-        return {'email': False, 'whatsapp': False, 'sms': False}
-    
-    def __str__(self):
-        return self.get_full_name()
+            logger.info(f"Reset failed login attempts for user: {self.username}", 
+                       extra={'user_type': self.user_type})
 
+    def add_loyalty_points(self, points: int, reason: str = None):
+        logger = Logger(__name__, user=self)
+        if points < 0:
+            raise ValidationError(_('Points to add cannot be negative.'))
+        self.loyalty_points += points
+        self.save(update_fields=['loyalty_points'])
+        AuditLog.objects.create(
+            branch=self.default_branch,
+            user=self,
+            action_type=AuditLog.ActionType.LOYALTY_POINTS_ADDED,
+            username=self.username,
+            details={'points': points, 'reason': reason or 'No reason provided', 'user_type': self.user_type}
+        )
+        logger.info(f"Added {points} loyalty points to user: {self.username}", 
+                   extra={'points': points, 'reason': reason, 'user_type': self.user_type})
+
+    def redeem_loyalty_points(self, points: int, coupon_id: Optional[int] = None):
+        logger = Logger(__name__, user=self)
+        if points < 0:
+            raise ValidationError(_('Points to redeem cannot be negative.'))
+        if points > self.loyalty_points:
+            raise ValidationError(_('Insufficient loyalty points.'))
+        self.loyalty_points -= points
+        self.save(update_fields=['loyalty_points'])
+        AuditLog.objects.create(
+            branch=self.default_branch,
+            user=self,
+            action_type=AuditLog.ActionType.LOYALTY_POINTS_REDEEMED,
+            username=self.username,
+            details={'points': points, 'coupon_id': coupon_id, 'user_type': self.user_type}
+        )
+        logger.info(f"Redeemed {points} loyalty points from user: {self.username}", 
+                   extra={'points': points, 'coupon_id': coupon_id, 'user_type': self.user_type})
+
+    def __str__(self):
+        return f"{self.get_full_name()} ({self.get_user_type_display()})"
 
 class UserProfile(AuditableModel):
-    """
-    Enhanced user profile model with comprehensive validation and features.
-    """
-    
+    """User profile with e-commerce features, media integration, and compliance features."""
     class Gender(models.TextChoices):
         MALE = 'male', _('Male')
         FEMALE = 'female', _('Female')
         PREFER_NOT_TO_SAY = 'prefer_not_to_say', _('Prefer Not to Say')
-        OTHER = 'other', _('Other')
-    
+
     class ProfileVisibility(models.TextChoices):
         PUBLIC = 'public', _('Public')
         PRIVATE = 'private', _('Private')
         COLLEAGUES = 'colleagues', _('Colleagues Only')
-    
+
+    class PreferredPaymentMethod(models.TextChoices):
+        CREDIT_CARD = 'credit_card', _('Credit Card')
+        DEBIT_CARD = 'debit_card', _('Debit Card')
+        PAYPAL = 'paypal', _('PayPal')
+        CASH_ON_DELIVERY = 'cash_on_delivery', _('Cash on Delivery')
+
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name='profile',
-        verbose_name=_("User"),
-        help_text=_("Associated user account")
+        verbose_name=_("User")
     )
-    
-    avatar = models.ImageField(
-        upload_to=upload_avatar,
+    avatar = models.ForeignKey(
+        Media,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        related_name='user_profiles',
         verbose_name=_("Avatar"),
-        help_text=_("Profile picture")
+        limit_choices_to={'media_type': 'image'}
     )
-    
     bio = models.TextField(
         blank=True,
         max_length=500,
-        verbose_name=_("Biography"),
-        help_text=_("Brief description about the user")
+        verbose_name=_("Biography")
     )
-    
     email = models.EmailField(
         unique=True,
         blank=True,
         null=True,
         max_length=255,
         validators=[EmailValidator()],
-        verbose_name=_("Email Address"),
-        help_text=_("Primary email address for notifications")
+        verbose_name=_("Email Address")
     )
-    
     phone_number = PhoneNumberField(
         blank=True,
         null=True,
-        verbose_name=_("Phone Number"),
-        help_text=_("Primary phone number for notifications")
+        verbose_name=_("Phone Number")
     )
-    
     address = models.TextField(
         blank=True,
-        verbose_name=_("Address"),
-        help_text=_("Physical address")
+        verbose_name=_("Address")
     )
-    
     nationality = models.CharField(
         max_length=50,
         blank=True,
         null=True,
-        verbose_name=_("Nationality"),
-        help_text=_("User's nationality")
+        verbose_name=_("Nationality")
     )
-    
     date_of_birth = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_("Date of Birth"),
-        help_text=_("User's date of birth")
+        verbose_name=_("Date of Birth")
     )
-    
     gender = models.CharField(
         max_length=20,
         choices=Gender.choices,
         default=Gender.PREFER_NOT_TO_SAY,
-        blank=True,
-        verbose_name=_("Gender"),
-        help_text=_("User's gender")
+        verbose_name=_("Gender")
     )
-
-    emergency_contact_name = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name=_("Emergency Contact Name"),
-        help_text=_("Name of emergency contact person")
+    notifications = models.JSONField(
+        default=lambda: {'email': False, 'sms': False, 'whatsapp': False, 'in_app': False, 'push': False},
+        verbose_name=_("Notification Settings"),
+        help_text=_("Channels for notifications: {'email': bool, 'sms': bool, 'whatsapp': bool, 'in_app': bool, 'push': bool}")
     )
-    
-    emergency_contact_phone = PhoneNumberField(
-        blank=True,
-        null=True,
-        verbose_name=_("Emergency Contact Phone"),
-        help_text=_("Phone number of emergency contact")
-    )
-    
-    enable_email_notifications = models.BooleanField(
-        default=True,
-        verbose_name=_("Enable Email Notifications"),
-        help_text=_("Enable system email notifications")
-    )
-    
-    enable_sms_notifications = models.BooleanField(
-        default=False,
-        verbose_name=_("Enable SMS Notifications"),
-        help_text=_("Enable system SMS notifications")
-    )
-    
-    enable_whatsapp_notifications = models.BooleanField(
-        default=False,
-        verbose_name=_("Enable WhatsApp Notifications"),
-        help_text=_("Enable system WhatsApp notifications")
-    )
-    enable_in_app_notifications = models.BooleanField(
-        default=False,
-        verbose_name=_("Enable In-App Notifications"),
-        help_text=_("Enable system In-App notifications")
-    )
-    enable_push_notifications = models.BooleanField(
-        default=False,
-        verbose_name=_("Enable Push Notifications"),
-        help_text=_("Enable system Push notifications")
-    )
-    
     profile_visibility = models.CharField(
         max_length=20,
         choices=ProfileVisibility.choices,
-        default=ProfileVisibility.COLLEAGUES,
-        verbose_name=_("Profile Visibility"),
-        help_text=_("Who can view this profile")
+        default=ProfileVisibility.PUBLIC,
+        verbose_name=_("Profile Visibility")
     )
-    
+    preferred_payment_method = models.CharField(
+        max_length=20,
+        choices=PreferredPaymentMethod.choices,
+        default=PreferredPaymentMethod.CREDIT_CARD,
+        verbose_name=_("Preferred Payment Method")
+    )
+    marketing_opt_in = models.BooleanField(
+        default=False,
+        verbose_name=_("Marketing Opt-In")
+    )
+    terms_accepted = models.BooleanField(
+        default=False,
+        verbose_name=_("Terms and Conditions Accepted")
+    )
+    terms_accepted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Terms Accepted At")
+    )
+    terms_version = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name=_("Terms Version"),
+        help_text=_("Version of the terms and conditions accepted by the user.")
+    )
+    data_consent = models.JSONField(
+        default=lambda: {'data_processing': False, 'marketing': False, 'analytics': False, 'data_sharing': False},
+        verbose_name=_("Data Consent Preferences"),
+        help_text=_("User consent for data usage: {'data_processing': bool, 'marketing': bool, 'analytics': bool, 'data_sharing': bool}")
+    )
+    wishlist_items = models.ManyToManyField(
+        'inventory.Item',
+        blank=True,
+        related_name='wishlisted_by',
+        verbose_name=_("Wishlist Items")
+    )
+
     class Meta:
         verbose_name = _("User Profile")
         verbose_name_plural = _("User Profiles")
         indexes = [
-            models.Index(fields=['user']),
-            models.Index(fields=['phone_number']),
-            models.Index(fields=['email']),
-            models.Index(fields=['profile_visibility']),
+            models.Index(fields=['user', 'profile_visibility']),
+            models.Index(fields=['email', 'phone_number']),
+            models.Index(fields=['terms_accepted', 'terms_version']),
         ]
-    
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
     def clean(self):
-        """Custom validation for profile."""
         super().clean()
-        
         if self.date_of_birth and self.date_of_birth > timezone.now().date():
-            raise ValidationError({
-                'date_of_birth': _('Date of birth cannot be in the future.')
-            })
-        
-        if (self.enable_email_notifications or 
-            self.enable_whatsapp_notifications or 
-            self.enable_sms_notifications):
-            
-            if not self.email and not self.phone_number:
-                raise ValidationError(
-                    _('At least one contact method (email or phone) must be provided if notifications are enabled.')
-                )
-    
+            raise ValidationError({'date_of_birth': _('Date of birth cannot be in the future.')})
+        if any(self.notifications.get(channel, False) for channel in ['email', 'sms', 'whatsapp', 'push']) and not (self.email or self.phone_number):
+            raise ValidationError(_('At least one contact method (email or phone) must be provided if notifications are enabled.'))
+        if self.avatar and self.avatar.media_type != 'image':
+            raise ValidationError({'avatar': _('Avatar must be an image media type.')})
+        if any(self.notifications.get(channel, False) for channel in self.notifications) and not self.terms_accepted:
+            raise ValidationError(_('Terms and conditions must be accepted to enable notifications.'))
+        if self.marketing_opt_in and not (self.terms_accepted and self.data_consent.get('marketing', False)):
+            raise ValidationError(_('Marketing opt-in requires terms acceptance and marketing consent.'))
+        if any(self.data_consent.get(key, False) for key in self.data_consent) and not self.terms_accepted:
+            raise ValidationError(_('Data consent requires terms and conditions acceptance.'))
+    def save(self, *args, **kwargs):
+        logger = Logger(__name__, user=self.user)
+        if not self.pk:
+            self.marketing_opt_in = self.user.user_type in ['customer', 'vip']
+            self.terms_accepted = self.user.user_type != 'guest'
+            self.data_consent = {
+                'data_processing': self.user.user_type != 'guest',
+                'marketing': self.user.user_type in ['customer', 'vip'],
+                'analytics': self.user.user_type != 'guest',
+                'data_sharing': self.user.user_type == 'partner'
+            }
+        if self.avatar and not self.avatar.alt_text:
+            self.avatar.alt_text = f"Profile picture of {self.user.get_full_name()}"
+            self.avatar.save()
+        if self.terms_accepted and not self.terms_accepted_at:
+            self.terms_accepted_at = timezone.now()
+            self.avatar.save()
+        if self.terms_accepted and not self.terms_accepted_at:
+            self.terms_accepted_at = timezone.now()
+            AuditLog.objects.create(
+                branch=self.user.default_branch,
+                user=self.user,
+                action_type=AuditLog.ActionType.TERMS_ACCEPTED,
+                username=self.user.username,
+                details={'terms_version': self.terms_version or '1.0', 'user_type': self.user.user_type}
+            )
+            logger.info(f"Terms accepted for user: {self.user.username}", 
+                       extra={'terms_version': self.terms_version, 'user_type': self.user.user_type})
+        if self.pk and self.data_consent != self.__class__.objects.get(pk=self.pk).data_consent:
+            AuditLog.objects.create(
+                branch=self.user.default_branch,
+                user=self.user,
+                action_type=AuditLog.ActionType.CONSENT_UPDATED,
+                username=self.user.username,
+                details={'data_consent': self.data_consent, 'user_type': self.user.user_type}
+            )
+            logger.info(f"Data consent updated for user: {self.user.username}", 
+                       extra={'data_consent': self.data_consent, 'user_type': self.user.user_type})
+        super().save(*args, **kwargs)
+        logger.info(f"Profile saved for user: {self.user.username}", 
+                   extra={'user_type': self.user.user_type})
+
     def has_complete_profile(self) -> bool:
-        """Check if profile is complete."""
-        required_fields = [
-            self.user.first_name,
-            self.user.last_name,
-            self.email or self.phone_number,
-        ]
+        if self.user.user_type == 'guest':
+            return True
+        required_fields = [self.user.first_name, self.user.last_name, self.email or self.phone_number, self.address, self.terms_accepted]
         return all(field for field in required_fields)
-    
+
     def get_age(self) -> Optional[int]:
-        """Calculate age from date of birth."""
         if self.date_of_birth:
             today = timezone.now().date()
             return today.year - self.date_of_birth.year - (
                 (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
             )
         return None
-    
-    def can_receive_notifications(self, channel: str) -> bool:
-        """Check if user can receive notifications via specific channel."""
-        channel_map = {
-            'email': self.wants_email_notifications and bool(self.email),
-            'whatsapp': self.wants_push_whatsapp_notifications and bool(self.phone_number),
-            'sms': self.wants_sms_notifications and bool(self.phone_number),
-        }
-        return channel_map.get(channel, False)
-    
-    def __str__(self):
-        return f"Profile of {self.user.get_full_name()}"
 
+    def can_receive_notifications(self, channel: str) -> bool:
+        return (
+            self.terms_accepted and
+            self.data_consent.get('data_processing', False) and
+            self.notifications.get(channel, False) and (
+                channel == 'email' and bool(self.email) or
+                channel in ('sms', 'whatsapp') and bool(self.phone_number) or
+                channel == 'push' and bool(self.push_token) or
+                channel == 'in_app'
+            )
+        )
+
+    def withdraw_consent(self, consent_type: str):
+        """Withdraw specific data consent (e.g., marketing, analytics)."""
+        logger = Logger(__name__, user=self.user)
+        if consent_type in self.data_consent:
+            self.data_consent[consent_type] = False
+            if consent_type == 'marketing':
+                self.marketing_opt_in = False
+            if consent_type == 'data_processing':
+                self.notifications = {channel: False for channel in self.notifications}
+            self.save()
+            AuditLog.objects.create(
+                branch=self.user.default_branch,
+                user=self.user,
+                action_type=AuditLog.ActionType.CONSENT_UPDATED,
+                username=self.user.username,
+                details={'consent_type': consent_type, 'status': 'withdrawn', 'user_type': self.user.user_type}
+            )
+            logger.info(f"Withdrew {consent_type} consent for user: {self.user.username}", 
+                       extra={'consent_type': consent_type, 'user_type': self.user.user_type})
+
+    def delete_profile(self):
+        """Soft delete profile data for GDPR/CCPA compliance."""
+        logger = Logger(__name__, user=self.user)
+        self.email = None
+        self.phone_number = None
+        self.address = None
+        self.date_of_birth = None
+        self.gender = self.Gender.PREFER_NOT_TO_SAY
+        self.bio = ''
+        self.avatar = None
+        self.notifications = {channel: False for channel in self.notifications}
+        self.data_consent = {key: False for key in self.data_consent}
+        self.marketing_opt_in = False
+        self.terms_accepted = False
+        self.terms_accepted_at = None
+        self.terms_version = None
+        self.save()
+        AuditLog.objects.create(
+            branch=self.user.default_branch,
+            user=self.user,
+            action_type=AuditLog.ActionType.PROFILE_DELETION,
+            username=self.user.username,
+            details={'reason': 'User requested profile deletion', 'user_type': self.user.user_type}
+        )
+        logger.info(f"Profile data deleted for user: {self.user.username}", 
+                   extra={'user_type': self.user.user_type})
+
+    def __str__(self):
+        return f"Profile of {self.user.get_full_name()} ({self.user.get_user_type_display()})"
 
 class AuditLog(AuditableModel):
-    """
-    Comprehensive audit log for security and compliance tracking.
-    """
-    
+    """Audit log for security and compliance tracking."""
     class ActionType(models.TextChoices):
         LOGIN = 'login', _('Login')
         LOGOUT = 'logout', _('Logout')
@@ -571,159 +596,107 @@ class AuditLog(AuditableModel):
         SYSTEM_ACCESS = 'system_access', _('System Access')
         ACCOUNT_LOCKED = 'account_locked', _('Account Locked')
         ACCOUNT_UNLOCKED = 'account_unlocked', _('Account Unlocked')
-    
+        LOYALTY_POINTS_ADDED = 'loyalty_points_added', _('Loyalty Points Added')
+        LOYALTY_POINTS_REDEEMED = 'loyalty_points_redeemed', _('Loyalty Points Redeemed')
+        TERMS_ACCEPTED = 'terms_accepted', _('Terms Accepted')
+        CONSENT_UPDATED = 'consent_updated', _('Consent Updated')
+        PROFILE_DELETION = 'profile_deletion', _('Profile Deletion')
+
     class LoginStatus(models.TextChoices):
         SUCCESS = 'success', _('Success')
         FAILED = 'failed', _('Failed')
         BLOCKED = 'blocked', _('Blocked')
-        SUSPICIOUS = 'suspicious', _('Suspicious')
-    
+
     class RiskLevel(models.TextChoices):
         LOW = 'low', _('Low')
         MEDIUM = 'medium', _('Medium')
         HIGH = 'high', _('High')
         CRITICAL = 'critical', _('Critical')
-    
+
     branch = models.ForeignKey(
         'organization.Branch',
         on_delete=models.CASCADE,
-        verbose_name=_("Branch"),
-        help_text=_("Branch where the action occurred")
+        verbose_name=_("Branch")
     )
-    
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="audit_logs",
-        verbose_name=_("User"),
-        help_text=_("User who performed the action")
+        verbose_name=_("User")
     )
-    
     action_type = models.CharField(
         max_length=20,
         choices=ActionType.choices,
         default=ActionType.LOGIN,
-        verbose_name=_("Action Type"),
-        help_text=_("Type of action performed")
+        verbose_name=_("Action Type")
     )
-    
     username = models.CharField(
         max_length=100,
         blank=True,
         null=True,
-        verbose_name=_("Username"),
-        help_text=_("Username at time of action")
+        verbose_name=_("Username")
     )
-    
     ip_address = models.GenericIPAddressField(
         null=True,
         blank=True,
-        verbose_name=_("IP Address"),
-        help_text=_("IP address from which action was performed")
+        verbose_name=_("IP Address")
     )
-    
     user_agent = models.TextField(
         blank=True,
-        verbose_name=_("User Agent"),
-        help_text=_("Browser/client user agent string")
+        verbose_name=_("User Agent")
     )
-    
     device_type = models.CharField(
         max_length=50,
         blank=True,
-        verbose_name=_("Device Type"),
-        help_text=_("Type of device used")
+        verbose_name=_("Device Type")
     )
-
     login_status = models.CharField(
         max_length=20,
         choices=LoginStatus.choices,
         default=LoginStatus.SUCCESS,
-        verbose_name=_("Status"),
-        help_text=_("Status of the action")
+        verbose_name=_("Status")
     )
-    
     session_id = models.CharField(
         max_length=100,
         blank=True,
         null=True,
-        verbose_name=_("Session ID"),
-        help_text=_("Session identifier")
+        verbose_name=_("Session ID")
     )
-    
     country = models.CharField(
         max_length=100,
         blank=True,
         null=True,
-        verbose_name=_("Country"),
-        help_text=_("Country from which action was performed")
+        verbose_name=_("Country")
     )
-    
     city = models.CharField(
         max_length=100,
         blank=True,
         null=True,
-        verbose_name=_("City"),
-        help_text=_("City from which action was performed")
+        verbose_name=_("City")
     )
-    
-    computer_name = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        verbose_name=_("Computer Name"),
-        help_text=_("Name of the computer used")
-    )
-    
-    screen_name = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        verbose_name=_("Screen Name"),
-        help_text=_("Screen or form accessed")
-    )
-    
     details = models.JSONField(
         default=dict,
         blank=True,
-        verbose_name=_("Additional Details"),
-        help_text=_("Additional information about the action")
+        verbose_name=_("Additional Details")
     )
-    
     risk_score = models.PositiveIntegerField(
         default=0,
-        verbose_name=_("Risk Score"),
-        help_text=_("Calculated risk score (0-100)")
+        verbose_name=_("Risk Score")
     )
-    
     risk_level = models.CharField(
         max_length=10,
         choices=RiskLevel.choices,
         default=RiskLevel.LOW,
-        verbose_name=_("Risk Level"),
-        help_text=_("Assessed risk level")
+        verbose_name=_("Risk Level")
     )
-    
-    is_suspicious = models.BooleanField(
-        default=False,
-        verbose_name=_("Suspicious Activity"),
-        help_text=_("Whether this activity is flagged as suspicious")
-    )
-    
+
     class Meta:
         verbose_name = _("Audit Log")
         verbose_name_plural = _("Audit Logs")
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['created_at']),
-            models.Index(fields=['user', 'created_at']),
-            models.Index(fields=['action_type']),
-            models.Index(fields=['ip_address']),
-            models.Index(fields=['login_status']),
-            models.Index(fields=['is_suspicious']),
-            models.Index(fields=['risk_level']),
-            models.Index(fields=['branch', 'created_at']),
-            models.Index(fields=['risk_score']),
+            models.Index(fields=['user', 'action_type', 'created_at']),
+            models.Index(fields=['ip_address', 'login_status']),
         ]
         constraints = [
             models.CheckConstraint(
@@ -731,93 +704,56 @@ class AuditLog(AuditableModel):
                 name='valid_risk_score'
             )
         ]
-    
+
     def save(self, *args, **kwargs):
-        """Enhanced save method with automatic field population."""
+        logger = Logger(__name__, user=self.user)
         if not self.username and self.user:
             self.username = self.user.username
-        
         if not self.device_type and self.user_agent:
             self.device_type = self._get_device_type(self.user_agent)
-    
         self.risk_score = self._calculate_risk_score()
         self.risk_level = self._determine_risk_level(self.risk_score)
-        self.is_suspicious = self.risk_score > 70
-        
         super().save(*args, **kwargs)
-    
+        logger.info(f"Audit log saved for action: {self.get_action_type_display()}", 
+                   extra={'user_type': self.user.user_type, 'action_type': self.action_type})
+
     def _get_device_type(self, user_agent: str) -> str:
-        """Enhanced device type detection."""
         ua = user_agent.lower()
-        
         if any(mobile in ua for mobile in ['mobile', 'android', 'iphone', 'ipod']):
-            if 'iphone' in ua:
-                return 'iPhone'
-            elif 'android' in ua:
-                return 'Android Phone'
             return 'Mobile Device'
-        
         if any(tablet in ua for tablet in ['tablet', 'ipad']):
-            if 'ipad' in ua:
-                return 'iPad'
             return 'Tablet'
-        
         if 'windows' in ua:
             return 'Windows Desktop'
-        elif any(mac in ua for mac in ['macintosh', 'mac os']):
+        if any(mac in ua for mac in ['macintosh', 'mac os']):
             return 'Mac Desktop'
-        elif 'linux' in ua:
+        if 'linux' in ua:
             return 'Linux Desktop'
-        
         return 'Unknown Device'
-    
+
     def _calculate_risk_score(self) -> int:
-        """Calculate risk score based on various factors."""
         score = 0
-        
-        if self.login_status == self.LoginStatus.FAILED:
-            score += 30
-        elif self.login_status == self.LoginStatus.BLOCKED:
-            score += 50
-        
+        if self.login_status in (self.LoginStatus.FAILED, self.LoginStatus.BLOCKED):
+            score += 40
         if not self.country or not self.city:
             score += 20
-        
-        current_hour = timezone.now().hour
-        if current_hour < 6 or current_hour > 22:
-            score += 15
-        
-        if self.ip_address:
-            recent_attempts = AuditLog.objects.filter(
-                ip_address=self.ip_address,
-                created_at__gte=timezone.now() - timezone.timedelta(minutes=10)
-            ).count()
-            if recent_attempts > 5:
-                score += 25
-        
-        if self.action_type in [self.ActionType.PERMISSION_CHANGE, self.ActionType.ACCOUNT_LOCKED]:
+        if self.action_type in (self.ActionType.PERMISSION_CHANGE, self.ActionType.ACCOUNT_LOCKED, 
+                              self.ActionType.TERMS_ACCEPTED, self.ActionType.CONSENT_UPDATED):
             score += 20
-        
+        if self.action_type == self.ActionType.PROFILE_DELETION:
+            score += 30
+        if self.user.user_type in [User.UserType.GUEST, User.UserType.PARTNER]:
+            score += 10 
         return min(score, 100)
-    
+
     def _determine_risk_level(self, score: int) -> str:
-        """Determine risk level based on score."""
         if score >= 80:
             return self.RiskLevel.CRITICAL
-        elif score >= 60:
+        if score >= 50:
             return self.RiskLevel.HIGH
-        elif score >= 30:
+        if score >= 20:
             return self.RiskLevel.MEDIUM
-        else:
-            return self.RiskLevel.LOW
-    
-    def get_location_display(self) -> str:
-        """Get formatted location string."""
-        if self.city and self.country:
-            return f"{self.city}, {self.country}"
-        elif self.country:
-            return self.country
-        return _("Unknown Location")
-    
+        return self.RiskLevel.LOW
+
     def __str__(self):
-        return f"{self.user.get_full_name()} - {self.get_action_type_display()} at {self.created_at}"
+        return f"{self.user.get_full_name()} ({self.user.get_user_type_display()}) - {self.get_action_type_display()} at {self.created_at}"

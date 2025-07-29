@@ -3,21 +3,21 @@ Core base models and utilities for the pharmacy management system.
 Provides common functionality and ensures consistency across all models.
 """
 import uuid
-import logging
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from django.db.models import QuerySet
+from typing import Dict, List
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework import viewsets
+from hinsell_backend.backend.apps.core_apps.utils import Logger
 
-logger = logging.getLogger(__name__)
 
-
-class PharmacyPagination(PageNumberPagination):
+class Pagination(PageNumberPagination):
     """
     Custom pagination class for consistent API responses.
     """
@@ -109,26 +109,16 @@ class TimestampedModel(models.Model):
         ]
     
     def soft_delete(self, user=None):
-        """
-        Soft delete this record by setting is_deleted=True and deleted_at timestamp.
-        """
         self.is_deleted = True
         self.deleted_at = timezone.now()
         self.save(update_fields=['is_deleted', 'deleted_at'])
-        
-        if user:
-            logger.info(f"Record {self.__class__.__name__}({self.id}) soft deleted by user {user}")
-    
+        Logger(__name__, user=user).info(f"Soft deleted {self.__class__.__name__}({self.id})")
+
     def restore(self, user=None):
-        """
-        Restore a soft-deleted record.
-        """
         self.is_deleted = False
         self.deleted_at = None
         self.save(update_fields=['is_deleted', 'deleted_at'])
-        
-        if user:
-            logger.info(f"Record {self.__class__.__name__}({self.id}) restored by user {user}")
+        Logger(__name__, user=user).info(f"Restored {self.__class__.__name__}({self.id})")
     
     def clean(self):
         """
@@ -173,40 +163,64 @@ class AuditableModel(TimestampedModel):
 
 
 class BaseViewSet(viewsets.ModelViewSet):
-    """
-    Base ViewSet with common configuration for all API endpoints.
-    """
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    """Base ViewSet for common functionality across apps."""
     permission_classes = [IsAuthenticated | HasAPIKey]
-    pagination_class = PharmacyPagination
-    
-    def get_queryset(self):
-        """
-        Return queryset filtered to exclude soft-deleted records.
-        """
-        queryset = super().get_queryset()
+    permission_classes_by_action: Dict[str, List] = {}
+    logger_name: str = __name__
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields: List[str] = []
+    search_fields: List[str] = []
+    ordering_fields: List[str] = []
+    ordering: List[str] = ['-created_at']
+
+    def get_queryset(self) -> QuerySet:
+        """Filter queryset based on user's branch permissions."""
+        user = self.request.user
+        if not user.is_authenticated or not hasattr(user, 'profile'):
+            return self.queryset.none()
         
-        if hasattr(queryset.model, 'is_deleted'):
-            queryset = queryset.filter(is_deleted=False)
+        queryset = self.queryset
+        if hasattr(self.queryset.model, 'branch'):
+            queryset = queryset.filter(branch__in=user.profile.branches.all())
+        elif hasattr(self.queryset.model, 'item') and hasattr(self.queryset.model.item.field.related_model, 'branch'):
+            queryset = queryset.filter(item__branch__in=user.profile.branches.all())
+        elif hasattr(self.queryset.model, 'item') and hasattr(self.queryset.model.item.field.related_model, 'item'):
+            queryset = queryset.filter(item__item__branch__in=user.profile.branches.all())
         
         return queryset
-    
+
+    def get_permissions(self):
+        """Return permission classes based on action."""
+        try:
+            return [
+                permission()
+                for permission in self.permission_classes_by_action.get(
+                    self.action, self.permission_classes
+                )
+            ]
+        except AttributeError:
+            return [permission() for permission in self.permission_classes]
+
     def perform_create(self, serializer):
-        """
-        Set the created_by field when creating a new record.
-        """
-        if hasattr(serializer.Meta.model, 'created_by'):
-            serializer.save(created_by=self.request.user)
-        else:
-            serializer.save()
-    
+        """Set created_by and updated_by fields on create."""
+        logger = Logger(self.logger_name, user=self.request.user)
+        instance = serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        logger.info(f"Created {self.queryset.model.__name__} with ID {instance.id}", 
+                   extra={'action': 'create', 'object_id': instance.id})
+        return instance
+
     def perform_update(self, serializer):
-        """
-        Set the updated_by field when updating a record.
-        """
-        if hasattr(serializer.Meta.model, 'updated_by'):
-            serializer.save(updated_by=self.request.user)
-        else:
-            serializer.save()
+        """Set updated_by field on update."""
+        logger = Logger(self.logger_name, user=self.request.user)
+        instance = serializer.save(updated_by=self.request.user)
+        logger.info(f"Updated {self.queryset.model.__name__} with ID {instance.id}", 
+                   extra={'action': 'update', 'object_id': instance.id})
+        return instance
 
-
+    def perform_destroy(self, instance):
+        """Log deletion of an object."""
+        logger = Logger(self.logger_name, user=self.request.user)
+        logger.info(f"Deleted {self.queryset.model.__name__} with ID {instance.id}", 
+                   extra={'action': 'delete', 'object_id': instance.id})
+        instance.delete()

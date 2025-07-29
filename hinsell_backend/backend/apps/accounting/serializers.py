@@ -1,212 +1,172 @@
-"""
-Serializers for accounting app.
-"""
 from rest_framework import serializers
-from decimal import Decimal
-from apps.accounting.models import Currency, CurrencyHistory, AccountType, Account, CostCenter,OpeningBalance,AccountingPeriod,Budget
-
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+from apps.accounting.models import Currency, CurrencyHistory, AccountType, Account, CostCenter, OpeningBalance, AccountingPeriod, Budget
+from apps.organization.models import Branch
+from apps.authentication.models import User
+from apps.inventory.models import Item
+from phonenumber_field.serializerfields import PhoneNumberField
 
 class CurrencySerializer(serializers.ModelSerializer):
     """Serializer for Currency model."""
-    
-    branch_name = serializers.CharField(source='branch.branch_name', read_only=True)
-    formatted_rate = serializers.SerializerMethodField()
-    
+    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
+
     class Meta:
         model = Currency
         fields = [
-            'id', 'branch', 'branch_name', 'currency_code', 'currency_name',
-            'currency_symbol', 'is_local', 'is_default', 'fraction_name',
-            'decimal_places', 'exchange_rate', 'formatted_rate', 'exchange_rate_date',
-            'upper_limit', 'lower_limit', 'is_active', 'created_at', 'updated_at'
+            'id', 'branch', 'code', 'name', 'symbol', 'is_default', 'decimal_places',
+            'exchange_rate', 'exchange_rate_date', 'upper_limit', 'lower_limit',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'branch_name', 'exchange_rate_date', 'formatted_rate']
-    
-    def get_formatted_rate(self, obj):
-        """Get formatted exchange rate."""
-        return f"1 {obj.currency_code} = {obj.exchange_rate} (Base)"
-    
-    def validate_currency_code(self, value):
-        """Validate currency code."""
-        if not value or len(value.strip()) < 2:
-            raise serializers.ValidationError("Currency code must be at least 2 characters.")
-        return value.upper().strip()
-    
+        read_only_fields = ['id', 'code', 'exchange_rate_date', 'created_at', 'updated_at']
+
     def validate(self, data):
-        """Custom validation for currency."""
-        upper_limit = data.get('upper_limit', Decimal('0'))
-        lower_limit = data.get('lower_limit', Decimal('0'))
-        exchange_rate = data.get('exchange_rate', Decimal('1'))
-        
-        if upper_limit > 0 and lower_limit > 0 and lower_limit >= upper_limit:
-            raise serializers.ValidationError({
-                'upper_limit': 'Upper limit must be greater than lower limit.'
-            })
-        
-        if upper_limit > 0 and exchange_rate > upper_limit:
-            raise serializers.ValidationError({
-                'exchange_rate': 'Exchange rate exceeds upper limit.'
-            })
-        
-        if lower_limit > 0 and exchange_rate < lower_limit:
-            raise serializers.ValidationError({
-                'exchange_rate': 'Exchange rate is below lower limit.'
-            })
-        
+        if not data.get('name').strip():
+            raise ValidationError(_('Currency name cannot be empty.'))
+        if data.get('upper_limit', 0) > 0 and data.get('lower_limit', 0) > 0 and data.get('lower_limit') >= data.get('upper_limit'):
+            raise ValidationError(_('Upper limit must be greater than lower limit.'))
+        return data
+
+class CurrencyHistorySerializer(serializers.ModelSerializer):
+    """Serializer for CurrencyHistory model."""
+    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
+    currency = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all())
+    changed_by = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True)
+
+    class Meta:
+        model = CurrencyHistory
+        fields = [
+            'id', 'branch', 'currency', 'old_exchange_rate', 'new_exchange_rate',
+            'changed_by', 'reason', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+class AccountTypeSerializer(serializers.ModelSerializer):
+    """Serializer for AccountType model."""
+    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
+
+    class Meta:
+        model = AccountType
+        fields = [
+            'id', 'branch', 'code', 'name', 'category', 'normal_balance',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'code', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        if not data.get('name').strip():
+            raise ValidationError(_('Name cannot be empty.'))
+        return data
+
+class AccountSerializer(serializers.ModelSerializer):
+    """Serializer for Account model."""
+    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
+    parent = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), allow_null=True)
+    account_type = serializers.PrimaryKeyRelatedField(queryset=AccountType.objects.all())
+    currency = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all(), allow_null=True)
+    phone_number = PhoneNumberField(allow_blank=True, required=False)
+
+    class Meta:
+        model = Account
+        fields = [
+            'id', 'branch', 'code', 'name', 'parent', 'account_type', 'account_nature',
+            'is_header', 'is_hidden', 'is_system', 'currency', 'is_taxable', 'tax_code',
+            'commission_ratio', 'credit_limit', 'debit_limit', 'email', 'phone_number',
+            'address', 'tax_registration_number', 'stop_sales', 'current_balance',
+            'budget_amount', 'enable_notifications', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'code', 'current_balance', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        if not data.get('name').strip():
+            raise ValidationError(_('Name cannot be empty.'))
+        if any(data.get('enable_notifications', {}).get(channel, False) for channel in ['email', 'sms', 'whatsapp']) and not (data.get('email') or data.get('phone_number')):
+            raise ValidationError(_('Account must have email or phone for enabled notifications.'))
+        return data
+
+class CostCenterSerializer(serializers.ModelSerializer):
+    """Serializer for CostCenter model."""
+    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
+    parent = serializers.PrimaryKeyRelatedField(queryset=CostCenter.objects.all(), allow_null=True)
+    manager = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True)
+
+    class Meta:
+        model = CostCenter
+        fields = [
+            'id', 'branch', 'code', 'name', 'parent', 'is_header', 'budget_limit',
+            'manager', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'code', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        if not data.get('name').strip():
+            raise ValidationError(_('Name cannot be empty.'))
         return data
 
 class OpeningBalanceSerializer(serializers.ModelSerializer):
     """Serializer for OpeningBalance model."""
+    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
+    account = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), allow_null=True)
+    item = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all(), allow_null=True)
 
     class Meta:
         model = OpeningBalance
-        fields = '__all__'
+        fields = [
+            'id', 'branch', 'account', 'item', 'fiscal_year', 'opening_date',
+            'debit_amount', 'credit_amount', 'quantity', 'unit_cost',
+            'created_at', 'updated_at'
+        ]
         read_only_fields = ['id', 'created_at', 'updated_at']
-        
+
+    def validate(self, data):
+        if not data.get('opening_date'):
+            raise ValidationError(_('Opening date cannot be empty.'))
+        if data.get('account') and data.get('item'):
+            raise ValidationError(_('Cannot set both account and item for opening balance.'))
+        if not (data.get('account') or data.get('item')):
+            raise ValidationError(_('Either account or item must be set.'))
+        return data
+
 class AccountingPeriodSerializer(serializers.ModelSerializer):
     """Serializer for AccountingPeriod model."""
-    
+    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
+    closed_by = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True)
+
     class Meta:
         model = AccountingPeriod
-        fields = '__all__'
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        fields = [
+            'id', 'branch', 'code', 'name', 'start_date', 'end_date', 'fiscal_year',
+            'is_closed', 'closed_by', 'closed_at', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'code', 'closed_at', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        if not data.get('name').strip():
+            raise ValidationError(_('Name cannot be empty.'))
+        if data.get('start_date') >= data.get('end_date'):
+            raise ValidationError(_('End date must be after start date.'))
+        if data.get('is_closed') and not data.get('closed_by'):
+            raise ValidationError(_('Closed by user must be set when closing period.'))
+        return data
 
 class BudgetSerializer(serializers.ModelSerializer):
     """Serializer for Budget model."""
+    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
+    account = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), allow_null=True)
+    cost_center = serializers.PrimaryKeyRelatedField(queryset=CostCenter.objects.all(), allow_null=True)
+    item = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all(), allow_null=True)
 
     class Meta:
         model = Budget
-        fields = '__all__'
-        read_only_fields = ['id', 'created_at', 'updated_at']
-
-    class Meta:
-        model = Budget
-        fields = '__all__'
-        read_only_fields = ['id', 'created_at', 'updated_at']
-
-class CurrencyHistorySerializer(serializers.ModelSerializer):
-    """Serializer for CurrencyHistory model."""
-    
-    currency_code = serializers.CharField(source='currency.currency_code', read_only=True)
-    changed_by_name = serializers.CharField(source='changed_by.get_full_name', read_only=True)
-    rate_change = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = CurrencyHistory
         fields = [
-            'id', 'branch', 'currency', 'currency_code', 'old_exchange_rate',
-            'new_exchange_rate', 'rate_change', 'changed_by', 'changed_by_name',
-            'reason', 'created_at'
+            'id', 'branch', 'code', 'name', 'fiscal_year', 'account', 'cost_center',
+            'item', 'budgeted_amount', 'actual_amount', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'currency_code', 'changed_by_name', 'rate_change']
-    
-    def get_rate_change(self, obj):
-        """Calculate rate change percentage."""
-        if obj.old_exchange_rate > 0:
-            change = ((obj.new_exchange_rate - obj.old_exchange_rate) / obj.old_exchange_rate) * 100
-            return round(change, 4)
-        return 0
+        read_only_fields = ['id', 'code', 'actual_amount', 'created_at', 'updated_at']
 
-
-class AccountTypeSerializer(serializers.ModelSerializer):
-    """Serializer for AccountType model."""
-    
-    branch_name = serializers.CharField(source='branch.branch_name', read_only=True)
-    accounts_count = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = AccountType
-        fields = [
-            'id', 'branch', 'branch_name', 'type_code', 'type_name',
-            'category', 'normal_balance', 'accounts_count',
-            'is_active', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'branch_name', 'accounts_count']
-    
-    def get_accounts_count(self, obj) -> int:
-        """Get number of accounts using this type."""
-        return obj.accounts.filter(is_active=True).count()
-
-
-class AccountSerializer(serializers.ModelSerializer):
-    """Serializer for Account model."""
-    
-    branch_name = serializers.CharField(source='branch.branch_name', read_only=True)
-    account_type_name = serializers.CharField(source='account_type.type_name', read_only=True)
-    parent_name = serializers.CharField(source='parent.account_name', read_only=True)
-    currency_code = serializers.CharField(source='currency.currency_code', read_only=True)
-    full_code = serializers.SerializerMethodField()
-    level = serializers.SerializerMethodField()
-    formatted_balance = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Account
-        fields = [
-            'id', 'branch', 'branch_name', 'account_code', 'account_name',
-            'account_name_english', 'parent', 'parent_name', 'account_type',
-            'account_type_name', 'account_nature', 'is_header', 'is_hidden',
-            'is_system', 'currency', 'currency_code', 'is_taxable', 'tax_code',
-            'commission_ratio', 'credit_limit', 'debit_limit', 'email',
-            'phone_number', 'mobile_number', 'fax_number', 'address',
-            'tax_registration_number', 'commercial_registration', 'stop_sales',
-            'current_balance', 'formatted_balance', 'budget_amount',
-            'enable_email_notifications', 'enable_sms_notifications',
-            'enable_whatsapp_notifications', 'full_code', 'level',
-            'is_active', 'created_at', 'updated_at'
-        ]
-        read_only_fields = [
-            'id', 'created_at', 'updated_at', 'branch_name', 'account_type_name',
-            'parent_name', 'currency_code', 'current_balance', 'formatted_balance',
-            'full_code', 'level'
-        ]
-    
-    def get_full_code(self, obj) -> str:
-        """Get full hierarchical account code."""
-        return obj.get_full_code()
-    
-    def get_level(self, obj):
-        """Get account level in hierarchy."""
-        return obj.get_level()
-    
-    def get_formatted_balance(self, obj):
-        """Get formatted balance with currency."""
-        if obj.currency:
-            return obj.currency.format_amount(obj.current_balance)
-        return f"{obj.current_balance:.2f}"
-    
-    def validate_account_code(self, value):
-        """Validate account code."""
-        if not value or not value.strip():
-            raise serializers.ValidationError("Account code cannot be empty.")
-        return value.strip()
-    
     def validate(self, data):
-        """Custom validation for account."""
-        parent = data.get('parent')
-        if parent and parent.is_header is False:
-            raise serializers.ValidationError({
-                'parent': 'Parent account must be a header account.'
-            })
+        if not data.get('name').strip():
+            raise ValidationError(_('Name cannot be empty.'))
+        if not any([data.get('account'), data.get('cost_center'), data.get('item')]):
+            raise ValidationError(_('At least one of account, cost center, or item must be set.'))
         return data
-
-
-class CostCenterSerializer(serializers.ModelSerializer):
-    """Serializer for CostCenter model."""
-    
-    branch_name = serializers.CharField(source='branch.branch_name', read_only=True)
-    parent_name = serializers.CharField(source='parent.cost_center_name', read_only=True)
-    manager_name = serializers.CharField(source='manager.get_full_name', read_only=True)
-    full_code = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = CostCenter
-        fields = [
-            'id', 'branch', 'branch_name', 'cost_center_code', 'cost_center_name',
-            'parent', 'parent_name', 'is_header', 'budget_limit', 'manager',
-            'manager_name', 'full_code', 'is_active', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'branch_name', 'parent_name', 'manager_name', 'full_code']
-    
-    def get_full_code(self, obj):
-        """Get full hierarchical cost center code."""
-        return obj.get_full_code()

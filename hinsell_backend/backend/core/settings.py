@@ -82,7 +82,7 @@ INSTALLED_APPS = [
     "apps.accounting",
     "apps.inventory",
     "apps.insurance",
-    "apps.medical",
+    "apps.hinsell",
     "apps.notifications",
     "apps.transactions",
     'apps.webhooks',

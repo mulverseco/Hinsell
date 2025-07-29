@@ -28,7 +28,7 @@ rest_api_urlpatterns = [
     path('api/', include('apps.organization.urls')),
     path('api/', include('apps.reporting.urls')),
     path('api/', include('apps.insurance.urls')),
-    path('api/', include('apps.medical.urls')),
+    path('api/', include('apps.hinsell.urls', namespace='hinsell')),
     path('api/', include('apps.accounting.urls')),
     path('api/', include('apps.inventory.urls')),
     path('api/', include('apps.notifications.urls')),

@@ -9,7 +9,20 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+class IsBranchMember(permissions.BasePermission):
+    """Custom permission to ensure user belongs to the branch of the object."""
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.default_branch is not None
 
+    def has_object_permission(self, request, view, obj):
+        user_branches = request.user.default_branch.company.branches.all()
+        return hasattr(obj, 'branch') and obj.branch in user_branches
+
+class IsSystemAdmin(permissions.BasePermission):
+    """Custom permission for system administrators."""
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)
+    
 class IsOwnerOrReadOnly(BasePermission):
     """
     Custom permission to only allow owners of an object to edit it.

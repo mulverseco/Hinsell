@@ -26,7 +26,7 @@ def send_welcome_message_task(self, user_id: int, branch_id: str):
     Send welcome message to new users using MessagingService.
     """
     try:
-        from apps.core_apps.services.services import MessagingService
+        from hinsell_backend.backend.apps.core_apps.services.messaging_service import MessagingService
         
         user = User.objects.get(id=user_id)
         branch = Branch.objects.get(id=branch_id)
@@ -108,7 +108,7 @@ def send_security_alert_task(self, user_id: int, branch_id: str, alert_type: str
     Send security alert notifications using MessagingService.
     """
     try:
-        from apps.core_apps.services.services import MessagingService
+        from hinsell_backend.backend.apps.core_apps.services.messaging_service import MessagingService
         
         user = User.objects.get(id=user_id)
         branch = Branch.objects.get(id=branch_id)
@@ -282,7 +282,7 @@ def send_notification_task(
     Send notification using MessagingService with comprehensive validation.
     """
     try:
-        from apps.core_apps.services.services import MessagingService
+        from hinsell_backend.backend.apps.core_apps.services.messaging_service import MessagingService
         
         # Get branch
         branch = Branch.objects.get(id=branch_id)
@@ -378,7 +378,7 @@ def send_bulk_notification_task(
     Send bulk notifications to multiple users using MessagingService.
     """
     try:
-        from apps.core_apps.services.services import MessagingService
+        from hinsell_backend.backend.apps.core_apps.services.messaging_service import MessagingService
         
         branch = Branch.objects.get(id=branch_id)
         messaging_service = MessagingService(branch)
@@ -507,7 +507,7 @@ def send_system_announcement_task(
     Send system announcements to users based on roles using MessagingService.
     """
     try:
-        from apps.core_apps.services.services import MessagingService
+        from hinsell_backend.backend.apps.core_apps.services.messaging_service import MessagingService
         
         branch = Branch.objects.get(id=branch_id)
         messaging_service = MessagingService(branch)
@@ -625,7 +625,7 @@ def generate_messaging_report_task(branch_id: str, user_id: int, period_days: in
     Generate messaging status report using MessagingService.
     """
     try:
-        from apps.core_apps.services.services import MessagingService
+        from hinsell_backend.backend.apps.core_apps.services.messaging_service import MessagingService
         
         branch = Branch.objects.get(id=branch_id)
         user = User.objects.get(id=user_id)
@@ -754,7 +754,7 @@ def test_messaging_channels_task(branch_id: str, user_id: int):
     Test all available messaging channels for a user.
     """
     try:
-        from apps.core_apps.services.services import MessagingService
+        from hinsell_backend.backend.apps.core_apps.services.messaging_service import MessagingService
         
         branch = Branch.objects.get(id=branch_id)
         user = User.objects.get(id=user_id)
