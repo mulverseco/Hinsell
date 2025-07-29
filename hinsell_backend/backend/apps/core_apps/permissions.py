@@ -5,9 +5,9 @@ Implements role-based access control with granular permissions.
 from rest_framework import permissions
 from rest_framework.permissions import BasePermission
 from django.contrib.auth.models import Permission
-import logging
+from apps.core_apps.utils import Logger
 
-logger = logging.getLogger(__name__)
+logger = Logger(__name__)
 
 class IsBranchMember(permissions.BasePermission):
     """Custom permission to ensure user belongs to the branch of the object."""

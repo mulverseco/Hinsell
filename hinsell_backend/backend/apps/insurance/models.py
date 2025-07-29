@@ -1,15 +1,11 @@
-"""
-insurance management models including .
-Handles all insurance data with proper validation and audit trails.
-"""
-import logging
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 from apps.core_apps.general import AuditableModel
 from apps.organization.models import Branch
+from apps.core_apps.utils import Logger
 
-logger = logging.getLogger(__name__)
+logger = Logger(__name__)
 
 class InsuranceSubscriber(AuditableModel):
     """Insurance company subscribers"""

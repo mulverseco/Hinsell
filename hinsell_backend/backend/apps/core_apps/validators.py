@@ -1,11 +1,6 @@
-"""
-Custom validators for business logic
-"""
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from decimal import Decimal
-
 
 def validate_positive_decimal(value):
     """Validate that decimal value is positive"""

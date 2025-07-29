@@ -1,4 +1,3 @@
-import logging
 import hashlib
 from datetime import datetime, timedelta
 from typing import Dict, Optional
@@ -15,10 +14,10 @@ from apps.core_apps.encryption import EncryptedField
 from apps.inventory.models import Media
 from apps.authentication.models import User
 from apps.accounting.models import Currency
-from hinsell_backend.backend.apps.core_apps.utils import generate_unique_code
+from hinsell_backend.backend.apps.core_apps.utils import Logger, generate_unique_code
 from apps.core_apps.services.messaging_service import MessagingService
 
-logger = logging.getLogger(__name__)
+logger = Logger(__name__)
 
 class LicenseType(AuditableModel):
     """License type definitions with feature restrictions."""

@@ -1,4 +1,3 @@
-import logging
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -8,9 +7,9 @@ from apps.core_apps.general import AuditableModel
 from apps.authentication.models import User
 from apps.organization.models import Branch
 from apps.inventory.models import Media
-from hinsell_backend.backend.apps.core_apps.utils import generate_unique_code
+from hinsell_backend.backend.apps.core_apps.utils import Logger, generate_unique_code
 
-logger = logging.getLogger(__name__)
+logger = Logger(__name__)
 
 class NotificationTemplate(AuditableModel):
     """Template for different types of notifications."""

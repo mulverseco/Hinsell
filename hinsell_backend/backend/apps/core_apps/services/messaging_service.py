@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, List, Optional, Union
 from datetime import datetime
 from django.utils import timezone
@@ -13,11 +12,11 @@ from twilio.base.exceptions import TwilioRestException
 from apps.notifications.models import InternalMessage, Notification, NotificationTemplate, NotificationLog
 from apps.organization.models import Branch
 from apps.authentication.models import User
-from hinsell_backend.backend.apps.core_apps.utils import generate_unique_code
+from apps.core_apps.utils import Logger, generate_unique_code
 from django.core.validators import EmailValidator
 from phonenumber_field.phonenumber import PhoneNumber
 
-logger = logging.getLogger(__name__)
+logger = Logger(__name__)
 
 try:
     if not firebase_admin._apps:
