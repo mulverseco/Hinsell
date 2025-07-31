@@ -3,7 +3,7 @@ from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
 from apps.inventory.models import Item, ItemGroup, StoreGroup
 from apps.authentication.models import User
 from apps.organization.models import Branch
-from apps.inventory.serializers import MediaSerializer
+from apps.shared.serializers import MediaSerializer
 
 class OfferSerializer(serializers.ModelSerializer):
     target_users = serializers.PrimaryKeyRelatedField(

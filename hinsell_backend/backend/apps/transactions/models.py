@@ -12,7 +12,7 @@ from apps.accounting.models import Account, Currency, CostCenter
 from apps.authentication.models import User
 from apps.organization.models import Branch
 from apps.core_apps.services.messaging_service import MessagingService
-from hinsell_backend.backend.apps.core_apps.utils import generate_unique_code
+from apps.core_apps.utils import generate_unique_code
 
 logger = logging.getLogger(__name__)
 

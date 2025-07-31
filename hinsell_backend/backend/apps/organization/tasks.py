@@ -1,33 +1,28 @@
-import logging
 from celery import shared_task
-from apps.organization.models import License, Company
+from apps.organization.models import License
+from apps.core_apps.utils import Logger
+from django.utils.translation import gettext_lazy as _
 
-logger = logging.getLogger(__name__)
-
-@shared_task
-def process_license_validation(license_id: int):
-    """Process license validation asynchronously."""
-    try:
-        license = License.objects.get(id=license_id)
-        result = license.validate_and_update()
-        if result['warnings'] or result['violations']:
-            logger.warning(f"License {license.license_code} validation: {result}")
-        else:
-            logger.info(f"License {license.license_code} validated successfully.")
-    except License.DoesNotExist:
-        logger.error(f"License {license_id} not found")
-    except Exception as e:
-        logger.error(f"Error processing license {license_id} validation: {str(e)}", exc_info=True)
+logger = Logger(__name__)
 
 @shared_task
-def process_company_update(company_id: int):
-    """Process company update to sync license stats."""
+def validate_licenses():
     try:
-        company = Company.objects.get(id=company_id)
-        if company.license:
-            company.license.update_usage_stats()
-            logger.info(f"Company {company.code} updated; license stats synced.")
-    except Company.DoesNotExist:
-        logger.error(f"Company {company_id} not found")
+        licenses = License.objects.filter(
+            status__in=[License.Status.ACTIVE, License.Status.TRIAL],
+            is_deleted=False
+        )
+        for license in licenses:
+            result = license.validate_and_update()
+            if not result['valid']:
+                logger.warning(
+                    f"License validation failed for {license.company.company_name}: {result['violations']}",
+                    extra={'license_code': license.license_code}
+                )
+            elif result['warnings']:
+                logger.info(
+                    f"License warnings for {license.company.company_name}: {result['warnings']}",
+                    extra={'license_code': license.license_code}
+                )
     except Exception as e:
-        logger.error(f"Error processing company {company_id} update: {str(e)}", exc_info=True)
+        logger.error(f"Error validating licenses: {str(e)}", exc_info=True)

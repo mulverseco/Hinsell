@@ -1,263 +1,203 @@
-"""
-Django admin configuration for transactions app.
-"""
 from django.contrib import admin
-from django.utils.html import format_html
-from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from apps.transactions.models import TransactionType, TransactionHeader, TransactionDetail, LedgerEntry
+from apps.core_apps.utils import Logger
 
+logger = Logger(__name__)
 
 @admin.register(TransactionType)
 class TransactionTypeAdmin(admin.ModelAdmin):
-    """Admin interface for TransactionType model."""
-    
-    list_display = [
-        'type_code', 'type_name', 'branch', 'category', 'affects_inventory',
-        'affects_accounts', 'requires_approval', 'transactions_count', 'is_active'
-    ]
-    list_filter = [
-        'branch', 'category', 'affects_inventory', 'affects_accounts',
-        'requires_approval', 'auto_post', 'is_active'
-    ]
-    search_fields = ['type_code', 'type_name', 'branch__branch_name']
-    readonly_fields = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by']
-    
+    list_display = ['code', 'name', 'category', 'branch', 'affects_inventory', 'affects_accounts', 'requires_approval']
+    list_filter = ['category', 'branch', 'affects_inventory', 'affects_accounts', 'requires_approval']
+    search_fields = ['code', 'name']
+    list_select_related = ['branch', 'default_debit_account', 'default_credit_account']
+    autocomplete_fields = ['branch', 'default_debit_account', 'default_credit_account']
+    readonly_fields = ['created_at', 'updated_at', 'created_by', 'updated_by']
     fieldsets = (
-        ('Basic Information', {
-            'fields': ('branch', 'type_code', 'type_name', 'category')
+        (None, {
+            'fields': ('branch', 'code', 'name', 'category')
         }),
-        ('Settings', {
-            'fields': (
-                'affects_inventory', 'affects_accounts', 'requires_approval', 'auto_post'
-            )
+        (_('Accounting Settings'), {
+            'fields': ('affects_inventory', 'affects_accounts', 'requires_approval', 'auto_post',
+                      'default_debit_account', 'default_credit_account')
         }),
-        ('Default Accounts', {
-            'fields': ('default_debit_account', 'default_credit_account'),
+        (_('Audit Fields'), {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
             'classes': ('collapse',)
         }),
-        ('Status', {
-            'fields': ('is_active',)
-        }),
-        ('Audit Information', {
-            'fields': ('id', 'created_at', 'updated_at', 'created_by', 'updated_by'),
-            'classes': ('collapse',)
-        })
     )
-    
-    def transactions_count(self, obj):
-        """Display number of transactions."""
-        count = obj.transactions.filter(is_active=True).count()
-        if count > 0:
-            url = reverse('admin:transactions_transactionheader_changelist') + f'?transaction_type__id__exact={obj.id}'
-            return format_html('<a href="{}">{} transactions</a>', url, count)
-        return '0 transactions'
-    transactions_count.short_description = 'Transactions'
-    
+
     def save_model(self, request, obj, form, change):
-        """Set created_by and updated_by fields."""
-        if not change:
+        if not obj.pk:
             obj.created_by = request.user
         obj.updated_by = request.user
         super().save_model(request, obj, form, change)
-
-
-class TransactionDetailInline(admin.TabularInline):
-    """Inline admin for TransactionDetail."""
-    model = TransactionDetail
-    extra = 1
-    fields = [
-        'line_number', 'item', 'item_unit', 'quantity', 'unit_price',
-        'discount_percentage', 'tax_percentage', 'line_total'
-    ]
-    readonly_fields = ['line_total']
-
+        logger.info(
+            f"{'Updated' if change else 'Created'} TransactionType {obj.code}",
+            extra={'user_id': request.user.id, 'object_id': obj.id}
+        )
 
 @admin.register(TransactionHeader)
 class TransactionHeaderAdmin(admin.ModelAdmin):
-    """Admin interface for TransactionHeader model."""
-    
-    list_display = [
-        'transaction_number', 'transaction_type', 'transaction_date', 'status',
-        'customer_account', 'supplier_account', 'total_amount', 'balance_due_display',
-        'is_overdue'
-    ]
-    list_filter = [
-        'branch', 'transaction_type', 'status', 'transaction_date',
-        'due_date', 'currency', 'posted_at'
-    ]
-    search_fields = [
-        'transaction_number', 'reference_number', 'customer_account__account_name',
-        'supplier_account__account_name'
-    ]
-    readonly_fields = [
-        'id', 'subtotal_amount', 'discount_amount', 'tax_amount', 'total_amount',
-        'balance_due_display', 'is_fully_paid', 'is_overdue', 'approved_by',
-        'approved_at', 'posted_by', 'posted_at', 'reversed_by', 'reversed_at',
-        'created_at', 'updated_at', 'created_by', 'updated_by'
-    ]
-    inlines = [TransactionDetailInline]
-    
+    list_display = ['code', 'transaction_number', 'transaction_type', 'branch', 'status', 'total_amount', 'transaction_date']
+    list_filter = ['status', 'transaction_type', 'branch', 'transaction_date']
+    search_fields = ['code', 'transaction_number', 'reference_number']
+    list_select_related = ['branch', 'transaction_type', 'currency', 'approved_by', 'posted_by']
+    autocomplete_fields = ['branch', 'transaction_type', 'customer_account', 'supplier_account', 'currency']
+    readonly_fields = ['created_at', 'updated_at', 'created_by', 'updated_by', 'approved_at', 'posted_at', 'reversed_at']
     fieldsets = (
-        ('Basic Information', {
-            'fields': (
-                'branch', 'transaction_type', 'transaction_number', 'reference_number',
-                'transaction_date', 'due_date', 'status'
-            )
+        (None, {
+            'fields': ('branch', 'code', 'transaction_number', 'transaction_type', 'reference_number')
         }),
-        ('Parties', {
-            'fields': ('customer_account', 'supplier_account')
+        (_('Financial Details'), {
+            'fields': ('currency', 'exchange_rate', 'subtotal_amount', 'discount_amount', 'tax_amount',
+                      'total_amount', 'paid_amount', 'customer_account', 'supplier_account')
         }),
-        ('Financial Information', {
-            'fields': (
-                'currency', 'exchange_rate', 'subtotal_amount', 'discount_amount',
-                'tax_amount', 'total_amount', 'paid_amount', 'balance_due_display'
-            )
+        (_('Dates'), {
+            'fields': ('transaction_date', 'due_date')
         }),
-        ('Payment Terms', {
-            'fields': ('payment_terms', 'credit_days'),
+        (_('Status'), {
+            'fields': ('status', 'approved_by', 'approved_at', 'posted_by', 'posted_at',
+                      'reversed_by', 'reversed_at', 'reversal_reason')
+        }),
+        (_('Notes'), {
+            'fields': ('notes', 'internal_notes')
+        }),
+        (_('Attachments'), {
+            'fields': ('attachments',)
+        }),
+        (_('Audit Fields'), {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
             'classes': ('collapse',)
         }),
-        ('Status Information', {
-            'fields': (
-                'is_fully_paid', 'is_overdue', 'approved_by', 'approved_at',
-                'posted_by', 'posted_at', 'reversed_by', 'reversed_at'
-            ),
-            'classes': ('collapse',)
-        }),
-        ('Notes', {
-            'fields': ('notes', 'internal_notes'),
-            'classes': ('collapse',)
-        }),
-        ('Reversal Information', {
-            'fields': ('reversal_reason',),
-            'classes': ('collapse',)
-        }),
-        ('Audit Information', {
-            'fields': ('id', 'created_at', 'updated_at', 'created_by', 'updated_by'),
-            'classes': ('collapse',)
-        })
     )
-    
-    def balance_due_display(self, obj):
-        """Display balance due with color coding."""
-        balance = obj.get_balance_due()
-        if balance > 0:
-            color = 'red' if obj.is_overdue() else 'orange'
-            return format_html('<span style="color: {}; font-weight: bold;">{}</span>', color, balance)
-        return format_html('<span style="color: green;">Paid</span>')
-    balance_due_display.short_description = 'Balance Due'
-    
+    actions = ['approve_transactions', 'post_transactions', 'reverse_transactions']
+
+    def approve_transactions(self, request, queryset):
+        for transaction in queryset:
+            if transaction.status == TransactionHeader.Status.PENDING:
+                try:
+                    transaction.approve(request.user)
+                    self.message_user(request, f"Transaction {transaction.code} approved.")
+                except Exception as e:
+                    self.message_user(request, f"Error approving {transaction.code}: {str(e)}", level='error')
+                    logger.error(
+                        f"Error approving transaction {transaction.code}: {str(e)}",
+                        extra={'user_id': request.user.id, 'object_id': transaction.id}
+                    )
+    approve_transactions.short_description = _("Approve selected transactions")
+
+    def post_transactions(self, request, queryset):
+        for transaction in queryset:
+            if transaction.status == TransactionHeader.Status.APPROVED:
+                try:
+                    transaction.post(request.user)
+                    self.message_user(request, f"Transaction {transaction.code} posted.")
+                except Exception as e:
+                    self.message_user(request, f"Error posting {transaction.code}: {str(e)}", level='error')
+                    logger.error(
+                        f"Error posting transaction {transaction.code}: {str(e)}",
+                        extra={'user_id': request.user.id, 'object_id': transaction.id}
+                    )
+    post_transactions.short_description = _("Post selected transactions")
+
+    def reverse_transactions(self, request, queryset):
+        for transaction in queryset:
+            if transaction.status == TransactionHeader.Status.POSTED:
+                try:
+                    reason = f"Reversed via admin by {request.user.username}"
+                    transaction.reverse(request.user, reason)
+                    self.message_user(request, f"Transaction {transaction.code} reversed.")
+                except Exception as e:
+                    self.message_user(request, f"Error reversing {transaction.code}: {str(e)}", level='error')
+                    logger.error(
+                        f"Error reversing transaction {transaction.code}: {str(e)}",
+                        extra={'user_id': request.user.id, 'object_id': transaction.id}
+                    )
+    reverse_transactions.short_description = _("Reverse selected transactions")
+
     def save_model(self, request, obj, form, change):
-        """Set created_by and updated_by fields."""
-        if not change:
+        if not obj.pk:
             obj.created_by = request.user
         obj.updated_by = request.user
         super().save_model(request, obj, form, change)
-
+        logger.info(
+            f"{'Updated' if change else 'Created'} TransactionHeader {obj.code}",
+            extra={'user_id': request.user.id, 'object_id': obj.id}
+        )
 
 @admin.register(TransactionDetail)
 class TransactionDetailAdmin(admin.ModelAdmin):
-    """Admin interface for TransactionDetail model."""
-    
-    list_display = [
-        'header', 'line_number', 'item', 'quantity', 'unit_price',
-        'discount_percentage', 'tax_percentage', 'line_total', 'net_amount_display'
-    ]
-    list_filter = ['header__transaction_type', 'item__item_group', 'expiry_date']
-    search_fields = [
-        'header__transaction_number', 'item__item_code', 'item__item_name',
-        'batch_number'
-    ]
-    readonly_fields = [
-        'id', 'base_quantity', 'line_total', 'discount_amount', 'tax_amount',
-        'net_amount_display', 'total_quantity_display', 'created_at', 'updated_at',
-        'created_by', 'updated_by'
-    ]
-    
-    def net_amount_display(self, obj):
-        """Display net amount."""
-        return obj.get_net_amount()
-    net_amount_display.short_description = 'Net Amount'
-    
-    def total_quantity_display(self, obj):
-        """Display total quantity including bonus."""
-        return obj.get_total_quantity()
-    total_quantity_display.short_description = 'Total Quantity'
-    
+    list_display = ['header', 'line_number', 'item', 'quantity', 'unit_price', 'line_total']
+    list_filter = ['header__transaction_type', 'header__branch']
+    search_fields = ['header__code', 'header__transaction_number', 'item__item_name', 'batch_number']
+    list_select_related = ['header', 'item', 'item_unit']
+    autocomplete_fields = ['header', 'item', 'item_unit']
+    readonly_fields = ['created_at', 'updated_at', 'created_by', 'updated_by', 'line_total']
+    fieldsets = (
+        (None, {
+            'fields': ('header', 'line_number', 'item', 'item_unit')
+        }),
+        (_('Quantities'), {
+            'fields': ('quantity', 'base_quantity', 'unit_size', 'bonus_quantity')
+        }),
+        (_('Pricing'), {
+            'fields': ('unit_price', 'unit_cost', 'line_total', 'discount_percentage',
+                      'discount_amount', 'tax_percentage', 'tax_amount')
+        }),
+        (_('Details'), {
+            'fields': ('batch_number', 'expiry_date', 'description', 'notes')
+        }),
+        (_('Audit Fields'), {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',)
+        }),
+    )
+
     def save_model(self, request, obj, form, change):
-        """Set created_by and updated_by fields."""
-        if not change:
+        if not obj.pk:
             obj.created_by = request.user
         obj.updated_by = request.user
         super().save_model(request, obj, form, change)
-
+        logger.info(
+            f"{'Updated' if change else 'Created'} TransactionDetail for header {obj.header.code}",
+            extra={'user_id': request.user.id, 'object_id': obj.id}
+        )
 
 @admin.register(LedgerEntry)
 class LedgerEntryAdmin(admin.ModelAdmin):
-    """Admin interface for LedgerEntry model."""
-    
-    list_display = [
-        'transaction_header', 'account', 'entry_date', 'debit_amount',
-        'credit_amount', 'entry_type_display', 'is_posted', 'is_reversed'
-    ]
-    list_filter = [
-        'branch', 'entry_date', 'is_posted', 'is_reversed', 'currency',
-        'account__account_type'
-    ]
-    search_fields = [
-        'transaction_header__transaction_number', 'account__account_code',
-        'account__account_name', 'description', 'reference'
-    ]
-    readonly_fields = [
-        'id', 'entry_type_display', 'entry_amount_display', 'created_at',
-        'updated_at', 'created_by', 'updated_by'
-    ]
-    
+    list_display = ['code', 'transaction_header', 'account', 'entry_date', 'debit_amount', 'credit_amount', 'is_posted']
+    list_filter = ['is_posted', 'is_reversed', 'branch', 'entry_date']
+    search_fields = ['code', 'transaction_header__code', 'transaction_header__transaction_number', 'account__code']
+    list_select_related = ['branch', 'transaction_header', 'account', 'currency']
+    autocomplete_fields = ['branch', 'transaction_header', 'account', 'cost_center', 'currency']
+    readonly_fields = ['created_at', 'updated_at', 'created_by', 'updated_by', 'is_posted', 'is_reversed']
     fieldsets = (
-        ('Basic Information', {
-            'fields': (
-                'branch', 'transaction_header', 'account', 'cost_center', 'entry_date'
-            )
+        (None, {
+            'fields': ('branch', 'code', 'transaction_header', 'account', 'cost_center')
         }),
-        ('Amounts', {
-            'fields': (
-                'debit_amount', 'credit_amount', 'entry_type_display', 'entry_amount_display'
-            )
+        (_('Financial Details'), {
+            'fields': ('entry_date', 'debit_amount', 'credit_amount', 'foreign_debit_amount',
+                      'foreign_credit_amount', 'currency', 'exchange_rate')
         }),
-        ('Foreign Currency', {
-            'fields': (
-                'foreign_debit_amount', 'foreign_credit_amount', 'currency', 'exchange_rate'
-            ),
-            'classes': ('collapse',)
-        }),
-        ('Status', {
+        (_('Status'), {
             'fields': ('is_posted', 'is_reversed', 'reversal_entry')
         }),
-        ('Description', {
+        (_('Details'), {
             'fields': ('description', 'reference')
         }),
-        ('Audit Information', {
-            'fields': ('id', 'created_at', 'updated_at', 'created_by', 'updated_by'),
+        (_('Audit Fields'), {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
             'classes': ('collapse',)
-        })
+        }),
     )
-    
-    def entry_type_display(self, obj):
-        """Display entry type with color coding."""
-        if obj.is_debit():
-            return format_html('<span style="color: blue; font-weight: bold;">DR</span>')
-        else:
-            return format_html('<span style="color: green; font-weight: bold;">CR</span>')
-    entry_type_display.short_description = 'Type'
-    
-    def entry_amount_display(self, obj):
-        """Display entry amount."""
-        return obj.get_amount()
-    entry_amount_display.short_description = 'Amount'
-    
+
     def save_model(self, request, obj, form, change):
-        """Set created_by and updated_by fields."""
-        if not change:
+        if not obj.pk:
             obj.created_by = request.user
         obj.updated_by = request.user
         super().save_model(request, obj, form, change)
+        logger.info(
+            f"{'Updated' if change else 'Created'} LedgerEntry {obj.code}",
+            extra={'user_id': request.user.id, 'object_id': obj.id}
+        )

@@ -1,4 +1,3 @@
-import logging
 import uuid
 from decimal import Decimal
 from django.db import models
@@ -11,9 +10,9 @@ from apps.core_apps.general import AuditableModel
 from apps.core_apps.validators import validate_positive_decimal, validate_percentage
 from apps.organization.models import Branch 
 from apps.authentication.models import User
-from apps.core_apps.services.messaging_service import MessagingService
+from apps.core_apps.utils import Logger, get_default_account_code, get_default_account_type_code, get_default_accounting_period_code, get_default_budget_code, get_default_cost_center_code, get_default_currency_code, get_default_notifications
 
-logger = logging.getLogger(__name__)
+logger = Logger(__name__)
 
 def generate_unique_code(prefix: str, length: int = 8) -> str:
     """Generate a unique code with a prefix and UUID."""
@@ -22,7 +21,7 @@ def generate_unique_code(prefix: str, length: int = 8) -> str:
 class Currency(AuditableModel):
     """Currency model with validation and exchange rate tracking."""
     branch = models.ForeignKey(
-        Branch,
+        "organization.Branch",
         on_delete=models.CASCADE,
         related_name='currencies',
         verbose_name=_("Branch")
@@ -31,7 +30,7 @@ class Currency(AuditableModel):
         max_length=5,
         verbose_name=_("Code"),
         help_text=_("ISO currency code (e.g., USD, EUR)"),
-        default=lambda: generate_unique_code('CUR', 5)
+        default=get_default_currency_code
     )
     name = models.CharField(
         max_length=50,
@@ -208,7 +207,7 @@ class AccountType(AuditableModel):
     code = models.CharField(
         max_length=10,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('AT')
+        default=get_default_account_type_code
     )
     name = models.CharField(
         max_length=100,
@@ -264,7 +263,7 @@ class Account(AuditableModel):
     code = models.CharField(
         max_length=20,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('ACC')
+        default=get_default_account_code
     )
     name = models.CharField(
         max_length=250,
@@ -380,11 +379,10 @@ class Account(AuditableModel):
         verbose_name=_("Budget Amount")
     )
     enable_notifications = models.JSONField(
-        default=lambda: {'email': True, 'sms': False, 'whatsapp': False},
+        default=get_default_notifications,
         verbose_name=_("Notification Settings"),
-        help_text=_("Channels for notifications: {'email': bool, 'sms': bool, 'whatsapp': bool}")
+        help_text=_("Channels for notifications: {'email': bool, 'sms': bool, 'whatsapp': bool, 'in_app': bool, 'push': bool}")
     )
-
     class Meta:
         verbose_name = _("Account")
         verbose_name_plural = _("Accounts")
@@ -462,6 +460,7 @@ class Account(AuditableModel):
 
     def notify_limit_violation(self, balance: Decimal):
         """Send notification for credit/debit limit violation."""
+        from apps.core_apps.services.messaging_service import MessagingService
         try:
             if not self.can_receive_notifications('email'):
                 logger.warning(f"Cannot send notification for account {self.code}: Email not configured")
@@ -501,7 +500,7 @@ class CostCenter(AuditableModel):
     code = models.CharField(
         max_length=20,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('CC')
+        default=get_default_cost_center_code
     )
     name = models.CharField(
         max_length=100,
@@ -657,7 +656,7 @@ class AccountingPeriod(AuditableModel):
     code = models.CharField(
         max_length=10,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('AP')
+        default=get_default_accounting_period_code
     )
     name = models.CharField(
         max_length=50,
@@ -726,7 +725,7 @@ class Budget(AuditableModel):
     code = models.CharField(
         max_length=20,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('BUD')
+        default=get_default_budget_code
     )
     name = models.CharField(
         max_length=100,

@@ -1,0 +1,38 @@
+{
+  "schema": "http://localhost:8000/schema",
+  "outputDir": "src/core/generated",
+  "framework": {
+    "type": "nextjs",
+    "router": "app",
+    "features": {
+      "serverActions": true,
+      "middleware": false,
+      "streaming": false,
+      "revalidation": true
+    }
+  },
+  "api": {
+    "baseUrl": "http://localhost:8000/api",
+    "timeout": 30000,
+    "retries": 3
+  },
+  "cache": {
+    "strategy": "memory",
+    "ttl": 300,
+    "tags": true,
+    "revalidation": "on-demand"
+  },
+  "dev": {
+    "logging": true,
+    "validation": true,
+    "mocking": false,
+    "watch": false
+  },
+  "generation": {
+    "typescript": true,
+    "strict": true,
+    "comments": true,
+    "examples": false,
+    "tests": false
+  }
+}

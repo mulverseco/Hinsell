@@ -8,7 +8,10 @@ class EncryptedField(models.TextField):
     """
     
     def __init__(self, *args, **kwargs):
-        self.cipher_suite = Fernet(settings.FIELD_ENCRYPTION_KEY.encode())
+        key = settings.FIELD_ENCRYPTION_KEY
+        if isinstance(key, str):
+            key = key.encode()
+        self.cipher_suite = Fernet(key)
         super().__init__(*args, **kwargs)
     
     def from_db_value(self, value, expression, connection):

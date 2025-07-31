@@ -1,40 +1,36 @@
 import uuid
-from typing import Optional
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.core.validators import EmailValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from apps.core_apps.utils import Logger, generate_unique_code
+from apps.core_apps.utils import generate_unique_code, get_default_data_consent, get_default_employee_code, get_default_notifications
 from apps.core_apps.general import AuditableModel
 from phonenumber_field.modelfields import PhoneNumberField
 from decimal import Decimal
 from apps.core_apps.validators import validate_percentage
-from apps.inventory.models import Media
 
 
 def upload_avatar(instance, filename):
-    """Generate unique avatar upload path."""
     random_uuid = uuid.uuid4().hex
     extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
     return f'avatars/{instance.user.username}/{random_uuid}.{extension}'
 
 def generate_unique_username(email: str) -> str:
-    """Generate a unique username from email address."""
     base_username = email.split('@')[0].replace('.', '').replace('_', '').lower()[:30]
     username = base_username
-    counter = 1
-    while User.objects.filter(username=username).exists():
-        username = f"{base_username}{counter}"
-        counter += 1
-        if len(username) > 50:
-            username = f"{base_username[:45]}{counter}"
-    return username
+    if not User.objects.filter(username=username).exists():
+        return username
+    while True:
+        suffix = uuid.uuid4().hex[:8]
+        username = f"{base_username}_{suffix}"[:50]
+        if not User.objects.filter(username=username).exists():
+            return username
 
 class UserManager(BaseUserManager):
-    """Custom user manager with enhanced security and error handling."""
     def create_user(self, email, password=None, user_type='customer', **extra_fields):
+        from apps.core_apps.utils import Logger
         logger = Logger(__name__)
         try:
             if not email:
@@ -64,6 +60,7 @@ class UserManager(BaseUserManager):
             raise
 
     def create_superuser(self, username, email=None, password=None, **extra_fields):
+        from apps.core_apps.utils import Logger
         logger = Logger(__name__)
         try:
             extra_fields.setdefault("is_staff", True)
@@ -97,7 +94,6 @@ class UserManager(BaseUserManager):
             raise ValueError(_("Invalid email address format"))
 
 class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
-    """Custom user model with e-commerce and security features."""
     class UserType(models.TextChoices):
         CUSTOMER = 'customer', _('Customer')
         VIP = 'vip', _('VIP Customer')
@@ -147,7 +143,7 @@ class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
         null=True,
         unique=True,
         verbose_name=_("Employee Code"),
-        default=lambda: generate_unique_code('EMP')
+        default=get_default_employee_code
     )
     is_two_factor_enabled = models.BooleanField(
         default=False,
@@ -204,10 +200,15 @@ class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
         related_name='default_users',
         verbose_name=_("Default Branch")
     )
+    last_activity = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Last Activity")
+    )
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['user_type']
+    REQUIRED_FIELDS = ['']
 
     class Meta:
         verbose_name = _("User")
@@ -215,7 +216,7 @@ class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
         indexes = [
             models.Index(fields=['username', 'email']),
             models.Index(fields=['code']),
-            models.Index(fields=['is_active', 'is_staff']),
+            models.Index(fields=['is_active'], condition=models.Q(is_active=True), name='active_users_idx'),
             models.Index(fields=['failed_login_attempts', 'account_locked_until']),
             models.Index(fields=['user_type']),
         ]
@@ -248,77 +249,10 @@ class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
             return timezone.now() < self.account_locked_until
         return False
 
-    def lock_account(self, duration_minutes: int = 30):
-        logger = Logger(__name__, user=self)
-        self.account_locked_until = timezone.now() + timezone.timedelta(minutes=duration_minutes)
-        self.save(update_fields=['account_locked_until'])
-        logger.warning(f"Account locked for user: {self.username}", 
-                      extra={'user_type': self.user_type})
-
-    def unlock_account(self):
-        logger = Logger(__name__, user=self)
-        self.account_locked_until = None
-        self.failed_login_attempts = 0
-        self.save(update_fields=['account_locked_until', 'failed_login_attempts'])
-        logger.info(f"Account unlocked for user: {self.username}", 
-                   extra={'user_type': self.user_type})
-
-    def increment_failed_login(self):
-        logger = Logger(__name__, user=self)
-        self.failed_login_attempts += 1
-        if self.failed_login_attempts >= 5:
-            self.lock_account(30)
-        self.save(update_fields=['failed_login_attempts'])
-        logger.warning(f"Incremented failed login attempts for user: {self.username}", 
-                      extra={'failed_attempts': self.failed_login_attempts, 'user_type': self.user_type})
-
-    def reset_failed_login(self):
-        logger = Logger(__name__, user=self)
-        if self.failed_login_attempts > 0:
-            self.failed_login_attempts = 0
-            self.save(update_fields=['failed_login_attempts'])
-            logger.info(f"Reset failed login attempts for user: {self.username}", 
-                       extra={'user_type': self.user_type})
-
-    def add_loyalty_points(self, points: int, reason: str = None):
-        logger = Logger(__name__, user=self)
-        if points < 0:
-            raise ValidationError(_('Points to add cannot be negative.'))
-        self.loyalty_points += points
-        self.save(update_fields=['loyalty_points'])
-        AuditLog.objects.create(
-            branch=self.default_branch,
-            user=self,
-            action_type=AuditLog.ActionType.LOYALTY_POINTS_ADDED,
-            username=self.username,
-            details={'points': points, 'reason': reason or 'No reason provided', 'user_type': self.user_type}
-        )
-        logger.info(f"Added {points} loyalty points to user: {self.username}", 
-                   extra={'points': points, 'reason': reason, 'user_type': self.user_type})
-
-    def redeem_loyalty_points(self, points: int, coupon_id: Optional[int] = None):
-        logger = Logger(__name__, user=self)
-        if points < 0:
-            raise ValidationError(_('Points to redeem cannot be negative.'))
-        if points > self.loyalty_points:
-            raise ValidationError(_('Insufficient loyalty points.'))
-        self.loyalty_points -= points
-        self.save(update_fields=['loyalty_points'])
-        AuditLog.objects.create(
-            branch=self.default_branch,
-            user=self,
-            action_type=AuditLog.ActionType.LOYALTY_POINTS_REDEEMED,
-            username=self.username,
-            details={'points': points, 'coupon_id': coupon_id, 'user_type': self.user_type}
-        )
-        logger.info(f"Redeemed {points} loyalty points from user: {self.username}", 
-                   extra={'points': points, 'coupon_id': coupon_id, 'user_type': self.user_type})
-
     def __str__(self):
         return f"{self.get_full_name()} ({self.get_user_type_display()})"
 
 class UserProfile(AuditableModel):
-    """User profile with e-commerce features, media integration, and compliance features."""
     class Gender(models.TextChoices):
         MALE = 'male', _('Male')
         FEMALE = 'female', _('Female')
@@ -342,7 +276,7 @@ class UserProfile(AuditableModel):
         verbose_name=_("User")
     )
     avatar = models.ForeignKey(
-        Media,
+        "shared.Media",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -355,13 +289,13 @@ class UserProfile(AuditableModel):
         max_length=500,
         verbose_name=_("Biography")
     )
-    email = models.EmailField(
-        unique=True,
+    push_token = models.CharField(
+        max_length=255,
         blank=True,
         null=True,
-        max_length=255,
-        validators=[EmailValidator()],
-        verbose_name=_("Email Address")
+        verbose_name=_("Push Notification Token"),
+        help_text=_("Device token for push notifications (e.g., FCM or APNs token)"),
+        db_index=True
     )
     phone_number = PhoneNumberField(
         blank=True,
@@ -390,7 +324,7 @@ class UserProfile(AuditableModel):
         verbose_name=_("Gender")
     )
     notifications = models.JSONField(
-        default=lambda: {'email': False, 'sms': False, 'whatsapp': False, 'in_app': False, 'push': False},
+        default=get_default_notifications,
         verbose_name=_("Notification Settings"),
         help_text=_("Channels for notifications: {'email': bool, 'sms': bool, 'whatsapp': bool, 'in_app': bool, 'push': bool}")
     )
@@ -427,7 +361,7 @@ class UserProfile(AuditableModel):
         help_text=_("Version of the terms and conditions accepted by the user.")
     )
     data_consent = models.JSONField(
-        default=lambda: {'data_processing': False, 'marketing': False, 'analytics': False, 'data_sharing': False},
+        default=get_default_data_consent,
         verbose_name=_("Data Consent Preferences"),
         help_text=_("User consent for data usage: {'data_processing': bool, 'marketing': bool, 'analytics': bool, 'data_sharing': bool}")
     )
@@ -443,18 +377,16 @@ class UserProfile(AuditableModel):
         verbose_name_plural = _("User Profiles")
         indexes = [
             models.Index(fields=['user', 'profile_visibility']),
-            models.Index(fields=['email', 'phone_number']),
+            models.Index(fields=['phone_number']),
             models.Index(fields=['terms_accepted', 'terms_version']),
+            models.Index(fields=['push_token']),
         ]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
     def clean(self):
         super().clean()
         if self.date_of_birth and self.date_of_birth > timezone.now().date():
-            raise ValidationError({'date_of_birth': _('Date of birth cannot be in the future.')})
-        if any(self.notifications.get(channel, False) for channel in ['email', 'sms', 'whatsapp', 'push']) and not (self.email or self.phone_number):
+            raise ValidationError({'date_of_birth': _('Date of Birth cannot be in the future.')})
+        if any(self.notifications.get(channel, False) for channel in ['email', 'sms', 'whatsapp', 'push']) and not (self.user.email or self.phone_number):
             raise ValidationError(_('At least one contact method (email or phone) must be provided if notifications are enabled.'))
         if self.avatar and self.avatar.media_type != 'image':
             raise ValidationError({'avatar': _('Avatar must be an image media type.')})
@@ -464,7 +396,9 @@ class UserProfile(AuditableModel):
             raise ValidationError(_('Marketing opt-in requires terms acceptance and marketing consent.'))
         if any(self.data_consent.get(key, False) for key in self.data_consent) and not self.terms_accepted:
             raise ValidationError(_('Data consent requires terms and conditions acceptance.'))
+
     def save(self, *args, **kwargs):
+        from apps.core_apps.utils import Logger
         logger = Logger(__name__, user=self.user)
         if not self.pk:
             self.marketing_opt_in = self.user.user_type in ['customer', 'vip']
@@ -480,9 +414,7 @@ class UserProfile(AuditableModel):
             self.avatar.save()
         if self.terms_accepted and not self.terms_accepted_at:
             self.terms_accepted_at = timezone.now()
-            self.avatar.save()
-        if self.terms_accepted and not self.terms_accepted_at:
-            self.terms_accepted_at = timezone.now()
+            from apps.authentication.models import AuditLog
             AuditLog.objects.create(
                 branch=self.user.default_branch,
                 user=self.user,
@@ -492,16 +424,6 @@ class UserProfile(AuditableModel):
             )
             logger.info(f"Terms accepted for user: {self.user.username}", 
                        extra={'terms_version': self.terms_version, 'user_type': self.user.user_type})
-        if self.pk and self.data_consent != self.__class__.objects.get(pk=self.pk).data_consent:
-            AuditLog.objects.create(
-                branch=self.user.default_branch,
-                user=self.user,
-                action_type=AuditLog.ActionType.CONSENT_UPDATED,
-                username=self.user.username,
-                details={'data_consent': self.data_consent, 'user_type': self.user.user_type}
-            )
-            logger.info(f"Data consent updated for user: {self.user.username}", 
-                       extra={'data_consent': self.data_consent, 'user_type': self.user.user_type})
         super().save(*args, **kwargs)
         logger.info(f"Profile saved for user: {self.user.username}", 
                    extra={'user_type': self.user.user_type})
@@ -509,10 +431,10 @@ class UserProfile(AuditableModel):
     def has_complete_profile(self) -> bool:
         if self.user.user_type == 'guest':
             return True
-        required_fields = [self.user.first_name, self.user.last_name, self.email or self.phone_number, self.address, self.terms_accepted]
+        required_fields = [self.user.first_name, self.user.last_name, self.user.email or self.phone_number, self.address, self.terms_accepted]
         return all(field for field in required_fields)
 
-    def get_age(self) -> Optional[int]:
+    def get_age(self) -> int:
         if self.date_of_birth:
             today = timezone.now().date()
             return today.year - self.date_of_birth.year - (
@@ -525,65 +447,17 @@ class UserProfile(AuditableModel):
             self.terms_accepted and
             self.data_consent.get('data_processing', False) and
             self.notifications.get(channel, False) and (
-                channel == 'email' and bool(self.email) or
+                channel == 'email' and bool(self.user.email) or
                 channel in ('sms', 'whatsapp') and bool(self.phone_number) or
                 channel == 'push' and bool(self.push_token) or
                 channel == 'in_app'
             )
         )
 
-    def withdraw_consent(self, consent_type: str):
-        """Withdraw specific data consent (e.g., marketing, analytics)."""
-        logger = Logger(__name__, user=self.user)
-        if consent_type in self.data_consent:
-            self.data_consent[consent_type] = False
-            if consent_type == 'marketing':
-                self.marketing_opt_in = False
-            if consent_type == 'data_processing':
-                self.notifications = {channel: False for channel in self.notifications}
-            self.save()
-            AuditLog.objects.create(
-                branch=self.user.default_branch,
-                user=self.user,
-                action_type=AuditLog.ActionType.CONSENT_UPDATED,
-                username=self.user.username,
-                details={'consent_type': consent_type, 'status': 'withdrawn', 'user_type': self.user.user_type}
-            )
-            logger.info(f"Withdrew {consent_type} consent for user: {self.user.username}", 
-                       extra={'consent_type': consent_type, 'user_type': self.user.user_type})
-
-    def delete_profile(self):
-        """Soft delete profile data for GDPR/CCPA compliance."""
-        logger = Logger(__name__, user=self.user)
-        self.email = None
-        self.phone_number = None
-        self.address = None
-        self.date_of_birth = None
-        self.gender = self.Gender.PREFER_NOT_TO_SAY
-        self.bio = ''
-        self.avatar = None
-        self.notifications = {channel: False for channel in self.notifications}
-        self.data_consent = {key: False for key in self.data_consent}
-        self.marketing_opt_in = False
-        self.terms_accepted = False
-        self.terms_accepted_at = None
-        self.terms_version = None
-        self.save()
-        AuditLog.objects.create(
-            branch=self.user.default_branch,
-            user=self.user,
-            action_type=AuditLog.ActionType.PROFILE_DELETION,
-            username=self.user.username,
-            details={'reason': 'User requested profile deletion', 'user_type': self.user.user_type}
-        )
-        logger.info(f"Profile data deleted for user: {self.user.username}", 
-                   extra={'user_type': self.user.user_type})
-
     def __str__(self):
         return f"Profile of {self.user.get_full_name()} ({self.user.get_user_type_display()})"
 
 class AuditLog(AuditableModel):
-    """Audit log for security and compliance tracking."""
     class ActionType(models.TextChoices):
         LOGIN = 'login', _('Login')
         LOGOUT = 'logout', _('Logout')
@@ -601,6 +475,7 @@ class AuditLog(AuditableModel):
         TERMS_ACCEPTED = 'terms_accepted', _('Terms Accepted')
         CONSENT_UPDATED = 'consent_updated', _('Consent Updated')
         PROFILE_DELETION = 'profile_deletion', _('Profile Deletion')
+        PUSH_TOKEN_UPDATED = 'push_token_updated', _('Push Token Updated')
 
     class LoginStatus(models.TextChoices):
         SUCCESS = 'success', _('Success')
@@ -615,7 +490,9 @@ class AuditLog(AuditableModel):
 
     branch = models.ForeignKey(
         'organization.Branch',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         verbose_name=_("Branch")
     )
     user = models.ForeignKey(
@@ -625,7 +502,7 @@ class AuditLog(AuditableModel):
         verbose_name=_("User")
     )
     action_type = models.CharField(
-        max_length=20,
+        max_length=50,
         choices=ActionType.choices,
         default=ActionType.LOGIN,
         verbose_name=_("Action Type")
@@ -706,54 +583,13 @@ class AuditLog(AuditableModel):
         ]
 
     def save(self, *args, **kwargs):
+        from apps.core_apps.utils import Logger
         logger = Logger(__name__, user=self.user)
         if not self.username and self.user:
             self.username = self.user.username
-        if not self.device_type and self.user_agent:
-            self.device_type = self._get_device_type(self.user_agent)
-        self.risk_score = self._calculate_risk_score()
-        self.risk_level = self._determine_risk_level(self.risk_score)
         super().save(*args, **kwargs)
         logger.info(f"Audit log saved for action: {self.get_action_type_display()}", 
                    extra={'user_type': self.user.user_type, 'action_type': self.action_type})
-
-    def _get_device_type(self, user_agent: str) -> str:
-        ua = user_agent.lower()
-        if any(mobile in ua for mobile in ['mobile', 'android', 'iphone', 'ipod']):
-            return 'Mobile Device'
-        if any(tablet in ua for tablet in ['tablet', 'ipad']):
-            return 'Tablet'
-        if 'windows' in ua:
-            return 'Windows Desktop'
-        if any(mac in ua for mac in ['macintosh', 'mac os']):
-            return 'Mac Desktop'
-        if 'linux' in ua:
-            return 'Linux Desktop'
-        return 'Unknown Device'
-
-    def _calculate_risk_score(self) -> int:
-        score = 0
-        if self.login_status in (self.LoginStatus.FAILED, self.LoginStatus.BLOCKED):
-            score += 40
-        if not self.country or not self.city:
-            score += 20
-        if self.action_type in (self.ActionType.PERMISSION_CHANGE, self.ActionType.ACCOUNT_LOCKED, 
-                              self.ActionType.TERMS_ACCEPTED, self.ActionType.CONSENT_UPDATED):
-            score += 20
-        if self.action_type == self.ActionType.PROFILE_DELETION:
-            score += 30
-        if self.user.user_type in [User.UserType.GUEST, User.UserType.PARTNER]:
-            score += 10 
-        return min(score, 100)
-
-    def _determine_risk_level(self, score: int) -> str:
-        if score >= 80:
-            return self.RiskLevel.CRITICAL
-        if score >= 50:
-            return self.RiskLevel.HIGH
-        if score >= 20:
-            return self.RiskLevel.MEDIUM
-        return self.RiskLevel.LOW
 
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.user.get_user_type_display()}) - {self.get_action_type_display()} at {self.created_at}"

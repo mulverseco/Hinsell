@@ -1,288 +1,119 @@
-"""
-Django signals for the pharmacy management system.
-Handles automatic actions triggered by model events.
-"""
-import logging
-from django.db.models.signals import post_save, pre_save, post_delete
-from django.contrib.auth.signals import user_logged_in, user_logged_out, user_login_failed
+from django.conf import settings
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
-from django.utils import timezone
-from django.contrib.auth import get_user_model
-from django.core.cache import cache
-
 from apps.authentication.models import User, UserProfile, AuditLog
-from apps.authentication.tasks import (
-    send_welcome_message_task,
-    create_audit_log_entry,
-    send_security_alert_task,
-    cleanup_expired_sessions_task
-)
+from apps.core_apps.utils import Logger
+from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+import uuid
 
-logger = logging.getLogger(__name__)
-User = get_user_model()
-
+logger = Logger(__name__)
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    """
-    Automatically create a UserProfile when a new User is created.
-    """
-    if created:
-        try:
-            UserProfile.objects.create(
-                user=instance,
-                created_by=instance
-            )
-            logger.info(f"Created profile for user: {instance.username}")
-            
-            if hasattr(instance, 'email') and instance.email:
-                send_welcome_message_task.delay(instance.id, instance.branch.id)
-                
-        except Exception as e:
-            logger.error(f"Failed to create profile for user {instance.username}: {str(e)}")
-
+    if created and instance.user_type != User.UserType.GUEST:
+        UserProfile.objects.create(user=instance)
+        logger.info(
+            f"Created profile for user: {instance.username}",
+            extra={'user_id': instance.id, 'user_type': instance.user_type}
+        )
+        from apps.authentication.services import AuditService
+        AuditService.create_audit_log(
+            branch=instance.default_branch,
+            user=instance,
+            action_type=AuditLog.ActionType.PROFILE_UPDATE,
+            username=instance.username,
+            details={'action': 'Profile created', 'user_type': instance.user_type}
+        )
 
 @receiver(post_save, sender=User)
-def user_profile_updated(sender, instance, created, **kwargs):
-    """
-    Handle user profile updates and security changes.
-    """
+def log_user_creation(sender, instance, created, **kwargs):
+    if created:
+        logger.info(
+            f"User created: {instance.username}",
+            extra={'user_id': instance.id, 'user_type': instance.user_type}
+        )
+        from apps.authentication.services import AuditService
+        AuditService.create_audit_log(
+            branch=instance.default_branch,
+            user=instance,
+            action_type=AuditLog.ActionType.SYSTEM_ACCESS,
+            username=instance.username,
+            details={'action': 'User account created', 'user_type': instance.user_type}
+        )
+
+@receiver(post_save, sender=UserProfile)
+def log_profile_update(sender, instance, created, **kwargs):
+    from apps.core_apps.services.messaging_service import MessagingService
     if not created:
-        try:
-            original = User.objects.get(pk=instance.pk)
-            
-            # Check for security-relevant changes
-            if original.is_active != instance.is_active:
-                if not instance.is_active:
-                    # User was deactivated
-                    create_audit_log_entry.delay({
-                        'user_id': instance.id,
-                        'action_type': 'account_deactivated',
-                        'details': {'deactivated_at': timezone.now().isoformat()}
-                    })
-                    
-                    # Invalidate all user sessions
-                    cache.delete_pattern(f"user_session_{instance.id}_*")
-                    
-            if (original.is_staff != instance.is_staff or 
-                original.is_superuser != instance.is_superuser):
-                # Permission changes
-                create_audit_log_entry.delay({
-                    'user_id': instance.id,
-                    'action_type': 'permission_change',
-                    'details': {
-                        'is_staff': instance.is_staff,
-                        'is_superuser': instance.is_superuser,
-                        'changed_at': timezone.now().isoformat()
-                    }
-                })
-                
-                # Send security alert
-                send_security_alert_task.delay(
-                    instance.id,
-                    'permission_change',
-                    'Your account permissions have been modified.'
-                )
-                
-        except User.DoesNotExist:
-            pass
-
-@receiver(user_logged_in)
-def user_login_success(sender, request, user, **kwargs):
-    """
-    Handle successful user login.
-    """
-    try:
-        # Reset failed login attempts
-        user.reset_failed_login()
-        
-        # Update login information
-        user.last_login_ip = getattr(request, 'client_ip', '')
-        user.last_login_device = str(getattr(request, 'user_agent_parsed', ''))
-        user.save(update_fields=['last_login_ip', 'last_login_device'])
-        
-        # Create audit log entry
-        audit_data = {
-            'user_id': user.id,
-            'username': user.username,
-            'action_type': 'login',
-            'ip_address': getattr(request, 'client_ip', ''),
-            'user_agent': request.META.get('HTTP_USER_AGENT', ''),
-            'login_status': 'success',
-            'timestamp': timezone.now().isoformat()
-        }
-        
-        create_audit_log_entry.delay(audit_data)
-        
-        # Check for suspicious login patterns
-        recent_logins = AuditLog.objects.filter(
-            user=user,
-            action_type='login',
-            created_at__gte=timezone.now() - timezone.timedelta(hours=1)
-        ).count()
-        
-        if recent_logins > 5:
-            send_security_alert_task.delay(
-                user.id,
-                'suspicious_login',
-                'Multiple login attempts detected on your account.'
+        logger.info(
+            f"Profile updated for user: {instance.user.username}",
+            extra={'user_id': instance.user.id, 'user_type': instance.user.user_type}
+        )
+        from apps.authentication.services import AuditService
+        AuditService.create_audit_log(
+            branch=instance.user.default_branch,
+            user=instance.user,
+            action_type=AuditLog.ActionType.PROFILE_UPDATE,
+            username=instance.user.username,
+            details={'action': 'Profile updated', 'user_type': instance.user.user_type}
+        )
+        if instance.can_receive_notifications('email'):
+            MessagingService(branch=instance.user.default_branch).send_notification(
+                recipient=instance.user,
+                notification_type='profile_update',
+                context_data={
+                    'full_name': instance.user.get_full_name(),
+                    'date': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    'site_name': settings.SITE_NAME,
+                    'profile_url': f"{settings.SITE_URL}/profile/edit"
+                },
+                channel='email',
+                priority='normal'
             )
-            
-        logger.info(f"User {user.username} logged in successfully from {audit_data['ip_address']}")
-        
-    except Exception as e:
-        logger.error(f"Error handling user login for {user.username}: {str(e)}")
 
-
-@receiver(user_login_failed)
-def user_login_failed_handler(sender, credentials, request, **kwargs):
-    """
-    Handle failed login attempts.
-    """
+@receiver(pre_delete, sender=User)
+def handle_profile_deletion(sender, instance, **kwargs):
     try:
-        username = credentials.get('username', '')
-        ip_address = getattr(request, 'client_ip', '')
-        
-        # Try to find the user
-        try:
-            user = User.objects.get(username=username)
-            user.increment_failed_login()
-            
-            # Create audit log entry
-            audit_data = {
-                'user_id': user.id,
-                'username': username,
-                'action_type': 'login_failed',
-                'ip_address': ip_address,
-                'user_agent': request.META.get('HTTP_USER_AGENT', ''),
-                'login_status': 'failed',
-                'timestamp': timezone.now().isoformat()
-            }
-            
-            create_audit_log_entry.delay(audit_data)
-            
-            # Send security alert if account is locked
-            if user.is_account_locked():
-                send_security_alert_task.delay(
-                    user.id,
-                    'account_locked',
-                    'Your account has been temporarily locked due to multiple failed login attempts.'
-                )
-                
-        except User.DoesNotExist:
-            # Log failed attempt for non-existent user
-            audit_data = {
-                'username': username,
-                'action_type': 'login_failed',
-                'ip_address': ip_address,
-                'user_agent': request.META.get('HTTP_USER_AGENT', ''),
-                'login_status': 'failed',
-                'details': {'reason': 'user_not_found'},
-                'timestamp': timezone.now().isoformat()
-            }
-            
-            create_audit_log_entry.delay(audit_data)
-        
-        logger.warning(f"Failed login attempt for username: {username} from IP: {ip_address}")
-        
-    except Exception as e:
-        logger.error(f"Error handling failed login: {str(e)}")
-
-
-@receiver(user_logged_out)
-def user_logout_handler(sender, request, user, **kwargs):
-    """
-    Handle user logout.
-    """
-    try:
-        if user:
-            # Create audit log entry
-            audit_data = {
-                'user_id': user.id,
-                'username': user.username,
-                'action_type': 'logout',
-                'ip_address': getattr(request, 'client_ip', ''),
-                'user_agent': request.META.get('HTTP_USER_AGENT', ''),
-                'login_status': 'success',
-                'timestamp': timezone.now().isoformat()
-            }
-            
-            create_audit_log_entry.delay(audit_data)
-            
-            # Clean up user-specific cache
-            cache.delete_pattern(f"user_session_{user.id}_*")
-            
-            logger.info(f"User {user.username} logged out")
-            
-    except Exception as e:
-        logger.error(f"Error handling user logout: {str(e)}")
-
-
-@receiver(pre_save, sender=User)
-def track_user_changes(sender, instance, **kwargs):
-    """
-    Track changes to user model for audit purposes.
-    """
-    if instance.pk:
-        try:
-            # Get the original instance
-            original = User.objects.get(pk=instance.pk)
-            
-            # Track password changes
-            if original.password != instance.password:
-                instance.password_changed_at = timezone.now()
-                
-                # Send password change notification
-                send_security_alert_task.delay(
-                    instance.id,
-                    'password_changed',
-                    'Your password has been successfully changed.'
-                )
-                
-        except User.DoesNotExist:
-            pass
-        except Exception as e:
-            logger.error(f"Error tracking user changes: {str(e)}")
-
-
-@receiver(post_delete, sender=User)
-def user_deleted_handler(sender, instance, **kwargs):
-    """
-    Handle user deletion.
-    """
-    try:
-        # Create audit log entry
-        audit_data = {
-            'username': instance.username,
-            'action_type': 'user_deleted',
-            'details': {
-                'user_id': str(instance.id),
-                'deleted_at': timezone.now().isoformat()
-            }
-        }
-        
-        create_audit_log_entry.delay(audit_data)
-        
-        # Clean up user-related cache
-        cache.delete_pattern(f"user_*_{instance.id}_*")
-        
-        logger.info(f"User {instance.username} was deleted")
-        
-    except Exception as e:
-        logger.error(f"Error handling user deletion: {str(e)}")
-
-
-# Periodic cleanup signal
-@receiver(user_logged_in)
-def trigger_cleanup_tasks(sender, **kwargs):
-    """
-    Trigger periodic cleanup tasks on user login.
-    """
-    try:
-        # Randomly trigger cleanup (1 in 100 chance)
-        import random
-        if random.randint(1, 100) == 1:
-            cleanup_expired_sessions_task.delay()
-            
-    except Exception as e:
-        logger.error(f"Error triggering cleanup tasks: {str(e)}")
+        profile = instance.profile
+        profile.email = None
+        profile.phone_number = None
+        profile.address = None
+        profile.date_of_birth = None
+        profile.gender = profile.Gender.PREFER_NOT_TO_SAY
+        profile.bio = ''
+        profile.avatar = None
+        profile.notifications = {channel: False for channel in profile.notifications}
+        profile.data_consent = {key: False for key in profile.data_consent}
+        profile.marketing_opt_in = False
+        profile.terms_accepted = False
+        profile.terms_accepted_at = None
+        profile.terms_version = None
+        profile.push_token = None
+        profile.wishlist_items.clear()
+        profile.save()
+        from apps.authentication.services import AuditService
+        AuditService.create_audit_log(
+            branch=instance.default_branch,
+            user=instance,
+            action_type=AuditLog.ActionType.PROFILE_DELETION,
+            username=f"anonymized_{uuid.uuid4().hex[:8]}",
+            details={'reason': 'User requested profile deletion', 'user_type': instance.user_type}
+        )
+        logger.info(f"Profile data deleted for user: {instance.username}", 
+                   extra={'user_type': instance.user_type})
+        if instance.profile.can_receive_notifications('email'):
+            from apps.core_apps.services.messaging_service import MessagingService
+            MessagingService(branch=instance.default_branch).send_notification(
+                recipient=instance,
+                notification_type='profile_deletion',
+                context_data={
+                    'full_name': instance.get_full_name(),
+                    'date': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    'site_name': settings.SITE_NAME
+                },
+                channel='email',
+                priority='high'
+            )
+    except UserProfile.DoesNotExist:
+        logger.warning(f"No profile found for user: {instance.username}", extra={'user_id': instance.id})

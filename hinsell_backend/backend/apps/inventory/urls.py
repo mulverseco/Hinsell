@@ -1,11 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from apps.inventory.views import ( MediaViewSet, StoreGroupViewSet, ItemGroupViewSet, ItemViewSet, ItemVariantViewSet, ItemUnitViewSet, ItemBarcodeViewSet, InventoryBalanceViewSet)
+from apps.inventory.views import ( StoreGroupViewSet, ItemGroupViewSet, ItemViewSet, ItemVariantViewSet, ItemUnitViewSet, ItemBarcodeViewSet, InventoryBalanceViewSet)
 
 app_name = 'inventory'
 
 router = DefaultRouter()
-router.register(r'media', MediaViewSet, basename='media')
 router.register(r'store-groups', StoreGroupViewSet, basename='store-group')
 router.register(r'item-groups', ItemGroupViewSet, basename='item-group')
 router.register(r'items', ItemViewSet, basename='item')

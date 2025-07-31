@@ -1,560 +1,372 @@
-"""
-Django admin configuration for the organization application.
-Provides comprehensive admin interface for managing companies, branches, licenses, and system settings.
-"""
-
 from django.contrib import admin
-from django.contrib.admin import SimpleListFilter
-from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django.utils.safestring import mark_safe
-from django.db.models import Count, Q
-from django.contrib import messages
+from apps.organization.models import LicenseType, License, Company, Branch, SystemSettings, KeyboardShortcuts
+from apps.authentication.services import AuditService
+from apps.core_apps.utils import Logger
 
-from apps.organization.models import (
-    LicenseType, License, Company, Branch, 
-    SystemSettings, SystemConfiguration, KeyboardShortcuts
-)
-
-
-class LicenseStatusFilter(SimpleListFilter):
-    """Filter licenses by status."""
-    title = _('License Status')
-    parameter_name = 'license_status'
-
-    def lookups(self, request, model_admin):
-        return License.LICENSE_STATUS_CHOICES
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(status=self.value())
-        return queryset
-
-
-class ExpiryFilter(SimpleListFilter):
-    """Filter licenses by expiry status."""
-    title = _('Expiry Status')
-    parameter_name = 'expiry_status'
-
-    def lookups(self, request, model_admin):
-        return [
-            ('expired', _('Expired')),
-            ('expiring_soon', _('Expiring Soon (30 days)')),
-            ('expiring_week', _('Expiring This Week')),
-            ('never_expires', _('Never Expires')),
-        ]
-
-    def queryset(self, request, queryset):
-        from django.utils import timezone
-        from datetime import timedelta
-        
-        now = timezone.now()
-        
-        if self.value() == 'expired':
-            return queryset.filter(expiry_date__lt=now)
-        elif self.value() == 'expiring_soon':
-            return queryset.filter(
-                expiry_date__gte=now,
-                expiry_date__lte=now + timedelta(days=30)
-            )
-        elif self.value() == 'expiring_week':
-            return queryset.filter(
-                expiry_date__gte=now,
-                expiry_date__lte=now + timedelta(days=7)
-            )
-        elif self.value() == 'never_expires':
-            return queryset.filter(expiry_date__isnull=True)
-        return queryset
-
+logger = Logger(__name__)
 
 @admin.register(LicenseType)
 class LicenseTypeAdmin(admin.ModelAdmin):
-    """Admin interface for License Types."""
-    
-    list_display = [
-        'name', 'category', 'max_users', 'max_branches', 
-        'monthly_price', 'yearly_price', 'is_available', 'created_at'
-    ]
-    list_filter = ['category', 'is_available', 'allow_multi_currency', 'allow_api_access']
-    search_fields = ['name', 'description']
-    readonly_fields = ['id', 'created_at', 'updated_at']
-    
+    list_display = ['code', 'name', 'category', 'max_users', 'max_branches', 'monthly_price', 'is_available', 'is_active', 'is_deleted']
+    list_filter = ['category', 'is_available', 'support_level', 'is_active', 'is_deleted']
+    search_fields = ['code', 'name', 'description']
+    list_editable = ['is_available', 'is_active']
+    ordering = ['category', 'name']
     fieldsets = (
-        (_('Basic Information'), {
-            'fields': ('name', 'category', 'description', 'is_available')
+        (None, {
+            'fields': ('code', 'name', 'category', 'description')
         }),
-        (_('Usage Limits'), {
-            'fields': (
-                'max_users', 'max_branches', 
-                'max_transactions_per_month', 'max_storage_gb'
-            )
+        (_('Limits'), {
+            'fields': ('max_users', 'max_branches', 'max_transactions_per_month', 'max_storage_gb')
         }),
         (_('Features'), {
             'fields': (
-                'allow_multi_currency', 'allow_advanced_reporting',
-                'allow_api_access', 'allow_integrations',
-                'allow_custom_fields', 'allow_workflow_automation'
+                'allow_multi_currency', 'allow_advanced_reporting', 'allow_api_access',
+                'allow_integrations', 'allow_custom_fields', 'allow_workflow_automation'
             )
         }),
-        (_('Support & Pricing'), {
-            'fields': ('support_level', 'monthly_price', 'yearly_price')
+        (_('Pricing & Support'), {
+            'fields': ('monthly_price', 'yearly_price', 'support_level')
         }),
-        (_('Metadata'), {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        })
+        (_('Status'), {
+            'fields': ('is_active', 'is_deleted', 'deleted_at')
+        }),
+        (_('Audit'), {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',),
+        }),
     )
-    
-    def get_queryset(self, request):
-        return super().get_queryset(request).annotate(
-            license_count=Count('licenses')
-        )
+    readonly_fields = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
+    actions = ['soft_delete_selected', 'restore_selected']
 
+    def soft_delete_selected(self, request, queryset):
+        for obj in queryset:
+            obj.soft_delete(user=request.user)
+        self.message_user(request, _("Selected license types soft deleted."))
+    soft_delete_selected.short_description = _("Soft delete selected license types")
+
+    def restore_selected(self, request, queryset):
+        for obj in queryset:
+            obj.restore(user=request.user)
+        self.message_user(request, _("Selected license types restored."))
+    restore_selected.short_description = _("Restore selected license types")
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+        AuditService.create_audit_log(
+            branch=None,
+            user=request.user,
+            action_type='license_type_updated' if change else 'license_type_created',
+            username=request.user.username,
+            details={'license_type_code': obj.code, 'name': obj.name}
+        )
+        logger.info(f"{'Updated' if change else 'Created'} license type: {obj.code}", extra={'user_id': request.user.id})
 
 @admin.register(License)
 class LicenseAdmin(admin.ModelAdmin):
-    """Admin interface for Licenses."""
-    
-    list_display = [
-        'company', 'license_type', 'status_badge', 'expiry_info',
-        'current_users', 'current_branches', 'violation_count', 'last_validated'
-    ]
-    list_filter = [
-        LicenseStatusFilter, ExpiryFilter, 'license_type__category',
-        'license_type', 'violation_count'
-    ]
-    search_fields = [
-        'company__company_name', 'license_key', 'licensee_name', 'licensee_email'
-    ]
-    readonly_fields = [
-        'id', 'license_hash', 'issued_date', 'last_validated',
-        'created_at', 'updated_at', 'usage_summary'
-    ]
-    
+    list_display = ['license_code', 'company', 'license_type', 'status', 'issued_date', 'expiry_date', 'violation_count', 'is_active', 'is_deleted']
+    list_filter = ['status', 'license_type__category', 'is_active', 'is_deleted']
+    search_fields = ['license_code', 'license_key', 'licensee_name', 'licensee_email']
+    list_editable = ['status']
+    ordering = ['-issued_date']
     fieldsets = (
-        (_('License Information'), {
-            'fields': (
-                'company', 'license_type', 'license_key', 'license_hash',
-                'licensee_name', 'licensee_email'
-            )
+        (None, {
+            'fields': ('license_code', 'license_key', 'license_type', 'company', 'status')
         }),
-        (_('Status & Validity'), {
-            'fields': (
-                'status', 'issued_date', 'activation_date', 
-                'expiry_date', 'last_validated'
-            )
+        (_('Details'), {
+            'fields': ('licensee_name', 'licensee_email', 'notes')
         }),
-        (_('Usage Statistics'), {
-            'fields': (
-                'current_users', 'current_branches', 'monthly_transactions',
-                'storage_used_gb', 'usage_summary'
-            )
+        (_('Usage'), {
+            'fields': ('current_users', 'current_branches', 'monthly_transactions', 'storage_used_gb')
         }),
-        (_('Security & Violations'), {
-            'fields': (
-                'hardware_fingerprint', 'violation_count', 
-                'last_violation_date'
-            )
+        (_('Validation'), {
+            'fields': ('hardware_fingerprint', 'license_data', 'violation_count', 'last_violation_date')
         }),
-        (_('Additional Data'), {
-            'fields': ('license_data', 'notes'),
-            'classes': ('collapse',)
+        (_('Dates'), {
+            'fields': ('issued_date', 'activation_date', 'expiry_date', 'last_validated')
         }),
-        (_('Metadata'), {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        })
+        (_('Status'), {
+            'fields': ('is_active', 'is_deleted', 'deleted_at')
+        }),
+        (_('Audit'), {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',),
+        }),
     )
-    
-    actions = ['activate_licenses', 'suspend_licenses', 'validate_licenses']
-    
-    def status_badge(self, obj):
-        """Display status as colored badge."""
-        colors = {
-            'active': 'green',
-            'trial': 'blue',
-            'pending': 'orange',
-            'expired': 'red',
-            'suspended': 'red',
-            'revoked': 'darkred'
-        }
-        color = colors.get(obj.status, 'gray')
-        return format_html(
-            '<span style="color: {}; font-weight: bold;">{}</span>',
-            color, obj.get_status_display()
-        )
-    status_badge.short_description = _('Status')
-    
-    def expiry_info(self, obj):
-        """Display expiry information."""
-        if not obj.expiry_date:
-            return format_html('<span style="color: green;">Never expires</span>')
-        
-        days_left = obj.days_until_expiry()
-        if days_left is None:
-            return '-'
-        
-        if days_left <= 0:
-            return format_html('<span style="color: red;">Expired</span>')
-        elif days_left <= 7:
-            return format_html('<span style="color: red;">{} days left</span>', days_left)
-        elif days_left <= 30:
-            return format_html('<span style="color: orange;">{} days left</span>', days_left)
-        else:
-            return format_html('<span style="color: green;">{} days left</span>', days_left)
-    expiry_info.short_description = _('Expiry')
-    
-    def usage_summary(self, obj):
-        """Display usage summary."""
-        violations = obj.validate_usage_limits()
-        summary = []
-        
-        if obj.license_type.max_users:
-            status = "⚠️" if violations.get('users', False) else "✅"
-            summary.append(f"{status} Users: {obj.current_users}/{obj.license_type.max_users}")
-        
-        if obj.license_type.max_branches:
-            status = "⚠️" if violations.get('branches', False) else "✅"
-            summary.append(f"{status} Branches: {obj.current_branches}/{obj.license_type.max_branches}")
-        
-        return mark_safe('<br>'.join(summary))
-    usage_summary.short_description = _('Usage Summary')
-    
-    def activate_licenses(self, request, queryset):
-        """Activate selected licenses."""
-        activated = 0
-        for license in queryset:
-            if license.activate():
-                activated += 1
-        
-        self.message_user(
-            request,
-            f"Successfully activated {activated} license(s).",
-            messages.SUCCESS
-        )
-    activate_licenses.short_description = _("Activate selected licenses")
-    
-    def suspend_licenses(self, request, queryset):
-        """Suspend selected licenses."""
-        suspended = 0
-        for license in queryset:
-            if license.suspend("Suspended via admin action"):
-                suspended += 1
-        
-        self.message_user(
-            request,
-            f"Successfully suspended {suspended} license(s).",
-            messages.WARNING
-        )
-    suspend_licenses.short_description = _("Suspend selected licenses")
-    
-    def validate_licenses(self, request, queryset):
-        """Validate selected licenses."""
-        for license in queryset:
-            license.validate_and_update()
-        
-        self.message_user(
-            request,
-            f"Validated {queryset.count()} license(s).",
-            messages.INFO
-        )
-    validate_licenses.short_description = _("Validate selected licenses")
+    readonly_fields = ['id', 'license_hash', 'issued_date', 'last_validated', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
+    actions = ['soft_delete_selected', 'restore_selected']
 
+    def soft_delete_selected(self, request, queryset):
+        for obj in queryset:
+            obj.soft_delete(user=request.user)
+        self.message_user(request, _("Selected licenses soft deleted."))
+    soft_delete_selected.short_description = _("Soft delete selected licenses")
+
+    def restore_selected(self, request, queryset):
+        for obj in queryset:
+            obj.restore(user=request.user)
+        self.message_user(request, _("Selected licenses restored."))
+    restore_selected.short_description = _("Restore selected licenses")
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+            obj.license_key = obj.generate_license_key()
+            obj.license_hash = obj.generate_license_hash(obj.license_key)
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+        obj.validate_and_update()
+        AuditService.create_audit_log(
+            branch=obj.company.branches.filter(is_primary=True).first(),
+            user=request.user,
+            action_type='license_updated' if change else 'license_created',
+            username=request.user.username,
+            details={'license_code': obj.license_code, 'company': obj.company.company_name}
+        )
+        logger.info(f"{'Updated' if change else 'Created'} license: {obj.license_code}", extra={'user_id': request.user.id})
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    """Admin interface for Companies."""
-    
-    list_display = [
-        'company_name', 'registration_number', 'email', 
-        'license_status', 'branch_count', 'established_date', 'is_active'
-    ]
-    list_filter = ['industry', 'is_active', 'established_date']
-    search_fields = [
-        'company_name', 'company_name_english', 'registration_number', 
-        'tax_id', 'email'
-    ]
-    readonly_fields = ['id', 'created_at', 'updated_at', 'license_info']
-    
+    list_display = ['code', 'company_name', 'email', 'phone_number', 'is_authorized', 'is_active', 'is_deleted']
+    list_filter = ['industry', 'is_active', 'is_deleted']
+    search_fields = ['code', 'company_name', 'registration_number', 'tax_id', 'email']
+    ordering = ['company_name']
     fieldsets = (
-        (_('Company Information'), {
-            'fields': (
-                'company_name', 'company_name_english', 
-                'registration_number', 'tax_id'
-            )
+        (None, {
+            'fields': ('code', 'company_name', 'company_name_english')
         }),
-        (_('Contact Information'), {
-            'fields': ('email', 'phone_number', 'address', 'website')
+        (_('Details'), {
+            'fields': ('registration_number', 'tax_id', 'email', 'phone_number', 'address', 'website', 'industry', 'established_date', 'description')
         }),
-        (_('Business Information'), {
-            'fields': ('industry', 'established_date', 'description')
-        }),
-        (_('Branding'), {
+        (_('Media'), {
             'fields': ('logo',)
         }),
-        (_('License Information'), {
-            'fields': ('license_info',),
-            'classes': ('collapse',)
-        }),
         (_('Status'), {
-            'fields': ('is_active',)
+            'fields': ('is_active', 'is_deleted', 'deleted_at')
         }),
-        (_('Metadata'), {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        })
+        (_('Audit'), {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',),
+        }),
     )
-    
-    def license_status(self, obj):
-        """Display license status."""
-        try:
-            license = obj.license
-            return self.get_license_badge(license.status)
-        except License.DoesNotExist:
-            return format_html('<span style="color: red;">No License</span>')
-    license_status.short_description = _('License Status')
-    
-    def license_info(self, obj):
-        """Display detailed license information."""
-        try:
-            license = obj.license
-            info = [
-                f"Type: {license.license_type.name}",
-                f"Status: {license.get_status_display()}",
-                f"Key: {license.license_key}",
-            ]
-            if license.expiry_date:
-                info.append(f"Expires: {license.expiry_date.strftime('%Y-%m-%d')}")
-            
-            return mark_safe('<br>'.join(info))
-        except License.DoesNotExist:
-            return "No license assigned"
-    license_info.short_description = _('License Details')
-    
-    def branch_count(self, obj):
-        """Display number of branches."""
-        return obj.branches.filter(is_active=True).count()
-    branch_count.short_description = _('Active Branches')
-    
-    def get_license_badge(self, status):
-        """Get colored badge for license status."""
-        colors = {
-            'active': 'green',
-            'trial': 'blue',
-            'pending': 'orange',
-            'expired': 'red',
-            'suspended': 'red',
-            'revoked': 'darkred'
-        }
-        color = colors.get(status, 'gray')
-        return format_html(
-            '<span style="color: {}; font-weight: bold;">{}</span>',
-            color, status.title()
-        )
-    
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related('license').annotate(
-            branch_count=Count('branches', filter=Q(branches__is_active=True))
-        )
+    readonly_fields = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
+    actions = ['soft_delete_selected', 'restore_selected']
 
+    def soft_delete_selected(self, request, queryset):
+        for obj in queryset:
+            obj.soft_delete(user=request.user)
+        self.message_user(request, _("Selected companies soft deleted."))
+    soft_delete_selected.short_description = _("Soft delete selected companies")
+
+    def restore_selected(self, request, queryset):
+        for obj in queryset:
+            obj.restore(user=request.user)
+        self.message_user(request, _("Selected companies restored."))
+    restore_selected.short_description = _("Restore selected companies")
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+        AuditService.create_audit_log(
+            branch=None,
+            user=request.user,
+            action_type='company_updated' if change else 'company_created',
+            username=request.user.username,
+            details={'company_code': obj.code, 'name': obj.company_name}
+        )
+        logger.info(f"{'Updated' if change else 'Created'} company: {obj.company_name}", extra={'user_id': request.user.id})
 
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
-    """Admin interface for Branches."""
-    
-    list_display = [
-        'branch_name', 'company', 'branch_code', 'city', 'country',
-        'is_primary', 'is_headquarters', 'manager', 'is_active'
-    ]
-    list_filter = [
-        'company', 'is_primary', 'is_headquarters', 'is_active',
-        'country', 'city', 'use_multi_currency'
-    ]
-    search_fields = [
-        'branch_name', 'branch_name_english', 'branch_code',
-        'company__company_name', 'city', 'address'
-    ]
-    readonly_fields = ['id', 'created_at', 'updated_at']
-    
+    list_display = ['branch_code', 'branch_name', 'company', 'is_primary', 'is_headquarters', 'email', 'is_active', 'is_deleted']
+    list_filter = ['company', 'is_primary', 'is_headquarters', 'use_multi_currency', 'is_active', 'is_deleted']
+    search_fields = ['branch_code', 'branch_name', 'email', 'phone_number']
+    list_editable = ['is_primary', 'is_headquarters']
+    ordering = ['company', 'branch_name']
     fieldsets = (
-        (_('Basic Information'), {
-            'fields': (
-                'company', 'branch_code', 'branch_name', 'branch_name_english',
-                'is_primary', 'is_headquarters', 'manager'
-            )
-        }),
-        (_('Contact Information'), {
-            'fields': (
-                'email', 'phone_number', 'fax_number', 'address',
-                'city', 'state_province', 'country', 'postal_code'
-            )
-        }),
-        (_('Business Settings'), {
-            'fields': (
-                'fiscal_year_start_month', 'fiscal_year_end_month',
-                'current_fiscal_year', 'default_currency', 'timezone'
-            )
-        }),
-        (_('Feature Settings'), {
-            'fields': (
-                'use_cost_center', 'use_sales_tax', 'use_vat_tax',
-                'use_carry_fee', 'use_expire_date', 'use_batch_no',
-                'use_barcode', 'use_multi_currency'
-            )
+        (None, {
+            'fields': ('company', 'branch_code', 'branch_name', 'branch_name_english')
         }),
         (_('Status'), {
-            'fields': ('is_active',)
+            'fields': ('is_primary', 'is_headquarters', 'is_active', 'is_deleted', 'deleted_at')
         }),
-        (_('Metadata'), {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        })
+        (_('Contact'), {
+            'fields': ('email', 'phone_number', 'fax_number', 'address', 'city', 'state_province', 'country', 'postal_code')
+        }),
+        (_('Settings'), {
+            'fields': (
+                'fiscal_year_start_month', 'fiscal_year_end_month', 'current_fiscal_year',
+                'use_cost_center', 'use_sales_tax', 'use_vat_tax', 'use_carry_fee',
+                'use_expire_date', 'use_batch_no', 'use_barcode', 'use_multi_currency'
+            )
+        }),
+        (_('Management'), {
+            'fields': ('default_currency', 'manager', 'timezone')
+        }),
+        (_('Audit'), {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',),
+        }),
     )
-    
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            'company', 'manager', 'default_currency'
-        )
+    readonly_fields = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
+    actions = ['soft_delete_selected', 'restore_selected']
 
+    def soft_delete_selected(self, request, queryset):
+        for obj in queryset:
+            obj.soft_delete(user=request.user)
+        self.message_user(request, _("Selected branches soft deleted."))
+    soft_delete_selected.short_description = _("Soft delete selected branches")
+
+    def restore_selected(self, request, queryset):
+        for obj in queryset:
+            obj.restore(user=request.user)
+        self.message_user(request, _("Selected branches restored."))
+    restore_selected.short_description = _("Restore selected branches")
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+        AuditService.create_audit_log(
+            branch=obj,
+            user=request.user,
+            action_type='branch_updated' if change else 'branch_created',
+            username=request.user.username,
+            details={'branch_code': obj.branch_code, 'name': obj.branch_name}
+        )
+        logger.info(f"{'Updated' if change else 'Created'} branch: {obj.branch_name}", extra={'user_id': request.user.id})
 
 @admin.register(SystemSettings)
 class SystemSettingsAdmin(admin.ModelAdmin):
-    """Admin interface for System Settings."""
-    
-    list_display = [
-        'branch', 'session_timeout', 'max_login_attempts',
-        'enable_email_notifications', 'enable_sms_notifications',
-        'require_two_factor_auth'
-    ]
-    list_filter = [
-        'enable_email_notifications', 'enable_sms_notifications',
-        'enable_whatsapp_notifications', 'require_two_factor_auth',
-        'show_warnings', 'check_sales_price'
-    ]
-    search_fields = ['branch__branch_name', 'branch__company__company_name']
-    readonly_fields = ['id', 'created_at', 'updated_at']
-    
+    list_display = ['branch', 'connection_timeout', 'session_timeout', 'max_login_attempts', 'require_two_factor_auth', 'is_active', 'is_deleted']
+    list_filter = ['branch__company', 'require_two_factor_auth', 'is_active', 'is_deleted']
+    search_fields = ['branch__branch_name', 'branch__branch_code']
+    ordering = ['branch']
     fieldsets = (
-        (_('Branch'), {
+        (None, {
             'fields': ('branch',)
         }),
-        (_('Database Settings'), {
-            'fields': (
-                'database_server', 'database_name',
-                'database_username', 'database_password'
-            ),
-            'classes': ('collapse',)
+        (_('Database'), {
+            'fields': ('database_server', 'database_name', 'database_username', 'database_password')
         }),
-        (_('System Settings'), {
+        (_('Security'), {
             'fields': (
-                'connection_timeout', 'session_timeout',
-                'max_login_attempts', 'account_lockout_duration'
+                'connection_timeout', 'session_timeout', 'max_login_attempts',
+                'account_lockout_duration', 'require_two_factor_auth',
+                'password_expiry_days', 'minimum_password_length'
             )
         }),
-        (_('Display Settings'), {
-            'fields': (
-                'show_warnings', 'check_sales_price', 'enable_photo_storage'
-            )
+        (_('Features'), {
+            'fields': ('show_warnings', 'check_sales_price', 'enable_photo_storage')
         }),
-        (_('File Paths'), {
-            'fields': ('reports_path', 'backup_path'),
-            'classes': ('collapse',)
+        (_('Paths'), {
+            'fields': ('reports_path', 'backup_path')
         }),
-        (_('Notification Settings'), {
-            'fields': (
-                'enable_email_notifications', 'enable_sms_notifications',
-                'enable_whatsapp_notifications', 'enable_in_app_notifications',
-                'enable_push_notifications'
-            )
+        (_('Notifications'), {
+            'fields': ('notifications',)
         }),
-        (_('Security Settings'), {
-            'fields': (
-                'require_two_factor_auth', 'password_expiry_days',
-                'minimum_password_length'
-            )
+        (_('Status'), {
+            'fields': ('is_active', 'is_deleted', 'deleted_at')
         }),
-        (_('Metadata'), {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        })
+        (_('Audit'), {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',),
+        }),
     )
+    readonly_fields = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
+    actions = ['soft_delete_selected', 'restore_selected']
 
+    def soft_delete_selected(self, request, queryset):
+        for obj in queryset:
+            obj.soft_delete(user=request.user)
+        self.message_user(request, _("Selected system settings soft deleted."))
+    soft_delete_selected.short_description = _("Soft delete selected system settings")
 
-@admin.register(SystemConfiguration)
-class SystemConfigurationAdmin(admin.ModelAdmin):
-    """Admin interface for System Configuration."""
-    
-    list_display = [
-        'config_key', 'branch', 'config_type', 'is_system', 'updated_at'
-    ]
-    list_filter = ['config_type', 'is_system', 'branch']
-    search_fields = ['config_key', 'description', 'branch__branch_name']
-    readonly_fields = ['id', 'created_at', 'updated_at']
-    
-    fieldsets = (
-        (_('Configuration'), {
-            'fields': ('branch', 'config_key', 'config_value', 'config_type')
-        }),
-        (_('Details'), {
-            'fields': ('description', 'is_system')
-        }),
-        (_('Metadata'), {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        })
-    )
+    def restore_selected(self, request, queryset):
+        for obj in queryset:
+            obj.restore(user=request.user)
+        self.message_user(request, _("Selected system settings restored."))
+    restore_selected.short_description = _("Restore selected system settings")
 
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+        AuditService.create_audit_log(
+            branch=obj.branch,
+            user=request.user,
+            action_type='system_settings_updated' if change else 'system_settings_created',
+            username=request.user.username,
+            details={'branch': obj.branch.branch_name}
+        )
+        logger.info(f"{'Updated' if change else 'Created'} system settings for branch: {obj.branch.branch_name}", 
+                    extra={'user_id': request.user.id})
 
 @admin.register(KeyboardShortcuts)
 class KeyboardShortcutsAdmin(admin.ModelAdmin):
-    """Admin interface for Keyboard Shortcuts."""
-    
-    list_display = [
-        'display_name', 'key_combination', 'category', 'branch',
-        'is_enabled', 'is_global', 'priority'
-    ]
-    list_filter = [
-        'category', 'is_enabled', 'is_global', 'is_system_default',
-        'is_customizable', 'branch'
-    ]
-    search_fields = [
-        'action_name', 'display_name', 'key_combination',
-        'description', 'branch__branch_name'
-    ]
-    readonly_fields = ['id', 'created_at', 'updated_at']
-    
+    list_display = ['code', 'action_name', 'display_name', 'key_combination', 'category', 'is_enabled', 'is_active', 'is_deleted']
+    list_filter = ['category', 'is_enabled', 'is_global', 'is_active', 'is_deleted']
+    search_fields = ['code', 'action_name', 'display_name', 'key_combination']
+    list_editable = ['is_enabled']
+    ordering = ['category', 'sort_order']
     fieldsets = (
-        (_('Basic Information'), {
-            'fields': (
-                'branch', 'action_name', 'display_name', 'description', 'category'
-            )
+        (None, {
+            'fields': ('branch', 'code', 'action_name', 'display_name', 'category')
         }),
-        (_('Keyboard Combination'), {
-            'fields': (
-                'key_combination', 'primary_key', 'modifiers',
-                'alternative_combination'
-            )
+        (_('Shortcut Details'), {
+            'fields': ('key_combination', 'primary_key', 'modifiers', 'alternative_combination')
         }),
         (_('Configuration'), {
-            'fields': (
-                'is_enabled', 'is_system_default', 'is_customizable',
-                'is_global', 'priority', 'sort_order'
-            )
+            'fields': ('is_enabled', 'is_system_default', 'is_customizable', 'is_global')
         }),
-        (_('Context & Scope'), {
-            'fields': ('context', 'page_url_pattern'),
-            'classes': ('collapse',)
+        (_('Context'), {
+            'fields': ('context', 'page_url_pattern', 'priority', 'sort_order', 'javascript_function')
         }),
-        (_('JavaScript Function'), {
-            'fields': ('javascript_function',),
-            'classes': ('collapse',)
+        (_('Description'), {
+            'fields': ('description',)
         }),
-        (_('Metadata'), {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        })
+        (_('Status'), {
+            'fields': ('is_active', 'is_deleted', 'deleted_at')
+        }),
+        (_('Audit'), {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',),
+        }),
     )
-    
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related('branch')
+    readonly_fields = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
+    actions = ['soft_delete_selected', 'restore_selected']
 
+    def soft_delete_selected(self, request, queryset):
+        for obj in queryset:
+            obj.soft_delete(user=request.user)
+        self.message_user(request, _("Selected keyboard shortcuts soft deleted."))
+    soft_delete_selected.short_description = _("Soft delete selected keyboard shortcuts")
+
+    def restore_selected(self, request, queryset):
+        for obj in queryset:
+            obj.restore(user=request.user)
+        self.message_user(request, _("Selected keyboard shortcuts restored."))
+    restore_selected.short_description = _("Restore selected keyboard shortcuts")
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+        AuditService.create_audit_log(
+            branch=obj.branch,
+            user=request.user,
+            action_type='keyboard_shortcut_updated' if change else 'keyboard_shortcut_created',
+            username=request.user.username,
+            details={'action_name': obj.action_name, 'key_combination': obj.key_combination}
+        )
+        logger.info(f"{'Updated' if change else 'Created'} keyboard shortcut: {obj.action_name}", 
+                    extra={'user_id': request.user.id})

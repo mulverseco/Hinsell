@@ -11,11 +11,9 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from apps.core_apps.general import AuditableModel
 from apps.core_apps.encryption import EncryptedField
-from apps.inventory.models import Media
+from apps.shared.models import Media
 from apps.authentication.models import User
-from apps.accounting.models import Currency
-from hinsell_backend.backend.apps.core_apps.utils import Logger, generate_unique_code
-from apps.core_apps.services.messaging_service import MessagingService
+from apps.core_apps.utils import Logger, generate_unique_code
 
 logger = Logger(__name__)
 
@@ -372,6 +370,7 @@ class License(AuditableModel):
         logger.warning(f"License violation for company {self.company.company_name}: {violation_type}")
 
     def validate_and_update(self) -> Dict[str, any]:
+        from apps.core_apps.services.messaging_service import MessagingService
         self.last_validated = timezone.now()
         result = {
             'valid': True,
@@ -394,7 +393,7 @@ class License(AuditableModel):
             try:
                 primary_branch = self.company.branches.filter(is_primary=True).first()
                 if primary_branch:
-                    service = MessagingService(primary_branch)
+                    service = MessagingService(branch=primary_branch)
                     service.send_notification(
                         recipient=None,
                         notification_type='system_maintenance',
@@ -662,7 +661,7 @@ class Branch(AuditableModel):
         verbose_name=_("Postal Code")
     )
     default_currency = models.ForeignKey(
-        Currency,
+        "accounting.Currency",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

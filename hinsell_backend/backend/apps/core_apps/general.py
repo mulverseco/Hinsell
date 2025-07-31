@@ -14,7 +14,7 @@ from typing import Dict, List
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework import viewsets
-from hinsell_backend.backend.apps.core_apps.utils import Logger
+from apps.core_apps.utils import Logger
 
 
 class Pagination(PageNumberPagination):

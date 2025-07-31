@@ -6,12 +6,11 @@ import logging
 import requests
 import uuid
 from datetime import timedelta
-from typing import Dict, List, Optional, Any
-
+from typing import Dict, Any
 from django.conf import settings
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
-from django.db import transaction
+from django.db.models import F
 
 from apps.webhooks.models import (
     WebhookEvent, WebhookEndpoint, WebhookDelivery, 
@@ -335,7 +334,7 @@ class WebhookDeliveryService:
         failed_deliveries = WebhookDelivery.objects.filter(
             status=WebhookDelivery.Status.FAILED,
             next_retry_at__lte=timezone.now(),
-            attempt_number__lt=models.F('max_attempts')
+            attempt_number__lt=F('max_attempts')
         ).select_related('endpoint')[:50]  # Process in smaller batches for retries
         
         retry_count = 0

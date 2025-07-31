@@ -8,18 +8,9 @@ import { searchClient as algolia } from "./client"
 import { FilterBuilder } from "./filter-builder"
 import { HITS_PER_PAGE } from "constants/index"
 
-import {
-  getDemoCategories,
-  getDemoProductReviews,
-  getDemoProducts,
-  getDemoSingleCategory,
-  getDemoSingleProduct,
-  isDemoMode,
-} from "utils/demo-utils"
 import { notifyOptIn } from "utils/opt-in"
 
 import type { CommerceProduct } from "types"
-import type { PlatformCollection } from "lib/shopify/types"
 import type { Review } from "lib/reviews/types"
 import type { SearchSingleIndexProps } from "algoliasearch"
 
@@ -101,7 +92,6 @@ async function checkAlgoliaRateLimit(key: RateLimitKey) {
 
 const getProductCached = unstable_cache(
   async (handle: string) => {
-    if (isDemoMode()) return getDemoSingleProduct(handle)
 
     const { hits } = await algolia.search<CommerceProduct>({
       indexName: env.ALGOLIA_PRODUCTS_INDEX,
@@ -128,8 +118,7 @@ const getProductsCached = unstable_cache(
       hitsPerPage: 50,
     }
   ) => {
-    if (isDemoMode()) return getDemoProducts()
-
+ 
     return await algolia.search<PlatformCollection>({
       indexName: env.ALGOLIA_PRODUCTS_INDEX,
       searchParams: options,
@@ -150,7 +139,6 @@ export const getProducts = async (
 
 const searchProductsCached = unstable_cache(
   async (query: string, options: SearchSingleIndexProps["searchParams"] = {}) => {
-    if (isDemoMode()) return getDemoProducts()
 
     return await algolia.search<CommerceProduct>({
       indexName: env.ALGOLIA_PRODUCTS_INDEX,
@@ -175,7 +163,6 @@ const getCategoriesCached = unstable_cache(
       hitsPerPage: 50,
     }
   ) => {
-    if (isDemoMode()) return getDemoCategories()
 
     return await algolia.search<PlatformCollection>({
       indexName: env.ALGOLIA_CATEGORIES_INDEX,
@@ -197,7 +184,6 @@ export const getCategories = async (
 
 const getCollectionCached = unstable_cache(
   async (slug: string) => {
-    if (isDemoMode()) return getDemoSingleCategory(slug)
 
     const results = await algolia.search<PlatformCollection>({
       indexName: env.ALGOLIA_CATEGORIES_INDEX,
@@ -221,7 +207,6 @@ export const getCollection = async (slug: string) => {
 
 const getProductReviewsCached = unstable_cache(
   async (handle: string, { page = 0, limit = 10 } = { page: 0, limit: 10 }) => {
-    if (isDemoMode()) return getDemoProductReviews()
 
     if (!env.ALGOLIA_REVIEWS_INDEX) {
       notifyOptIn({ feature: "reviews", source: "rate-limited.ts" })
@@ -273,8 +258,6 @@ const getSimilarProductsCached = unstable_cache(
     const limit = 8
     if (!collection) return []
 
-    if (isDemoMode()) return getDemoProducts().hits.slice(0, limit)
-
     const { results } = await algolia.getRecommendations({
       requests: [
         {
@@ -318,7 +301,6 @@ const getFilteredProductsCached = unstable_cache(
     collectionHandle?: string,
     hasVendorFilter: boolean = false
   ) => {
-    if (isDemoMode()) return getDemoProducts()
 
     const indexName = algolia.mapIndexToSort(env.ALGOLIA_PRODUCTS_INDEX, sortBy as any)
 
@@ -437,7 +419,6 @@ export const getFilteredProducts = async (
 
 const getFacetValuesCached = unstable_cache(
   async ({ indexName, facetName }: { indexName: string; facetName: string }) => {
-    if (isDemoMode()) return []
 
     const res = await algolia.getFacetValues({
       indexName,

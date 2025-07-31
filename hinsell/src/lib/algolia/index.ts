@@ -2,20 +2,10 @@ import { unstable_cache } from "next/cache"
 
 import { env } from "env.mjs"
 
-import {
-  getDemoCategories,
-  getDemoProductReviews,
-  getDemoProducts,
-  getDemoSingleCategory,
-  getDemoSingleProduct,
-  isDemoMode,
-} from "utils/demo-utils"
 import { notifyOptIn } from "utils/opt-in"
 
 import { FilterBuilder } from "lib/algolia/filter-builder"
 import type { Review } from "lib/reviews/types"
-
-import type { PlatformCollection } from "lib/shopify/types"
 
 import { HITS_PER_PAGE } from "constants/index"
 
@@ -26,8 +16,6 @@ import type { CommerceProduct } from "types"
 
 export const getProduct = unstable_cache(
   async (handle: string) => {
-    if (isDemoMode()) return getDemoSingleProduct(handle)
-
     const { hits } = await algolia.search<CommerceProduct>({
       indexName: env.ALGOLIA_PRODUCTS_INDEX,
       searchParams: {
@@ -48,7 +36,7 @@ export const getProducts = unstable_cache(
       hitsPerPage: 50,
     }
   ) => {
-    if (isDemoMode()) return getDemoProducts()
+  
 
     return await algolia.search<PlatformCollection>({
       indexName: env.ALGOLIA_PRODUCTS_INDEX,
@@ -61,7 +49,6 @@ export const getProducts = unstable_cache(
 
 export const getFeaturedProducts = unstable_cache(
   async () => {
-    if (isDemoMode()) return getDemoProducts().hits.slice(0, 10)
 
     const { hits } = await algolia.search<CommerceProduct>({
       indexName: env.ALGOLIA_PRODUCTS_INDEX,
@@ -89,7 +76,6 @@ export const getFeaturedProducts = unstable_cache(
 )
 
 export const getAllProducts = async (options?: Omit<BrowseProps["browseParams"], "hitsPerPage">) => {
-  if (isDemoMode()) return getDemoProducts()
 
   return await algolia.getAllResults<CommerceProduct>({
     indexName: env.ALGOLIA_PRODUCTS_INDEX,
@@ -103,8 +89,6 @@ export const getSimilarProducts = unstable_cache(
   async (collection: string | undefined, objectID: string) => {
     const limit = 8
     if (!collection) return []
-
-    if (isDemoMode()) return getDemoProducts().hits.slice(0, limit)
 
     const { results } = await algolia.getRecommendations({
       requests: [
@@ -137,7 +121,6 @@ export const getSimilarProducts = unstable_cache(
 
 export const getNewestProducts = unstable_cache(
   async () => {
-    if (isDemoMode()) return getDemoProducts().hits.slice(0, 8)
     const { hits } = await algolia.search<CommerceProduct>({
       indexName: algolia.mapIndexToSort(env.ALGOLIA_PRODUCTS_INDEX, "updatedAtTimestamp:asc"),
       searchParams: {
@@ -153,8 +136,7 @@ export const getNewestProducts = unstable_cache(
 
 export const getCollection = unstable_cache(
   async (slug: string) => {
-    if (isDemoMode()) return getDemoSingleCategory(slug)
-
+  
     const results = await algolia.search<PlatformCollection>({
       indexName: env.ALGOLIA_CATEGORIES_INDEX,
       searchParams: {
@@ -173,8 +155,7 @@ export const getCollection = unstable_cache(
 
 export const getProductReviews = unstable_cache(
   async (handle: string, { page = 0, limit = 10 } = { page: 0, limit: 10 }) => {
-    if (isDemoMode()) return getDemoProductReviews()
-
+ 
     if (!env.ALGOLIA_REVIEWS_INDEX) {
       notifyOptIn({ feature: "reviews", source: "product.actions.ts" })
       return { reviews: [], total: 0 }
@@ -216,7 +197,6 @@ export const getProductReviews = unstable_cache(
 )
 
 export const getAllReviews = async (options: Omit<BrowseProps["browseParams"], "hitsPerPage"> = {}) => {
-  if (isDemoMode()) return getDemoProductReviews()
 
   if (!env.ALGOLIA_REVIEWS_INDEX) {
     notifyOptIn({ feature: "reviews", source: "product.actions.ts" })
@@ -237,7 +217,7 @@ export const getAllReviews = async (options: Omit<BrowseProps["browseParams"], "
 }
 
 export const updateProducts = async (products: Partial<CommerceProduct>[]) => {
-  if (isDemoMode()) return
+
 
   return algolia.update({
     indexName: env.ALGOLIA_PRODUCTS_INDEX,
@@ -246,7 +226,6 @@ export const updateProducts = async (products: Partial<CommerceProduct>[]) => {
 }
 
 export const updateReviews = async (reviews: Review[]) => {
-  if (isDemoMode() || !env.ALGOLIA_REVIEWS_INDEX) return
 
   return algolia.update({
     indexName: env.ALGOLIA_REVIEWS_INDEX,
@@ -260,7 +239,6 @@ export const getCategories = unstable_cache(
       hitsPerPage: 50,
     }
   ) => {
-    if (isDemoMode()) return getDemoCategories()
 
     return await algolia.search<PlatformCollection>({
       indexName: env.ALGOLIA_CATEGORIES_INDEX,
@@ -273,7 +251,7 @@ export const getCategories = unstable_cache(
 
 export const updateCategories = unstable_cache(
   async (categories: PlatformCollection[]) => {
-    if (isDemoMode()) return
+ 
 
     return algolia.update({
       indexName: env.ALGOLIA_CATEGORIES_INDEX,
@@ -285,7 +263,6 @@ export const updateCategories = unstable_cache(
 )
 
 export const deleteCategories = async (ids: string[]) => {
-  if (isDemoMode()) return
 
   return algolia.delete({
     indexName: env.ALGOLIA_CATEGORIES_INDEX,
@@ -294,7 +271,6 @@ export const deleteCategories = async (ids: string[]) => {
 }
 
 export const deleteProducts = async (ids: string[]) => {
-  if (isDemoMode()) return
 
   return algolia.delete({
     indexName: env.ALGOLIA_PRODUCTS_INDEX,
@@ -311,7 +287,7 @@ export const getFilteredProducts = unstable_cache(
     collectionHandle?: string,
     hasVendorFilter: boolean = false
   ) => {
-    if (isDemoMode()) return getDemoProducts()
+  
     const indexName = algolia.mapIndexToSort(env.ALGOLIA_PRODUCTS_INDEX, sortBy as SortType)
 
     try {
@@ -417,7 +393,6 @@ export const getFilteredProducts = unstable_cache(
 
 export const getFacetValues = unstable_cache(
   async ({ indexName, facetName }: { indexName: string; facetName: string }) => {
-    if (isDemoMode()) return []
 
     const res = await algolia.getFacetValues({
       indexName,
@@ -432,7 +407,6 @@ export const getFacetValues = unstable_cache(
 
 export const getProductsByCollectionTag = unstable_cache(
   async (tag: string, limit: number = 10) => {
-    if (isDemoMode()) return getDemoProducts().hits.slice(0, limit)
 
     const { hits } = await algolia.search<CommerceProduct>({
       indexName: algolia.mapIndexToSort(env.ALGOLIA_PRODUCTS_INDEX, "updatedAtTimestamp:desc"),

@@ -4,7 +4,7 @@ from rest_framework import serializers
 from django.utils import timezone
 from apps.notifications.models import Notification, NotificationTemplate, NotificationLog, InternalMessage, UserNote
 from apps.authentication.models import User
-from apps.inventory.models import Media
+from apps.shared.models import Media
 
 logger = logging.getLogger(__name__)
 

@@ -9,11 +9,12 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from apps.core_apps.general import AuditableModel
 from apps.core_apps.validators import validate_percentage
-from apps.core_apps.utils import generate_unique_code, generate_unique_slug, Logger
+from apps.core_apps.utils import generate_unique_code, generate_unique_slug, Logger, get_default_campaign_code, get_default_coupon_code, get_default_offer_code
 from apps.authentication.models import User
 from apps.organization.models import Branch
 from apps.inventory.models import Item, ItemGroup, StoreGroup, Media
 from apps.core_apps.services.messaging_service import MessagingService
+from apps.transactions.models import TransactionHeader
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class Offer(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('OFF')
+       default=get_default_offer_code
     )
     name = models.CharField(
         max_length=100,
@@ -260,7 +261,7 @@ class Offer(AuditableModel):
         elif self.offer_type == self.OfferType.FREE_SHIPPING:
             result['discounted_price'] = price  # No direct price change, handled in shipping logic
         elif self.offer_type == self.OfferType.BUNDLE:
-            result['discounted_price'] = price  # Bundle pricing handled in order logic
+            result['discounted_price'] = price  # Bundle pricing handled in transaction logic
         
         self.current_uses += 1
         self.save(update_fields=['current_uses'])
@@ -310,7 +311,7 @@ class Coupon(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('CPN')
+        default=get_default_coupon_code
     )
     name = models.CharField(
         max_length=100,
@@ -487,12 +488,12 @@ class UserCoupon(AuditableModel):
         verbose_name=_("Redemption Date")
     )
     order = models.ForeignKey(
-        'orders.Order',
+        TransactionHeader,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='user_coupons',
-        verbose_name=_("Order")
+        verbose_name=_("Transaction")
     )
     is_used = models.BooleanField(
         default=False,
@@ -511,18 +512,18 @@ class UserCoupon(AuditableModel):
     def clean(self):
         super().clean()
         if self.is_used and not self.order:
-            raise ValidationError({'order': _('Order must be specified for used coupons.')})
+            raise ValidationError({'order': _('Transaction must be specified for used coupons.')})
 
-    def mark_as_used(self, order):
-        """Mark coupon as used for a specific order."""
+    def mark_as_used(self, transaction):
+        """Mark coupon as used for a specific transaction."""
         logger = Logger(__name__, user=self.user, branch_id=self.branch.id)
         self.is_used = True
-        self.order = order
+        self.order = transaction
         self.save(update_fields=['is_used', 'order'])
-        logger.info(f"Coupon {self.coupon.code} marked as used by user {self.user.username} for order {order.id}", 
-                   extra={'coupon_id': self.coupon.id, 'user_id': self.user.id, 'order_id': order.id})
+        logger.info(f"Coupon {self.coupon.code} marked as used by user {self.user.username} for transaction {transaction.code}", 
+                   extra={'coupon_id': self.coupon.id, 'user_id': self.user.id, 'transaction_id': transaction.id})
 
-    def __str__():
+    def __str__(self):
         return f"{self.coupon.code} - {self.user.get_full_name()}"
 
 class Campaign(AuditableModel):
@@ -543,7 +544,7 @@ class Campaign(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('CMP')
+        default=get_default_campaign_code
     )
     name = models.CharField(
         max_length=100,

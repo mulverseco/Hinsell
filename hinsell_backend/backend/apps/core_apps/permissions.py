@@ -49,7 +49,8 @@ class IsBranchMember(BasePermission):
         
         user_branch = getattr(request.user, 'default_branch', None)
         return user_branch and obj.branch == user_branch
-
+class HasRolePermission:
+    pass
 
 class IsSystemAdmin(BasePermission):
     """
@@ -282,6 +283,89 @@ class DynamicPermission(BasePermission):
         return request.user.has_perm(f"{app_label}.{permission_codename}")
 
 
+class LicenseTypePermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.is_authenticated and request.user.has_perm('organization.view_licensetype')
+        return request.user.is_authenticated and request.user.has_perm('organization.change_licensetype')
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.has_perm('organization.view_licensetype')
+        return request.user.has_perm('organization.change_licensetype')
+
+class LicensePermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.is_authenticated and request.user.has_perm('organization.view_license')
+        return request.user.is_authenticated and request.user.has_perm('organization.change_license')
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.has_perm('organization.view_license') and obj.company.branches.filter(
+                id__in=request.user.profile.branches.filter(is_deleted=False).values_list('id', flat=True)
+            ).exists()
+        return request.user.has_perm('organization.change_license') and obj.company.branches.filter(
+            id__in=request.user.profile.branches.filter(is_deleted=False).values_list('id', flat=True)
+        ).exists()
+
+class CompanyPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.is_authenticated and request.user.has_perm('organization.view_company')
+        return request.user.is_authenticated and request.user.has_perm('organization.change_company')
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.has_perm('organization.view_company') and obj.branches.filter(
+                id__in=request.user.profile.branches.filter(is_deleted=False).values_list('id', flat=True)
+            ).exists()
+        return request.user.has_perm('organization.change_company') and obj.branches.filter(
+            id__in=request.user.profile.branches.filter(is_deleted=False).values_list('id', flat=True)
+        ).exists()
+
+class BranchPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.is_authenticated and request.user.has_perm('organization.view_branch')
+        return request.user.is_authenticated and request.user.has_perm('organization.change_branch')
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.has_perm('organization.view_branch') and obj.id in request.user.profile.branches.filter(is_deleted=False).values_list('id', flat=True)
+        return request.user.has_perm('organization.change_branch') and (
+            obj.id in request.user.profile.branches.filter(is_deleted=False).values_list('id', flat=True) or
+            request.user == obj.manager
+        )
+
+class SystemSettingsPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.is_authenticated and request.user.has_perm('organization.view_systemsettings')
+        return request.user.is_authenticated and request.user.has_perm('organization.change_systemsettings')
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.has_perm('organization.view_systemsettings') and obj.branch.id in request.user.profile.branches.filter(is_deleted=False).values_list('id', flat=True)
+        return request.user.has_perm('organization.change_systemsettings') and (
+            obj.branch.id in request.user.profile.branches.filter(is_deleted=False).values_list('id', flat=True) or
+            request.user == obj.branch.manager
+        )
+
+class KeyboardShortcutsPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.is_authenticated and request.user.has_perm('organization.view_keyboardshortcuts')
+        return request.user.is_authenticated and request.user.has_perm('organization.change_keyboardshortcuts')
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.has_perm('organization.view_keyboardshortcuts') and obj.branch.id in request.user.profile.branches.filter(is_deleted=False).values_list('id', flat=True)
+        return request.user.has_perm('organization.change_keyboardshortcuts') and (
+            obj.branch.id in request.user.profile.branches.filter(is_deleted=False).values_list('id', flat=True) or
+            request.user == obj.branch.manager
+        )
+    
 class PharmacyPermissionMixin:
     """
     Mixin to provide common permission methods for views.

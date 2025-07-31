@@ -7,7 +7,7 @@ from apps.core_apps.general import AuditableModel
 from apps.authentication.models import User
 from apps.organization.models import Branch
 from apps.inventory.models import Media
-from hinsell_backend.backend.apps.core_apps.utils import Logger, generate_unique_code
+from apps.core_apps.utils import Logger, generate_unique_code
 
 logger = Logger(__name__)
 
