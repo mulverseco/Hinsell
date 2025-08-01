@@ -13,7 +13,7 @@ from apps.core_apps.general import AuditableModel
 from apps.core_apps.encryption import EncryptedField
 from apps.shared.models import Media
 from apps.authentication.models import User
-from apps.core_apps.utils import Logger, generate_unique_code
+from apps.core_apps.utils import Logger, generate_unique_code, get_default_notifications
 
 logger = Logger(__name__)
 
@@ -31,7 +31,7 @@ class LicenseType(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('LT')
+        default=generate_unique_code('LT')
     )
     name = models.CharField(
         max_length=100,
@@ -157,7 +157,7 @@ class License(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('LIC')
+        default=generate_unique_code('LIC')
     )
     license_hash = models.CharField(
         max_length=64,
@@ -419,7 +419,7 @@ class Company(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('CMP')
+        default=generate_unique_code('CMP')
     )
     company_name = models.CharField(
         max_length=200,
@@ -550,7 +550,7 @@ class Branch(AuditableModel):
     branch_code = models.CharField(
         max_length=20,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('BR')
+        default=generate_unique_code('BR')
     )
     branch_name = models.CharField(
         max_length=200,
@@ -817,7 +817,7 @@ class SystemSettings(AuditableModel):
         verbose_name=_("Backup Path")
     )
     notifications = models.JSONField(
-        default=lambda: {'email': True, 'sms': False, 'whatsapp': False, 'in_app': False, 'push': False},
+        default=get_default_notifications,
         verbose_name=_("Notification Settings"),
         help_text=_("Channels for system notifications: {'email': bool, 'sms': bool, 'whatsapp': bool, 'in_app': bool, 'push': bool}")
     )
@@ -864,7 +864,7 @@ class SystemConfiguration(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('CFG')
+        default=generate_unique_code('CFG')
     )
     config_key = models.CharField(
         max_length=100,
@@ -935,7 +935,7 @@ class KeyboardShortcuts(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('KBD')
+        default=generate_unique_code('KBD')
     )
     action_name = models.CharField(
         max_length=100,

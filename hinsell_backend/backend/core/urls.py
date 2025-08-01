@@ -28,15 +28,16 @@ rest_api_urlpatterns = [
     path('api/', include('apps.organization.urls')),
     path('api/', include('apps.reporting.urls')),
     path('api/', include('apps.insurance.urls')),
-    path('api/', include('apps.hinsell.urls', namespace='hinsell')),
+    path('api/', include('apps.hinsell.urls')),
     path('api/', include('apps.accounting.urls')),
     path('api/', include('apps.inventory.urls')),
     path('api/', include('apps.notifications.urls')),
+    path('api/', include('apps.webhooks.urls')),
     path('api/health/', health_check, name='health_check'),
 ]
 
 urlpatterns = [
-    path('', lambda request: JsonResponse({'message': 'Pharsy API!'})),
+    path('', lambda request: JsonResponse({'message': 'Hinsell API!'})),
     path('admin/', admin.site.urls),
    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

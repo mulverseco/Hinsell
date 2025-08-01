@@ -2,7 +2,6 @@
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.conf import settings
-from apps.authentication.models import User, AuditLog, UserProfile
 from apps.core_apps.utils import Logger
 from django.utils.translation import gettext_lazy as _
 import jwt
@@ -17,6 +16,7 @@ class TwoFactorRequiredException(AuthenticationFailed):
 
 class CustomJWTAuthentication(BaseAuthentication):
     def authenticate(self, request):
+        from apps.authentication.models import User, AuditLog, UserProfile
         auth_header = request.META.get('HTTP_AUTHORIZATION')
         if not auth_header or not auth_header.startswith('Bearer '):
             return None

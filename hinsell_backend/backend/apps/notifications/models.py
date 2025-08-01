@@ -43,7 +43,7 @@ class NotificationTemplate(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('NT')
+        default=generate_unique_code('NT')
     )
     name = models.CharField(
         max_length=100,
@@ -436,7 +436,7 @@ class InternalMessage(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('MSG')
+        default=generate_unique_code('MSG')
     )
     sender = models.ForeignKey(
         User,
@@ -522,7 +522,7 @@ class UserNote(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('NOTE')
+        default=generate_unique_code('NOTE')
     )
     title = models.CharField(
         max_length=200,

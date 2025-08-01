@@ -37,7 +37,7 @@ class TransactionType(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('TT')
+        default=generate_unique_code('TT')
     )
     name = models.CharField(
         max_length=100,
@@ -121,7 +121,7 @@ class TransactionHeader(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('TXN')
+        default=generate_unique_code('TXN')
     )
     transaction_type = models.ForeignKey(
         TransactionType,
@@ -708,7 +708,7 @@ class LedgerEntry(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('LED')
+        default=generate_unique_code('LED')
     )
     transaction_header = models.ForeignKey(
         TransactionHeader,

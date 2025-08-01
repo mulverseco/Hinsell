@@ -82,7 +82,6 @@ INSTALLED_APPS = [
     'django_celery_results',
 
     "apps.authentication",
-    "apps.core_apps",
     "apps.shared",
     "apps.organization",
     "apps.reporting",
@@ -227,7 +226,7 @@ CORS_ALLOW_ALL_ORIGINS = DEVELOPMENT_MODE
 # ======================
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # 'apps.authentication.authentication.CustomJWTAuthentication',
+        'apps.authentication.authentication.CustomJWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -249,9 +248,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',

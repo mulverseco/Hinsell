@@ -29,7 +29,7 @@ class StoreGroup(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('SG')
+        default=generate_unique_code('SG')
     )
     name = models.CharField(
         max_length=100,
@@ -116,7 +116,7 @@ class ItemGroup(AuditableModel):
     code = models.CharField(
         max_length=20,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('IG')
+        default=generate_unique_code('IG')
     )
     name = models.CharField(
         max_length=100,
@@ -236,7 +236,7 @@ class Item(AuditableModel):
     code = models.CharField(
         max_length=50,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('ITM')
+        default=generate_unique_code('ITM')
     )
     name = models.CharField(
         max_length=200,
@@ -682,7 +682,7 @@ class ItemVariant(AuditableModel):
     code = models.CharField(
         max_length=50,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('VAR')
+        default=generate_unique_code('VAR')
     )
     size = models.CharField(
         max_length=50,
@@ -815,7 +815,7 @@ class ItemUnit(AuditableModel):
     code = models.CharField(
         max_length=20,
         verbose_name=_("Code"),
-        default=lambda: generate_unique_code('UNT')
+        default=generate_unique_code('UNT')
     )
     name = models.CharField(
         max_length=50,
@@ -905,7 +905,7 @@ class ItemBarcode(AuditableModel):
     barcode = models.CharField(
         max_length=50,
         verbose_name=_("Barcode"),
-        default=lambda: generate_unique_code('BAR')
+        default=generate_unique_code('BAR')
     )
     barcode_type = models.CharField(
         max_length=20,

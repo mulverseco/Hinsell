@@ -59,14 +59,13 @@ class UserManager(BaseUserManager):
                         extra={'user_type': user_type}, exc_info=True)
             raise
 
-    def create_superuser(self, username, email=None, password=None, **extra_fields):
+    def create_superuser(self, username=None, email=None, password=None, **extra_fields):
         from apps.core_apps.utils import Logger
         logger = Logger(__name__)
         try:
             extra_fields.setdefault("is_staff", True)
             extra_fields.setdefault("is_superuser", True)
             extra_fields.setdefault("is_active", True)
-            extra_fields.setdefault("use_control_panel", True)
             extra_fields.setdefault("user_type", 'admin')
             if not extra_fields.get("is_staff"):
                 raise ValueError(_("Superuser must have is_staff=True."))
@@ -74,15 +73,16 @@ class UserManager(BaseUserManager):
                 raise ValueError(_("Superuser must have is_superuser=True."))
             if not password:
                 raise ValueError(_("Superuser must have a password."))
-            user = self.create_user(email=email or f"{username}@example.com", 
-                                  password=password, 
-                                  username=username,
-                                  **extra_fields)
-            logger.info(f"Superuser created successfully: {username}", 
+            user = self.create_user(
+                email=email,
+                password=password,
+                **extra_fields
+            )
+            logger.info(f"Superuser created successfully: {user.username}", 
                        extra={'user_type': 'admin'})
             return user
         except Exception as e:
-            logger.error(f"Error creating superuser {username}: {str(e)}", 
+            logger.error(f"Error creating superuser with email {email}: {str(e)}", 
                         extra={'user_type': 'admin'}, exc_info=True)
             raise
 
@@ -148,6 +148,11 @@ class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
     is_two_factor_enabled = models.BooleanField(
         default=False,
         verbose_name=_("Two-Factor Authentication Enabled")
+    )
+    is_staff = models.BooleanField(
+        default=False,
+        verbose_name=_("Staff Status"),
+        help_text=_("Designates whether the user can log into the admin site.")
     )
     failed_login_attempts = models.PositiveIntegerField(
         default=0,
