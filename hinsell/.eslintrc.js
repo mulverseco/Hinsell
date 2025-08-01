@@ -22,22 +22,9 @@ module.exports = {
     "@next/next/no-html-link-for-pages": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/no-unused-vars": "off",
     "eslint-comments/no-unlimited-disable": "off",
     "eslint-comments/disable-enable-pair": "off",
-    "@typescript-eslint/no-unused-vars": [
-      "warn",
-      {
-        argsIgnorePattern: "^_",
-        varsIgnorePattern: "^_",
-      },
-    ],
-    "sort-imports": [
-      "error",
-      {
-        ignoreCase: true,
-        ignoreDeclarationSort: true,
-      },
-    ],
     "tailwindcss/classnames-order": "off",
   },
 }

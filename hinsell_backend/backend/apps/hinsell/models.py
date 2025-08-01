@@ -9,12 +9,13 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from apps.core_apps.general import AuditableModel
 from apps.core_apps.validators import validate_percentage
-from apps.core_apps.utils import generate_unique_code, generate_unique_slug, Logger, get_default_campaign_code, get_default_coupon_code, get_default_offer_code
+from apps.core_apps.utils import generate_unique_code, generate_unique_slug, Logger
 from apps.authentication.models import User
 from apps.organization.models import Branch
 from apps.inventory.models import Item, ItemGroup, StoreGroup, Media
 from apps.core_apps.services.messaging_service import MessagingService
 from apps.transactions.models import TransactionHeader
+from django.db.utils import IntegrityError
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +45,7 @@ class Offer(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
-        verbose_name=_("Code"),
-       default=get_default_offer_code
+        verbose_name=_("Code")
     )
     name = models.CharField(
         max_length=100,
@@ -191,6 +191,8 @@ class Offer(AuditableModel):
 
     def clean(self):
         super().clean()
+        if not self.code or not self.code.strip():
+            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.start_date >= self.end_date:
@@ -215,9 +217,24 @@ class Offer(AuditableModel):
             raise ValidationError({'target_type': _('At least one target must be specified for non-ALL target types.')})
 
     def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = generate_unique_code('OFF', length=12)
         if not self.slug:
             self.slug = generate_unique_slug(self.name, Offer)
-        super().save(*args, **kwargs)
+        retries = 3
+        while retries > 0:
+            try:
+                super().save(*args, **kwargs)
+                logger.info(f"Offer saved successfully: {self.code}", extra={'offer_id': self.id})
+                return
+            except IntegrityError as e:
+                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
+                    self.code = generate_unique_code('OFF', length=12)
+                    retries -= 1
+                else:
+                    logger.error(f"Error saving Offer {self.code}: {str(e)}", exc_info=True)
+                    raise
+        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def is_valid(self, user: Optional[User] = None, country: Optional[str] = None, item: Optional[Item] = None) -> bool:
         """Check if the offer is valid for the given context."""
@@ -310,8 +327,7 @@ class Coupon(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
-        verbose_name=_("Code"),
-        default=get_default_coupon_code
+        verbose_name=_("Code")
     )
     name = models.CharField(
         max_length=100,
@@ -398,12 +414,32 @@ class Coupon(AuditableModel):
 
     def clean(self):
         super().clean()
+        if not self.code or not self.code.strip():
+            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.start_date >= self.end_date:
             raise ValidationError({'end_date': _('End date must be after start date.')})
         if self.coupon_type == self.CouponType.PERCENTAGE and (self.value < 0 or self.value > 100):
             raise ValidationError({'value': _('Percentage value must be between 0 and 100.')})
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = generate_unique_code('CPN', length=12)
+        retries = 3
+        while retries > 0:
+            try:
+                super().save(*args, **kwargs)
+                logger.info(f"Coupon saved successfully: {self.code}", extra={'coupon_id': self.id})
+                return
+            except IntegrityError as e:
+                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
+                    self.code = generate_unique_code('CPN', length=12)
+                    retries -= 1
+                else:
+                    logger.error(f"Error saving Coupon {self.code}: {str(e)}", exc_info=True)
+                    raise
+        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def is_valid(self, user: Optional[User] = None, order_amount: Decimal = Decimal('0')) -> bool:
         """Check if the coupon is valid for the given context."""
@@ -543,8 +579,7 @@ class Campaign(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
-        verbose_name=_("Code"),
-        default=get_default_campaign_code
+        verbose_name=_("Code")
     )
     name = models.CharField(
         max_length=100,
@@ -655,6 +690,8 @@ class Campaign(AuditableModel):
 
     def clean(self):
         super().clean()
+        if not self.code or not self.code.strip():
+            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if not self.content.strip():
@@ -665,10 +702,25 @@ class Campaign(AuditableModel):
             raise ValidationError({'offer': _('At least one of offer or coupon must be specified.'), 'coupon': _('At least one of offer or coupon must be specified.')})
 
     def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = generate_unique_code('CMP', length=12)
         if not self.slug:
             self.slug = generate_unique_slug(self.name, Campaign)
         self.update_conversion_rate()
-        super().save(*args, **kwargs)
+        retries = 3
+        while retries > 0:
+            try:
+                super().save(*args, **kwargs)
+                logger.info(f"Campaign saved successfully: {self.code}", extra={'campaign_id': self.id})
+                return
+            except IntegrityError as e:
+                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
+                    self.code = generate_unique_code('CMP', length=12)
+                    retries -= 1
+                else:
+                    logger.error(f"Error saving Campaign {self.code}: {str(e)}", exc_info=True)
+                    raise
+        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def update_conversion_rate(self):
         """Update conversion rate based on impressions and conversions."""
@@ -676,12 +728,12 @@ class Campaign(AuditableModel):
             self.conversion_rate = (self.conversions / self.impressions) * 100
         else:
             self.conversion_rate = Decimal('0.00')
-        self.save(update_fields=['conversion_rate'])
 
     def track_impression(self):
         """Track a campaign impression."""
         self.impressions += 1
         self.update_conversion_rate()
+        self.save(update_fields=['impressions', 'conversion_rate'])
         logger.info(f"Tracked impression for campaign {self.code}", extra={'campaign_id': self.id, 'impressions': self.impressions})
 
     def track_click(self):
@@ -695,6 +747,7 @@ class Campaign(AuditableModel):
         logger = Logger(__name__, user=user, branch_id=self.branch.id)
         self.conversions += 1
         self.update_conversion_rate()
+        self.save(update_fields=['conversions', 'conversion_rate'])
         logger.info(f"Tracked conversion for campaign {self.code}", extra={'campaign_id': self.id, 'conversions': self.conversions, 'user_id': user.id if user else None})
 
     def launch(self, users: Optional[List[User]] = None):

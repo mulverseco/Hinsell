@@ -1,5 +1,5 @@
-from django.db import models
-from django.core.validators import MinValueValidator,MaxValueValidator
+from django.db import models, IntegrityError
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -29,7 +29,6 @@ class StoreGroup(AuditableModel):
         max_length=20,
         unique=True,
         verbose_name=_("Code"),
-        default=generate_unique_code('SG')
     )
     name = models.CharField(
         max_length=100,
@@ -82,7 +81,18 @@ class StoreGroup(AuditableModel):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_unique_slug(self.name, StoreGroup)
-        super().save(*args, **kwargs)
+        retries = 3
+        while retries > 0:
+            try:
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as e:
+                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
+                    self.code = generate_unique_code('SG')
+                    retries -= 1
+                else:
+                    raise
+        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def clean(self):
         super().clean()
@@ -116,7 +126,6 @@ class ItemGroup(AuditableModel):
     code = models.CharField(
         max_length=20,
         verbose_name=_("Code"),
-        default=generate_unique_code('IG')
     )
     name = models.CharField(
         max_length=100,
@@ -187,7 +196,18 @@ class ItemGroup(AuditableModel):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_unique_slug(self.name, ItemGroup)
-        super().save(*args, **kwargs)
+        retries = 3
+        while retries > 0:
+            try:
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as e:
+                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
+                    self.code = generate_unique_code('IG')
+                    retries -= 1
+                else:
+                    raise
+        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def clean(self):
         super().clean()
@@ -236,7 +256,6 @@ class Item(AuditableModel):
     code = models.CharField(
         max_length=50,
         verbose_name=_("Code"),
-        default=generate_unique_code('ITM')
     )
     name = models.CharField(
         max_length=200,
@@ -574,7 +593,18 @@ class Item(AuditableModel):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_unique_slug(self.name, Item)
-        super().save(*args, **kwargs)
+        retries = 3
+        while retries > 0:
+            try:
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as e:
+                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
+                    self.code = generate_unique_code('ITM')
+                    retries -= 1
+                else:
+                    raise
+        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def clean(self):
         super().clean()
@@ -682,7 +712,6 @@ class ItemVariant(AuditableModel):
     code = models.CharField(
         max_length=50,
         verbose_name=_("Code"),
-        default=generate_unique_code('VAR')
     )
     size = models.CharField(
         max_length=50,
@@ -737,6 +766,20 @@ class ItemVariant(AuditableModel):
             models.Index(fields=['item', 'code']),
             models.Index(fields=['size', 'color']),
         ]
+
+    def save(self, *args, **kwargs):
+        retries = 3
+        while retries > 0:
+            try:
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as e:
+                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
+                    self.code = generate_unique_code('VAR')
+                    retries -= 1
+                else:
+                    raise
+        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def clean(self):
         super().clean()
@@ -815,7 +858,6 @@ class ItemUnit(AuditableModel):
     code = models.CharField(
         max_length=20,
         verbose_name=_("Code"),
-        default=generate_unique_code('UNT')
     )
     name = models.CharField(
         max_length=50,
@@ -870,20 +912,31 @@ class ItemUnit(AuditableModel):
             )
         ]
 
-    def clean(self):
-        super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
-        if not self.name.strip():
-            raise ValidationError({'name': _('Name cannot be empty.')})
-
     def save(self, *args, **kwargs):
         if self.is_default:
             ItemUnit.objects.filter(
                 item=self.item,
                 is_default=True
             ).exclude(id=self.id).update(is_default=False)
-        super().save(*args, **kwargs)
+        retries = 3
+        while retries > 0:
+            try:
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as e:
+                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
+                    self.code = generate_unique_code('UNT')
+                    retries -= 1
+                else:
+                    raise
+        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
+
+    def clean(self):
+        super().clean()
+        if not self.code.strip():
+            raise ValidationError({'code': _('Code cannot be empty.')})
+        if not self.name.strip():
+            raise ValidationError({'name': _('Name cannot be empty.')})
 
     def convert_to_base_units(self, quantity: Decimal) -> Decimal:
         return quantity * self.conversion_factor
@@ -905,7 +958,6 @@ class ItemBarcode(AuditableModel):
     barcode = models.CharField(
         max_length=50,
         verbose_name=_("Barcode"),
-        default=generate_unique_code('BAR')
     )
     barcode_type = models.CharField(
         max_length=20,
@@ -943,20 +995,31 @@ class ItemBarcode(AuditableModel):
             models.Index(fields=['is_primary']),
         ]
 
-    def clean(self):
-        super().clean()
-        if not self.barcode.strip():
-            raise ValidationError({'barcode': _('Barcode cannot be empty.')})
-        if self.unit and self.unit.item != self.item:
-            raise ValidationError({'unit': _('Unit must belong to the same item variant.')})
-
     def save(self, *args, **kwargs):
         if self.is_primary:
             ItemBarcode.objects.filter(
                 item=self.item,
                 is_primary=True
             ).exclude(id=self.id).update(is_primary=False)
-        super().save(*args, **kwargs)
+        retries = 3
+        while retries > 0:
+            try:
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as e:
+                if 'unique constraint' in str(e).lower() and 'barcode' in str(e).lower():
+                    self.barcode = generate_unique_code('BAR')
+                    retries -= 1
+                else:
+                    raise
+        raise ValidationError({'barcode': _('Unable to generate a unique barcode after retries.')})
+
+    def clean(self):
+        super().clean()
+        if not self.barcode.strip():
+            raise ValidationError({'barcode': _('Barcode cannot be empty.')})
+        if self.unit and self.unit.item != self.item:
+            raise ValidationError({'unit': _('Unit must belong to the same item variant.')})
 
     def __str__(self):
         return f"{self.item.code} - {self.barcode}"

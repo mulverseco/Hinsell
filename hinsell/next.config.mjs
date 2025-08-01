@@ -43,7 +43,6 @@ const config = withPlugins([[ withBundleAnalyzer({ enabled: process.env.ANALYZE 
   rewrites() {
     return [
       { source: "/", destination: "/home" },
-      { source: "/health", destination: "/api/health" },
       {
         source: "/search/:second",
         destination: "/search?second=:second",
