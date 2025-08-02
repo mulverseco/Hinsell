@@ -41,9 +41,9 @@ class MediaAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all media, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            return self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):

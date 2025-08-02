@@ -277,6 +277,13 @@ else:
 FILE_UPLOAD_PERMISSIONS = 0o644
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
+# Allowed Media Extensions
+ALLOWED_MEDIA_EXTENSIONS = {
+    'image': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'],
+    'video': ['.mp4', '.mov', '.avi', '.mkv', '.webm'],
+    'document': ['.pdf', '.doc', '.docx', '.txt']
+}
+
 # ======================
 # Celery and Redis
 # ======================

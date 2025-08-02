@@ -48,9 +48,9 @@ class NotificationTemplateAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all notification templates, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            return self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):
@@ -139,9 +139,10 @@ class NotificationAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all notifications, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            # Use all_with_deleted for superusers
+            return self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):
@@ -216,9 +217,10 @@ class InternalMessageAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all messages, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            # Use all_with_deleted for superusers
+            return self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):
@@ -282,9 +284,10 @@ class UserNoteAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all user notes, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            # Use all_with_deleted for superusers
+            return self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):

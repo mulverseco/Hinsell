@@ -44,11 +44,11 @@ class StoreGroupAdmin(admin.ModelAdmin):
     list_per_page = 25
 
     def get_queryset(self, request):
-        """Allow superusers to see all store groups, including soft-deleted ones."""
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs.all_with_deleted()
-        return qs
+            """Allow superusers to see all items, including soft-deleted ones."""
+            qs = self.model.objects.get_queryset()
+            if request.user.is_superuser:
+                return self.model.objects.all_with_deleted()
+            return qs
 
     def save_model(self, request, obj, form, change):
         """Log store group creation or update in audit log."""
@@ -116,9 +116,9 @@ class ItemGroupAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all item groups, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            return  self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):
@@ -265,9 +265,9 @@ class ItemAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all items, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            return  self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):
@@ -330,9 +330,9 @@ class ItemVariantAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all item variants, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            return  self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):
@@ -399,9 +399,9 @@ class ItemUnitAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all item units, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            return  self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):
@@ -459,9 +459,9 @@ class ItemBarcodeAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all barcodes, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            return  self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):
@@ -525,9 +525,9 @@ class InventoryBalanceAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Allow superusers to see all inventory balances, including soft-deleted ones."""
-        qs = super().get_queryset(request)
+        qs = self.model.objects.get_queryset()
         if request.user.is_superuser:
-            return qs.all_with_deleted()
+            return  self.model.objects.all_with_deleted()
         return qs
 
     def save_model(self, request, obj, form, change):

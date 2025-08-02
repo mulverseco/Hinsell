@@ -9,8 +9,10 @@ WORKDIR /app
 
 # Install PostgreSQL development packages and dependencies
 RUN apt-get update && \
-    apt-get install -y libpq-dev gcc && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    libmagic1 libmagic-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY ./requirements.txt /app/
 

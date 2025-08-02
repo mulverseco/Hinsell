@@ -324,7 +324,7 @@ class UserProfile(AuditableModel):
         help_text=_("Device token for push notifications (e.g., FCM or APNs token)"),
         db_index=True
     )
-    phone_number = models.PhoneNumberField(
+    phone_number = PhoneNumberField(
         blank=True,
         null=True,
         verbose_name=_("Phone Number")
