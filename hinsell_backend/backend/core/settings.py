@@ -8,6 +8,11 @@ env = environ.Env(
     DEBUG=(bool, False),
     DEVELOPMENT_MODE=(bool, False),
     USE_S3=(bool, False),
+    WEBSOCKET_RATE_LIMIT=(bool, True),
+    WEBSOCKET_MAX_CONNECTIONS=(int, 1000),
+    # Added for messaging and notification services
+    MESSAGING_RATE_LIMIT_PER_MINUTE=(int, 30),
+    NOTIFICATION_RATE_LIMIT_PER_MINUTE=(int, 60),
 )
 
 # ======================
@@ -22,13 +27,16 @@ DEBUG = env.bool('DEBUG', default=DEVELOPMENT_MODE)
 # Security Settings
 # ======================
 SECRET_KEY = env('DJANGO_SECRET_KEY', default=get_random_secret_key())
-FIELD_ENCRYPTION_KEY = env('FIELD_ENCRYPTION_KEY',default="WpIhsht-vH71uh8s22Ei_hjpo5O3y88boDs9zDDIl60=")
+FIELD_ENCRYPTION_KEY = env('FIELD_ENCRYPTION_KEY', default="WpIhsht-vH71uh8s22Ei_hjpo5O3y88boDs9zDDIl60=")
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', 'backend'])
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'ws://localhost:8000',
+    'ws://127.0.0.1:8000',
+    'wss://backend',
 ])
 
 # HTTPS Settings
@@ -58,7 +66,12 @@ if not DEVELOPMENT_MODE:
     CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "https://trusted.cdn.com")
     CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://trusted.cdn.com")
     CSP_IMG_SRC = ("'self'", "data:", "https://trusted.cdn.com")
-    CSP_CONNECT_SRC = ("'self'", "https://api.example.com")
+    CSP_CONNECT_SRC = (
+        "'self'",
+        "https://api.example.com",
+        "ws://backend",
+        "wss://backend",
+    )
 
 # ======================
 # Application Definition
@@ -78,9 +91,9 @@ INSTALLED_APPS = [
     'social_django',
     'phonenumber_field',
     'django_filters',
+    'channels',
     'django_celery_beat',
     'django_celery_results',
-
     "apps.authentication",
     "apps.shared",
     "apps.organization",
@@ -217,6 +230,8 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:8000',
+    'ws://localhost:8000',
+    'wss://backend',
 ])
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = DEVELOPMENT_MODE
@@ -240,6 +255,44 @@ REST_FRAMEWORK = {
         'user': '1000/day',
     },
 }
+
+# ======================
+# WebSocket Configuration
+# ======================
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': env.list('REDIS_HOSTS', default=[env('REDIS_CACHE_URL', default='redis://redis:6379/0')]),
+            'capacity': env.int('WEBSOCKET_CHANNEL_CAPACITY', default=1500),
+            'expiry': env.int('WEBSOCKET_CHANNEL_EXPIRY', default=10),
+            'pool': {
+                'max_connections': env.int('REDIS_MAX_CONNECTIONS', default=100),
+                'retry_on_timeout': True,
+                'timeout': 5,
+            },
+            'compression': True,
+        },
+    },
+}
+
+# WebSocket rate limiting
+WEBSOCKET_RATE_LIMIT = env.bool('WEBSOCKET_RATE_LIMIT', default=True)
+WEBSOCKET_RATE_LIMIT_PER_MINUTE = env.int('WEBSOCKET_RATE_LIMIT_PER_MINUTE', default=60)
+WEBSOCKET_MAX_CONNECTIONS = env.int('WEBSOCKET_MAX_CONNECTIONS', default=1000)
+MESSAGING_RATE_LIMIT_PER_MINUTE = env.int('MESSAGING_RATE_LIMIT_PER_MINUTE', default=30)
+NOTIFICATION_RATE_LIMIT_PER_MINUTE = env.int('NOTIFICATION_RATE_LIMIT_PER_MINUTE', default=60)
+
+# WebSocket security
+WEBSOCKET_SECURE = env.bool('WEBSOCKET_SECURE', default=not DEVELOPMENT_MODE)
+WEBSOCKET_ALLOWED_ORIGINS = env.list('WEBSOCKET_ALLOWED_ORIGINS', default=[
+    'ws://localhost:8000',
+    'ws://127.0.0.1:8000',
+    'wss://backend',
+])
+
+# Health check endpoint for WebSocket service
+HEALTH_CHECK_ENDPOINT = '/health/websocket/'
 
 # ======================
 # Static and Media Files
@@ -300,19 +353,14 @@ CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': env('REDIS_CACHE_URL', default='redis://redis:6379/0'),
-        'OPTIONS': {'CLIENT_CLASS': 'django_redis.client.DefaultClient'},
-    }
-}
-
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [env('REDIS_CACHE_URL', default='redis://redis:6379/0')],
-            'capacity': 1500,
-            'expiry': 10,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': env.int('REDIS_MAX_CONNECTIONS', default=100),
+                'retry_on_timeout': True,
+            },
         },
-    },
+    }
 }
 
 # ======================
@@ -336,7 +384,7 @@ TWILIO_ACCOUNT_SID = env('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = env('TWILIO_AUTH_TOKEN')
 TWILIO_FROM_NUMBER = env('TWILIO_FROM_NUMBER')
 
-FIREBASE_CREDENTIALS = env('FIREBASE_CREDENTIALS',default="")
+FIREBASE_CREDENTIALS = env('FIREBASE_CREDENTIALS', default="")
 
 # ======================
 # Logging Configuration
@@ -360,6 +408,21 @@ LOGGING = {
             'backupCount': 5,
             'formatter': 'verbose',
         },
+        'websocket_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGGING_DIR / 'websocket.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        # Added for messaging service
+        'messaging_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGGING_DIR / 'messaging.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
     },
     'root': {'handlers': ['console', 'file'], 'level': 'INFO'},
     'loggers': {
@@ -369,7 +432,11 @@ LOGGING = {
         'boto3': {'handlers': ['console'], 'level': 'DEBUG'},
         'botocore': {'handlers': ['console'], 'level': 'DEBUG'},
         's3transfer': {'handlers': ['console'], 'level': 'DEBUG'},
-        'channels': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'channels': {'handlers': ['console', 'websocket_file'], 'level': 'INFO', 'propagate': False},
+        'channels.server': {'handlers': ['console', 'websocket_file'], 'level': 'INFO', 'propagate': False},
+        'channels.db': {'handlers': ['console', 'websocket_file'], 'level': 'INFO', 'propagate': False},
+        # Added for messaging service
+        'apps.messaging': {'handlers': ['console', 'messaging_file'], 'level': 'INFO', 'propagate': False},
     },
 }
 
@@ -389,3 +456,13 @@ ENABLE_EMAIL_RATE_LIMITING = True
 ENABLE_SMS_RATE_LIMITING = True
 PHONENUMBER_DEFAULT_REGION = 'YE'
 PHONENUMBER_DB_FORMAT = 'E164'
+
+# ======================
+# Uvicorn Configuration
+# ======================
+UVICORN_WORKERS = env.int('UVICORN_WORKERS', default=os.cpu_count() * 2 + 1)
+UVICORN_PORT = env.int('UVICORN_PORT', default=8000)
+UVICORN_HOST = env('UVICORN_HOST', default='0.0.0.0')
+UVICORN_LOG_LEVEL = env('UVICORN_LOG_LEVEL', default='info' if not DEBUG else 'debug')
+UVICORN_RELOAD = DEVELOPMENT_MODE
+UVICORN_TIMEOUT_KEEP_ALIVE = env.int('UVICORN_TIMEOUT_KEEP_ALIVE', default=65)

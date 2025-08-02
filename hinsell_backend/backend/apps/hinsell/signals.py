@@ -1,11 +1,56 @@
 from django.utils import timezone
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from django.core.cache import cache
 from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
+from apps.transactions.models import TransactionHeader
+from apps.notifications.models import Notification
 from apps.core_apps.utils import Logger
 
 logger = Logger(__name__)
+
+
+
+@receiver(post_save, sender=TransactionHeader)
+def transaction_status_updated(sender, instance, **kwargs):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f'user_{instance.created_by_id}',
+        {
+            'type': 'transaction_update',
+            'transaction_id': instance.id,
+            'status': instance.status,
+            'updated_at': instance.updated_at.isoformat(),
+        }
+    )
+    async_to_sync(channel_layer.group_send)(
+        f'branch_{instance.branch_id}',
+        {
+            'type': 'transaction_update',
+            'transaction_id': instance.id,
+            'status': instance.status,
+            'updated_at': instance.updated_at.isoformat(),
+        }
+    )
+    logger.info(f"Transaction {instance.transaction_number} status updated to {instance.status}")
+
+@receiver(post_save, sender=Notification)
+def notification_created(sender, instance, created, **kwargs):
+    if created or instance.status in ['PENDING', 'SENT']:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'user_{instance.recipient_id}',
+            {
+                'type': 'notification_update',
+                'notification_id': instance.id,
+                'message': instance.message,
+                'status': instance.status,
+                'created_at': instance.created_at.isoformat(),
+            }
+        )
+        logger.info(f"Notification {instance.id} sent to user {instance.recipient_id}")
 
 @receiver(post_save, sender=Offer)
 def clear_offer_cache(sender, instance, **kwargs):

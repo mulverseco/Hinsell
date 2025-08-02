@@ -2,7 +2,7 @@ import uuid
 from django.utils.text import slugify
 import logging
 from typing import Optional, Dict, Any
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.http import HttpRequest
 
 def generate_unique_code(prefix: str, length: int = 8) -> str:
@@ -25,7 +25,7 @@ def generate_unique_slug(name: str, model_class, max_length: int = 120) -> str:
 class Logger:
     """Custom logger for structured logging with context."""
     
-    def __init__(self, name: str, user: Optional[User] = None, branch_id: Optional[int] = None, 
+    def __init__(self, name: str, user: Optional[Any] = None, branch_id: Optional[int] = None, 
                  request: Optional[HttpRequest] = None):
         self.logger = logging.getLogger(name)
         self.user = user
@@ -74,33 +74,3 @@ def get_default_notifications():
 
 def get_default_data_consent():
     return {'data_processing': False, 'marketing': False, 'analytics': False, 'data_sharing': False}
-
-def get_default_employee_code():
-    return generate_unique_code('EMP')
-
-def get_default_offer_code():
-    return generate_unique_code('OFF')
-
-def get_default_coupon_code():
-    return generate_unique_code('CPN')
-
-def get_default_campaign_code():
-    return generate_unique_code('CMP')
-
-def get_default_currency_code():
-    return generate_unique_code('CUR', 5)
-
-def get_default_account_type_code():
-    return generate_unique_code('AT')
-
-def get_default_account_code():
-    return generate_unique_code('ACC')
-
-def get_default_cost_center_code():
-    return generate_unique_code('CC')
-
-def get_default_accounting_period_code():
-    return generate_unique_code('AP')
-
-def get_default_budget_code():
-    return generate_unique_code('BUD')
