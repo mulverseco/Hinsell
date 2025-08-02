@@ -16,6 +16,7 @@ import { Footer } from "components/footer"
 import { Modals } from "components/modals/modals"
 import DraftToolbar from "components/draft-toolbar"
 import { getNavigationData } from "lib/navigation"
+import { Providers } from "./providers"
 
 export const revalidate = 86400
 
@@ -40,6 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body className="@container">
+        <Providers locale={""}>
         <NuqsAdapter>
           <Script id="mobileMegaMenuLogic" strategy="lazyOnload">{`${mobileInlineScript}`}</Script>
 
@@ -63,6 +65,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
           <GithubBadge />
         </NuqsAdapter>
+        </Providers>
       </body>
     </html>
   )

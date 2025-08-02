@@ -1,4 +1,4 @@
-import { createSafeActionClient, DEFAULT_SERVER_ERROR_MESSAGE } from "next-safe-action";
+import { DEFAULT_SERVER_ERROR_MESSAGE, createSafeActionClient } from "next-safe-action";
 import { headers } from "next/headers";
 import { z } from "zod";
 
@@ -33,7 +33,7 @@ export const actionClientWithMeta = createSafeActionClient({
       requiresAuth: z.boolean().default(false),
       rateLimit: z.object({
         requests: z.number(),
-        window: z.string(),
+        window: z.string(), // e.g., "10s", "1m"
       }).optional(),
     });
   },

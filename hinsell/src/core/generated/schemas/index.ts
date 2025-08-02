@@ -633,7 +633,7 @@ export const KeyboardShortcutsSchema = z.object({
   page_url_pattern: z.string().max(200, "Maximum length is 200").optional(),
   priority: z.number().int().min(0, "Minimum value is 0").max(2147483647, "Maximum value is 2147483647").optional(),
   sort_order: z.number().int().min(0, "Minimum value is 0").max(2147483647, "Maximum value is 2147483647").optional(),
-  javascript_function: z.string().optional(),
+  javascript_function: z.string().max(500, "Maximum length is 500").optional(),
   alternative_combination: z.string().max(50, "Maximum length is 50").optional(),
   is_active: z.boolean().optional(),
   is_deleted: z.boolean().optional(),
@@ -1267,13 +1267,12 @@ export const AccountsUpdateBalanceParamsSchema = z.object({
   })
 })
 
-
 export type AccountsUpdateBalanceParams = z.infer<typeof AccountsUpdateBalanceParamsSchema>
 /**
- * Success response schema for GET /api/webhooks/deliveries/
- * Status: 200
- * 
+ * Request schema for POST /accounts/{id}/update_balance/
  */
+
+
 export const ApiWebhooksDeliveriesListResponseSchema = z.array(WebhookDeliverySchema)
 
 export type ApiWebhooksDeliveriesListResponse = z.infer<typeof ApiWebhooksDeliveriesListResponseSchema>

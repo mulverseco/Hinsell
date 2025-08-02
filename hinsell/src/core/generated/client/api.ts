@@ -2,7 +2,7 @@ import 'server-only'
 import { z } from 'zod'
 import { cache } from 'react'
 import { BaseApiClient } from './base'
-import type { ClientResponse, RequestConfiguration } from './base'
+import type { RequestConfiguration } from './base'
 import { defaultMiddleware } from './middleware'
 import {
   ApiWebhooksDeliveriesListResponseSchema,

@@ -1,4 +1,4 @@
-import 'server-only'
+"use server"
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'

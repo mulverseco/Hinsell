@@ -15,6 +15,7 @@ import { CloseIcon } from "components/icons/close-icon"
 import { SearchButton } from "./search-button"
 import { NavigationItem } from "./navigation-item"
 import Link from "next/link"
+import { useItemGroupsList } from "@/core/generated/hooks/itemGroups"
 
 const ProductAddedAlert = dynamic(() =>
   import("components/product/product-added-alert").then((mod) => mod.ProductAddedAlert)
@@ -46,6 +47,8 @@ function VariantGrid({
 }
 
 export function NavigationBar({ items }: NavigationBarProps) {
+  const ItemGroups = useItemGroupsList()
+  console.log("ItemGroups", ItemGroups)
   const itemsMarkup = items.map((singleMenuItem) => (
     <li
       data-content={singleMenuItem.text}
