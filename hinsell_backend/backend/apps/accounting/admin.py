@@ -110,20 +110,20 @@ class TaxConfigurationAdmin(admin.ModelAdmin):
 
 @admin.register(PaymentMethod)
 class PaymentMethodAdmin(admin.ModelAdmin):
-    list_display = ('name', 'branch', 'method_type', 'processing_fee_rate', 'is_active')
-    list_filter = ('branch', 'method_type', 'is_active')
-    search_fields = ('name', 'processor_name')
+    list_display = ('code', 'name', 'branch', 'payment_type', 'processing_fee_rate', 'is_active')
+    list_filter = ('branch', 'payment_type', 'is_active')
+    search_fields = ('code', 'name')
     list_editable = ('processing_fee_rate', 'is_active')
     list_per_page = 25
     fieldsets = (
         (None, {
-            'fields': ('branch', 'name', 'method_type', 'processor_name')
+            'fields': ('branch', 'code', 'name', 'payment_type', 'account')
         }),
         (_('Fee Configuration'), {
-            'fields': ('processing_fee_rate', 'fixed_fee', 'fee_account')
+            'fields': ('processing_fee_rate', 'processing_fee_account')
         }),
         (_('Settings'), {
-            'fields': ('is_active', 'requires_verification', 'settlement_days')
+            'fields': ('is_active',)
         }),
     )
 
