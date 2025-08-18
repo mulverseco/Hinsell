@@ -234,6 +234,7 @@ class AccountType(AuditableModel):
     def __str__(self):
         return f"{self.code} - {self.name}"
 
+
 class Account(AuditableModel):
     """Chart of accounts with comprehensive features."""
     class AccountNature(models.TextChoices):
@@ -482,6 +483,157 @@ class Account(AuditableModel):
 
     def __str__(self):
         return f"{self.code} - {self.name}"
+
+class TaxConfiguration(AuditableModel, CodeGenerationMixin):
+    """Tax configuration for different tax types"""
+    
+    class TaxType(models.TextChoices):
+        SALES_TAX = 'sales_tax', _('Sales Tax')
+        VAT = 'vat', _('VAT')
+        INCOME_TAX = 'income_tax', _('Income Tax')
+        WITHHOLDING_TAX = 'withholding_tax', _('Withholding Tax')
+        CUSTOM_DUTY = 'custom_duty', _('Custom Duty')
+
+    branch = models.ForeignKey(
+        Branch,
+        on_delete=models.CASCADE,
+        related_name='tax_configurations',
+        verbose_name=_("Branch")
+    )
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=True,
+        verbose_name=_("Code")
+    )
+    name = models.CharField(
+        max_length=100,
+        verbose_name=_("Name")
+    )
+    tax_type = models.CharField(
+        max_length=20,
+        choices=TaxType.choices,
+        verbose_name=_("Tax Type")
+    )
+    rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[validate_percentage],
+        verbose_name=_("Tax Rate (%)")
+    )
+    is_inclusive = models.BooleanField(
+        default=False,
+        verbose_name=_("Tax Inclusive"),
+        help_text=_("Whether tax is included in the price")
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=_("Active")
+    )
+    effective_from = models.DateField(
+        verbose_name=_("Effective From")
+    )
+    effective_to = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_("Effective To")
+    )
+    tax_account = models.ForeignKey(
+        'user_manager.Account',
+        on_delete=models.PROTECT,
+        related_name='tax_configurations',
+        verbose_name=_("Tax Account")
+    )
+
+    class Meta:
+        verbose_name = _("Tax Configuration")
+        verbose_name_plural = _("Tax Configurations")
+        unique_together = [['branch', 'name']]
+        indexes = [
+            models.Index(fields=['branch', 'tax_type']),
+            models.Index(fields=['is_active', 'effective_from']),
+        ]
+
+    def get_code_prefix(self):
+        return 'TX'
+
+    def __str__(self):
+        return f"{self.name} ({self.rate}%)"
+
+class PaymentMethod(AuditableModel, CodeGenerationMixin):
+    """Payment methods configuration"""
+    
+    class PaymentType(models.TextChoices):
+        CASH = 'cash', _('Cash')
+        BANK_TRANSFER = 'bank_transfer', _('Bank Transfer')
+        CREDIT_CARD = 'credit_card', _('Credit Card')
+        DEBIT_CARD = 'debit_card', _('Debit Card')
+        DIGITAL_WALLET = 'digital_wallet', _('Digital Wallet')
+        CRYPTOCURRENCY = 'cryptocurrency', _('Cryptocurrency')
+        CHECK = 'check', _('Check')
+        OTHER = 'other', _('Other')
+
+    branch = models.ForeignKey(
+        Branch,
+        on_delete=models.CASCADE,
+        related_name='payment_methods',
+        verbose_name=_("Branch")
+    )
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=True,
+        verbose_name=_("Code")
+    )
+    name = models.CharField(
+        max_length=100,
+        verbose_name=_("Name")
+    )
+    payment_type = models.CharField(
+        max_length=20,
+        choices=PaymentType.choices,
+        verbose_name=_("Payment Type")
+    )
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.PROTECT,
+        related_name='payment_methods',
+        verbose_name=_("Associated Account")
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=_("Active")
+    )
+    processing_fee_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[validate_percentage],
+        verbose_name=_("Processing Fee Rate (%)")
+    )
+    processing_fee_account = models.ForeignKey(
+        Account,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='processing_fee_methods',
+        verbose_name=_("Processing Fee Account")
+    )
+
+    class Meta:
+        verbose_name = _("Payment Method")
+        verbose_name_plural = _("Payment Methods")
+        unique_together = [['branch', 'name']]
+        indexes = [
+            models.Index(fields=['branch', 'payment_type']),
+            models.Index(fields=['is_active']),
+        ]
+
+    def get_code_prefix(self):
+        return 'PM'
+
+    def __str__(self):
+        return f"{self.name} ({self.get_payment_type_display()})"
 
 class CostCenter(AuditableModel):
     """Cost center management for financial reporting."""
