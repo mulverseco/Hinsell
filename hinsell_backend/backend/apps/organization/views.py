@@ -126,7 +126,7 @@ class SystemSettingsViewSet(BaseViewSet):
     }
     logger_name = __name__
     filterset_fields = ['branch', 'require_two_factor_auth']
-    search_fields = ['branch__branch_name', 'branch__code']
+    search_fields = ['branch__branch_name', 'code']
     ordering_fields = ['branch', 'created_at']
 
     def perform_destroy(self, instance):
