@@ -430,17 +430,17 @@ class License(AuditableModel):
                 primary_branch = self.company.branches.filter(is_primary=True).first()
                 if primary_branch:
                     service = MessagingService(branch=primary_branch)
-                    service.send_notification(
-                        recipient=None,
-                        notification_type='system_maintenance',
-                        context_data={
-                            'email': self.licensee_email,
-                            'days_left': days_left,
-                            'company_name': self.company.company_name
-                        },
-                        channel='email',
-                        priority='urgent'
-                    )
+                    # service.send_notification(
+                    #     recipient=None,
+                    #     notification_type='system_maintenance',
+                    #     context_data={
+                    #         'email': self.licensee_email,
+                    #         'days_left': days_left,
+                    #         'company_name': self.company.company_name
+                    #     },
+                    #     channel='email',
+                    #     priority='urgent'
+                    # )
             except Exception as e:
                 logger.error(f"Error sending license expiry notification for {self.company.company_name}: {str(e)}", exc_info=True)
         self.save()
