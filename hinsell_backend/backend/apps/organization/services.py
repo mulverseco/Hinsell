@@ -131,19 +131,19 @@ class BranchService:
             username=created_by.username if created_by else None,
             details={'branch_code': branch.branch_code, 'name': branch.branch_name}
         )
-        if company.email:
-            MessagingService(branch=branch).send_notification(
-                recipient=None,
-                notification_type='branch_created',
-                context_data={
-                    'email': company.email,
-                    'branch_name': branch.branch_name,
-                    'company_name': company.company_name,
-                    'site_name': settings.SITE_NAME
-                },
-                channel='email',
-                priority='normal'
-            )
+        # if company.email:
+        #     MessagingService(branch=branch).send_notification(
+        #         recipient=None,
+        #         notification_type='branch_created',
+        #         context_data={
+        #             'email': company.email,
+        #             'branch_name': branch.branch_name,
+        #             'company_name': company.company_name,
+        #             'site_name': settings.SITE_NAME
+        #         },
+        #         channel='email',
+        #         priority='normal'
+        #     )
         return branch
 
 class SystemSettingsService:
