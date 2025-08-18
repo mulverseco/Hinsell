@@ -54,17 +54,17 @@ class StoreGroupAdmin(admin.ModelAdmin):
         """Log store group creation or update in audit log."""
         from apps.authentication.models import AuditLog
         super().save_model(request, obj, form, change)
-        AuditLog.objects.create(
-            branch=obj.branch,
-            user=obj.created_by,
-            action_type=AuditLog.ActionType.DATA_MODIFICATION,
-            username=obj.created_by.username if obj.created_by else None,
-            details={
-                'changed_by': request.user.username,
-                'store_group_code': obj.code,
-                'action': 'update' if change else 'create'
-            }
-        )
+        # AuditLog.objects.create(
+        #     branch=obj.branch,
+        #     user=obj.created_by,
+        #     action_type=AuditLog.ActionType.DATA_MODIFICATION,
+        #     username=obj.created_by.username if obj.created_by else None,
+        #     details={
+        #         'changed_by': request.user.username,
+        #         'store_group_code': obj.code,
+        #         'action': 'update' if change else 'create'
+        #     }
+        # )
 
 
 @admin.register(ItemGroup)
