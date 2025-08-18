@@ -484,7 +484,7 @@ class Account(AuditableModel):
     def __str__(self):
         return f"{self.code} - {self.name}"
 
-class TaxConfiguration(AuditableModel, CodeGenerationMixin):
+class TaxConfiguration(AuditableModel):
     """Tax configuration for different tax types"""
     
     class TaxType(models.TextChoices):
@@ -560,7 +560,7 @@ class TaxConfiguration(AuditableModel, CodeGenerationMixin):
     def __str__(self):
         return f"{self.name} ({self.rate}%)"
 
-class PaymentMethod(AuditableModel, CodeGenerationMixin):
+class PaymentMethod(AuditableModel):
     """Payment methods configuration"""
     
     class PaymentType(models.TextChoices):
