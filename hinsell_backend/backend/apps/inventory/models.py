@@ -8,7 +8,7 @@ from apps.core_apps.general import AuditableModel
 from apps.core_apps.validators import validate_positive_decimal, validate_percentage
 from apps.organization.models import Branch
 from apps.accounting.models import Account
-from apps.core_apps.utils import Logger, generate_unique_code, generate_unique_slug
+from apps.core_apps.utils import Logger, generate_unique_slug
 from apps.shared.models import Media
 
 class StoreGroup(AuditableModel):

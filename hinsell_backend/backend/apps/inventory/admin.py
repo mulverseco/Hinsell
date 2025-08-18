@@ -50,22 +50,6 @@ class StoreGroupAdmin(admin.ModelAdmin):
                 return self.model.objects.all_with_deleted()
             return qs
 
-    def save_model(self, request, obj, form, change):
-        """Log store group creation or update in audit log."""
-        from apps.authentication.models import AuditLog
-        super().save_model(request, obj, form, change)
-        # AuditLog.objects.create(
-        #     branch=obj.branch,
-        #     user=obj.created_by,
-        #     action_type=AuditLog.ActionType.DATA_MODIFICATION,
-        #     username=obj.created_by.username if obj.created_by else None,
-        #     details={
-        #         'changed_by': request.user.username,
-        #         'store_group_code': obj.code,
-        #         'action': 'update' if change else 'create'
-        #     }
-        # )
-
 
 @admin.register(ItemGroup)
 class ItemGroupAdmin(admin.ModelAdmin):
@@ -120,22 +104,6 @@ class ItemGroupAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return  self.model.objects.all_with_deleted()
         return qs
-
-    def save_model(self, request, obj, form, change):
-        """Log item group creation or update in audit log."""
-        from apps.authentication.models import AuditLog
-        super().save_model(request, obj, form, change)
-        AuditLog.objects.create(
-            branch=obj.branch,
-            user=obj.created_by,
-            action_type=AuditLog.ActionType.DATA_MODIFICATION,
-            username=obj.created_by.username if obj.created_by else None,
-            details={
-                'changed_by': request.user.username,
-                'item_group_code': obj.code,
-                'action': 'update' if change else 'create'
-            }
-        )
 
 
 @admin.register(Item)
@@ -270,23 +238,6 @@ class ItemAdmin(admin.ModelAdmin):
             return  self.model.objects.all_with_deleted()
         return qs
 
-    def save_model(self, request, obj, form, change):
-        """Log item creation or update in audit log."""
-        from apps.authentication.models import AuditLog
-        super().save_model(request, obj, form, change)
-        AuditLog.objects.create(
-            branch=obj.branch,
-            user=obj.created_by,
-            action_type=AuditLog.ActionType.DATA_MODIFICATION,
-            username=obj.created_by.username if obj.created_by else None,
-            details={
-                'changed_by': request.user.username,
-                'item_code': obj.code,
-                'action': 'update' if change else 'create'
-            }
-        )
-
-
 @admin.register(ItemVariant)
 class ItemVariantAdmin(admin.ModelAdmin):
     """
@@ -334,22 +285,6 @@ class ItemVariantAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return  self.model.objects.all_with_deleted()
         return qs
-
-    def save_model(self, request, obj, form, change):
-        """Log item variant creation or update in audit log."""
-        from apps.authentication.models import AuditLog
-        super().save_model(request, obj, form, change)
-        AuditLog.objects.create(
-            branch=obj.item.branch,
-            user=obj.created_by,
-            action_type=AuditLog.ActionType.DATA_MODIFICATION,
-            username=obj.created_by.username if obj.created_by else None,
-            details={
-                'changed_by': request.user.username,
-                'variant_code': obj.code,
-                'action': 'update' if change else 'create'
-            }
-        )
 
 
 @admin.register(ItemUnit)
@@ -404,22 +339,6 @@ class ItemUnitAdmin(admin.ModelAdmin):
             return  self.model.objects.all_with_deleted()
         return qs
 
-    def save_model(self, request, obj, form, change):
-        """Log item unit creation or update in audit log."""
-        from apps.authentication.models import AuditLog
-        super().save_model(request, obj, form, change)
-        AuditLog.objects.create(
-            branch=obj.item.item.branch,
-            user=obj.created_by,
-            action_type=AuditLog.ActionType.DATA_MODIFICATION,
-            username=obj.created_by.username if obj.created_by else None,
-            details={
-                'changed_by': request.user.username,
-                'unit_code': obj.code,
-                'action': 'update' if change else 'create'
-            }
-        )
-
 
 @admin.register(ItemBarcode)
 class ItemBarcodeAdmin(admin.ModelAdmin):
@@ -463,22 +382,6 @@ class ItemBarcodeAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return  self.model.objects.all_with_deleted()
         return qs
-
-    def save_model(self, request, obj, form, change):
-        """Log barcode creation or update in audit log."""
-        from apps.authentication.models import AuditLog
-        super().save_model(request, obj, form, change)
-        AuditLog.objects.create(
-            branch=obj.item.item.branch,
-            user=obj.created_by,
-            action_type=AuditLog.ActionType.DATA_MODIFICATION,
-            username=obj.created_by.username if obj.created_by else None,
-            details={
-                'changed_by': request.user.username,
-                'barcode': obj.barcode,
-                'action': 'update' if change else 'create'
-            }
-        )
 
 
 @admin.register(InventoryBalance)
@@ -529,23 +432,6 @@ class InventoryBalanceAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return  self.model.objects.all_with_deleted()
         return qs
-
-    def save_model(self, request, obj, form, change):
-        """Log inventory balance creation or update in audit log."""
-        from apps.authentication.models import AuditLog
-        super().save_model(request, obj, form, change)
-        AuditLog.objects.create(
-            branch=obj.branch,
-            user=obj.created_by,
-            action_type=AuditLog.ActionType.DATA_MODIFICATION,
-            username=obj.created_by.username if obj.created_by else None,
-            details={
-                'changed_by': request.user.username,
-                'item_code': obj.item.item.code,
-                'batch_number': obj.batch_number,
-                'action': 'update' if change else 'create'
-            }
-        )
 
     def has_add_permission(self, request):
         """Prevent manual creation of inventory balances."""
