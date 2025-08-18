@@ -1,0 +1,31 @@
+services:
+  core:
+    build:
+      context: ./backend
+    container_name: hinsell_backend
+    env_file: .env
+    ports:
+      - "8000:8000"
+    networks:
+      - mynetwork
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  celery:
+    build:
+      context: ./backend
+      dockerfile: ../infrastructure/celery/celery-worker/Dockerfile
+    container_name: hinsell_celery
+    env_file: .env
+    depends_on:
+      - core
+    networks:
+      - mynetwork
+    command: ["celery", "-A", "core", "worker", "--loglevel=info"]
+    
+networks:
+  mynetwork:
+    driver: bridge
