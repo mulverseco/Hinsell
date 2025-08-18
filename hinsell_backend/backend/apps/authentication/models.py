@@ -600,8 +600,15 @@ class AuditLog(AuditableModel):
         if not self.username and self.user:
             self.username = self.user.username
         super().save(*args, **kwargs)
-        logger.info(f"Audit log saved for action: {self.get_action_type_display()}", 
-                   extra={'user_type': self.user.user_type, 'action_type': self.action_type})
+        logger.info(
+            f"Audit log saved for action: {self.get_action_type_display()}",
+            extra={
+                'user_type': self.user.user_type if self.user else None,
+                'action_type': self.action_type
+            }
+        )
 
     def __str__(self):
-        return f"{self.user.get_full_name()} ({self.user.get_user_type_display()}) - {self.get_action_type_display()} at {self.created_at}"
+        if self.user:
+            return f"{self.user.get_full_name()} ({self.user.get_user_type_display()}) - {self.get_action_type_display()} at {self.created_at}"
+        return f"System - {self.get_action_type_display()} at {self.created_at}"
