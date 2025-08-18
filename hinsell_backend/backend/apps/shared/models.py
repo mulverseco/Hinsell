@@ -81,6 +81,8 @@ class Media(AuditableModel):
             ('document', _('Document')),
             ('other', _('Other')),
         ],
+        blank=True,
+        null=True,
         verbose_name=_("Media Type"),
         help_text=_("Automatically detected media type")
     )
