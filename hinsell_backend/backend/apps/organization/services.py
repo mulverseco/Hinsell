@@ -15,6 +15,7 @@ class LicenseService:
     def create_license(company, license_type, licensee_name, licensee_email, created_by=None):
         if company.is_deleted or license_type.is_deleted:
             raise ValidationError(_('Cannot create license for deleted company or license type.'))
+        
         license_key = License.generate_license_key()
         license = License.objects.create(
             license_key=license_key,
@@ -26,13 +27,34 @@ class LicenseService:
             updated_by=created_by
         )
         license.validate_and_update()
+        
+        primary_branch = company.branches.filter(is_primary=True, is_deleted=False).first()
         AuditService.create_audit_log(
-            branch=company.branches.filter(is_primary=True, is_deleted=False).first(),
+            branch=primary_branch,
             user=created_by,
             action_type=AuditLog.ActionType.LICENSE_CREATED,
             username=created_by.username if created_by else None,
             details={'license_code': license.license_code, 'company': company.company_name}
         )
+        
+        if license.licensee_email:
+            try:
+                if primary_branch:  # Only send notification if primary branch exists
+                    MessagingService(branch=primary_branch).send_notification(
+                        recipient=None,
+                        notification_type='license_created',
+                        context_data={
+                            'email': license.licensee_email,
+                            'license_code': license.license_code,
+                            'company_name': company.company_name,
+                            'site_name': settings.SITE_NAME
+                        },
+                        channel='email',
+                        priority='high'
+                    )
+            except Exception as e:
+                logger.error(f"Failed to send license creation notification: {str(e)}", exc_info=True)
+        
         return license
 
     @staticmethod
