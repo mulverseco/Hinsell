@@ -509,7 +509,7 @@ class AuditLog(AuditableModel):
         User,
         blank=True, 
         null=True,
-        on_delete=django.db.models.deletion.SET_NULL,
+        on_delete=models.deletion.SET_NULL,
         related_name="audit_logs",
         verbose_name=_("User")
     )
