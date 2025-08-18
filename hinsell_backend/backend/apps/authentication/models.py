@@ -507,7 +507,9 @@ class AuditLog(AuditableModel):
     )
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        blank=True, 
+        null=True,
+        on_delete=django.db.models.deletion.SET_NULL,
         related_name="audit_logs",
         verbose_name=_("User")
     )

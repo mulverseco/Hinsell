@@ -160,6 +160,14 @@ class AuditService:
 
     @staticmethod
     def create_audit_log(branch, user, action_type, username=None, ip_address=None, user_agent='', session_id=None, details=None, login_status=AuditLog.LoginStatus.SUCCESS):
+        # Skip audit log creation if no user is available during initial setup
+        if user is None and action_type == AuditLog.ActionType.SYSTEM_ACCESS:
+            logger.info(
+                f"Skipping audit log creation during system setup - no user available",
+                extra={'action_type': action_type, 'branch': branch.branch_name if branch else None}
+            )
+            return None
+            
         audit_log = AuditLog.objects.create(
             branch=branch,
             user=user,

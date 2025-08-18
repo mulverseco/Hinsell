@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from apps.core_apps.services.messaging_service import MessagingService
 
 logger = Logger(__name__)
+
 @receiver(post_save, sender=Branch)
 def create_system_settings(sender, instance, created, **kwargs):
     if created:
@@ -17,13 +18,21 @@ def create_system_settings(sender, instance, created, **kwargs):
             extra={'branch_id': instance.id, 'company': instance.company.company_name}
         )
         from apps.authentication.services import AuditService
-        AuditService.create_audit_log(
-            branch=instance,
-            user=instance.created_by,
-            action_type=AuditLog.ActionType.SYSTEM_ACCESS,
-            username=instance.created_by.username if instance.created_by else None,
-            details={'action': 'System settings created', 'branch': instance.branch_name}
-        )
+        
+        if instance.created_by is not None:
+            AuditService.create_audit_log(
+                branch=instance,
+                user=instance.created_by,
+                action_type=AuditLog.ActionType.SYSTEM_ACCESS,
+                username=instance.created_by.username,
+                details={'action': 'System settings created', 'branch': instance.branch_name}
+            )
+        else:
+            logger.info(
+                f"Skipping audit log creation for system setup - no user available",
+                extra={'branch': instance.branch_name, 'company': instance.company.company_name}
+            )
+        
         # if instance.company.email:
         #     MessagingService(branch=instance).send_notification(
         #         recipient=None,
