@@ -68,14 +68,14 @@ class LicenseTypeAdmin(admin.ModelAdmin):
 
 @admin.register(License)
 class LicenseAdmin(admin.ModelAdmin):
-    list_display = ['license_code', 'company', 'license_type', 'status', 'issued_date', 'expiry_date', 'violation_count', 'is_active', 'is_deleted']
+    list_display = ['code', 'company', 'license_type', 'status', 'issued_date', 'expiry_date', 'violation_count', 'is_active', 'is_deleted']
     list_filter = ['status', 'license_type__category', 'is_active', 'is_deleted']
-    search_fields = ['license_code', 'license_key', 'licensee_name', 'licensee_email']
+    search_fields = ['code', 'license_key', 'licensee_name', 'licensee_email']
     list_editable = ['status']
     ordering = ['-issued_date']
     fieldsets = (
         (None, {
-            'fields': ('license_code', 'license_key', 'license_type', 'company', 'status')
+            'fields': ('code', 'license_key', 'license_type', 'company', 'status')
         }),
         (_('Details'), {
             'fields': ('licensee_name', 'licensee_email', 'notes')
@@ -125,9 +125,9 @@ class LicenseAdmin(admin.ModelAdmin):
             user=request.user,
             action_type='license_updated' if change else 'license_created',
             username=request.user.username,
-            details={'license_code': obj.license_code, 'company': obj.company.company_name}
+            details={'code': obj.code, 'company': obj.company.company_name}
         )
-        logger.info(f"{'Updated' if change else 'Created'} license: {obj.license_code}", extra={'user_id': request.user.id})
+        logger.info(f"{'Updated' if change else 'Created'} license: {obj.code}", extra={'user_id': request.user.id})
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
@@ -184,14 +184,14 @@ class CompanyAdmin(admin.ModelAdmin):
 
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
-    list_display = ['branch_code', 'branch_name', 'company', 'is_primary', 'is_headquarters', 'email', 'is_active', 'is_deleted']
+    list_display = ['code', 'branch_name', 'company', 'is_primary', 'is_headquarters', 'email', 'is_active', 'is_deleted']
     list_filter = ['company', 'is_primary', 'is_headquarters', 'use_multi_currency', 'is_active', 'is_deleted']
-    search_fields = ['branch_code', 'branch_name', 'email', 'phone_number']
+    search_fields = ['code', 'branch_name', 'email', 'phone_number']
     list_editable = ['is_primary', 'is_headquarters']
     ordering = ['company', 'branch_name']
     fieldsets = (
         (None, {
-            'fields': ('company', 'branch_code', 'branch_name', 'branch_name_english')
+            'fields': ('company', 'code', 'branch_name', 'branch_name_english')
         }),
         (_('Status'), {
             'fields': ('is_primary', 'is_headquarters', 'is_active', 'is_deleted', 'deleted_at')
@@ -239,7 +239,7 @@ class BranchAdmin(admin.ModelAdmin):
             user=request.user,
             action_type='branch_updated' if change else 'branch_created',
             username=request.user.username,
-            details={'branch_code': obj.branch_code, 'name': obj.branch_name}
+            details={'code': obj.code, 'name': obj.branch_name}
         )
         logger.info(f"{'Updated' if change else 'Created'} branch: {obj.branch_name}", extra={'user_id': request.user.id})
 
@@ -247,7 +247,7 @@ class BranchAdmin(admin.ModelAdmin):
 class SystemSettingsAdmin(admin.ModelAdmin):
     list_display = ['branch', 'connection_timeout', 'session_timeout', 'max_login_attempts', 'require_two_factor_auth', 'is_active', 'is_deleted']
     list_filter = ['branch__company', 'require_two_factor_auth', 'is_active', 'is_deleted']
-    search_fields = ['branch__branch_name', 'branch__branch_code']
+    search_fields = ['branch__branch_name', 'branch__code']
     ordering = ['branch']
     fieldsets = (
         (None, {
