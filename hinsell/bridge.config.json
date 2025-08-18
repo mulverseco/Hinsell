@@ -1,5 +1,5 @@
 {
-  "schema": "http://localhost:8000/swagger/?format=openapi",
+  "schema": "https://hinsell.mulverse.com/swagger/?format=openapi",
   "outputDir": "src/core/generated",
   "framework": {
     "type": "nextjs",
@@ -12,7 +12,7 @@
     }
   },
   "api": {
-    "baseUrl": "http://localhost:8000/api",
+    "baseUrl": "https://hinsell.mulverse.com/api",
     "timeout": 30000,
     "retries": 3
   },
