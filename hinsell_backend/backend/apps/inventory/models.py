@@ -102,7 +102,7 @@ class StoreGroup(AuditableModel):
             raise ValidationError({'name': _('Name cannot be empty.')})
 
     def __str__(self):
-        return f"{self.code} - {self.name} ({self.branch.name})"
+        return f"{self.code} - {self.name} ({self.branch.branch_name})"
 
 class ItemGroup(AuditableModel):
     """Item group with hierarchical structure for e-commerce."""
