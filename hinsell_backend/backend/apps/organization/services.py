@@ -37,23 +37,23 @@ class LicenseService:
             details={'license_code': license.license_code, 'company': company.company_name}
         )
         
-        if license.licensee_email:
-            try:
-                if primary_branch:  # Only send notification if primary branch exists
-                    MessagingService(branch=primary_branch).send_notification(
-                        recipient=None,
-                        notification_type='license_created',
-                        context_data={
-                            'email': license.licensee_email,
-                            'license_code': license.license_code,
-                            'company_name': company.company_name,
-                            'site_name': settings.SITE_NAME
-                        },
-                        channel='email',
-                        priority='high'
-                    )
-            except Exception as e:
-                logger.error(f"Failed to send license creation notification: {str(e)}", exc_info=True)
+        # if license.licensee_email:
+        #     try:
+        #         if primary_branch:  # Only send notification if primary branch exists
+        #             MessagingService(branch=primary_branch).send_notification(
+        #                 recipient=None,
+        #                 notification_type='license_created',
+        #                 context_data={
+        #                     'email': license.licensee_email,
+        #                     'license_code': license.license_code,
+        #                     'company_name': company.company_name,
+        #                     'site_name': settings.SITE_NAME
+        #                 },
+        #                 channel='email',
+        #                 priority='high'
+        #             )
+        #     except Exception as e:
+        #         logger.error(f"Failed to send license creation notification: {str(e)}", exc_info=True)
         
         return license
 

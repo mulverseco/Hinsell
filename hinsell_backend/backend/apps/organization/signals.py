@@ -24,19 +24,19 @@ def create_system_settings(sender, instance, created, **kwargs):
             username=instance.created_by.username if instance.created_by else None,
             details={'action': 'System settings created', 'branch': instance.branch_name}
         )
-        if instance.company.email:
-            MessagingService(branch=instance).send_notification(
-                recipient=None,
-                notification_type='branch_created',
-                context_data={
-                    'email': instance.company.email,
-                    'branch_name': instance.branch_name,
-                    'company_name': instance.company.company_name,
-                    'site_name': settings.SITE_NAME
-                },
-                channel='email',
-                priority='normal'
-            )
+        # if instance.company.email:
+        #     MessagingService(branch=instance).send_notification(
+        #         recipient=None,
+        #         notification_type='branch_created',
+        #         context_data={
+        #             'email': instance.company.email,
+        #             'branch_name': instance.branch_name,
+        #             'company_name': instance.company.company_name,
+        #             'site_name': settings.SITE_NAME
+        #         },
+        #         channel='email',
+        #         priority='normal'
+        #     )
 
 @receiver(post_save, sender=License)
 def notify_license_activation(sender, instance, created, **kwargs):
