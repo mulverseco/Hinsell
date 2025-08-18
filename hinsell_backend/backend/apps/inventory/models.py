@@ -28,7 +28,8 @@ class StoreGroup(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
-        verbose_name=_("Code"),
+        blank=True,
+        verbose_name=_("Code")
     )
     name = models.CharField(
         max_length=100,
@@ -78,22 +79,6 @@ class StoreGroup(AuditableModel):
             models.Index(fields=['slug']),
         ]
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = generate_unique_slug(self.name, StoreGroup)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('SG')
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
-
     def clean(self):
         super().clean()
         if not self.code.strip():
@@ -125,7 +110,9 @@ class ItemGroup(AuditableModel):
     )
     code = models.CharField(
         max_length=20,
-        verbose_name=_("Code"),
+        unique=True,
+        blank=True,
+        verbose_name=_("Code")
     )
     name = models.CharField(
         max_length=100,
@@ -193,22 +180,6 @@ class ItemGroup(AuditableModel):
             models.Index(fields=['slug', 'is_featured', 'visibility']),
         ]
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = generate_unique_slug(self.name, ItemGroup)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('IG')
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
-
     def clean(self):
         super().clean()
         if not self.code.strip():
@@ -254,8 +225,10 @@ class Item(AuditableModel):
         verbose_name=_("Item Group")
     )
     code = models.CharField(
-        max_length=50,
-        verbose_name=_("Code"),
+        max_length=20,
+        unique=True,
+        blank=True,
+        verbose_name=_("Code")
     )
     name = models.CharField(
         max_length=200,
@@ -590,22 +563,6 @@ class Item(AuditableModel):
             )
         ]
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = generate_unique_slug(self.name, Item)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('ITM')
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
-
     def clean(self):
         super().clean()
         if not self.code.strip():
@@ -710,8 +667,10 @@ class ItemVariant(AuditableModel):
         verbose_name=_("Item")
     )
     code = models.CharField(
-        max_length=50,
-        verbose_name=_("Code"),
+        max_length=20,
+        unique=True,
+        blank=True,
+        verbose_name=_("Code")
     )
     size = models.CharField(
         max_length=50,
@@ -766,20 +725,6 @@ class ItemVariant(AuditableModel):
             models.Index(fields=['item', 'code']),
             models.Index(fields=['size', 'color']),
         ]
-
-    def save(self, *args, **kwargs):
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('VAR')
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def clean(self):
         super().clean()
@@ -857,7 +802,9 @@ class ItemUnit(AuditableModel):
     )
     code = models.CharField(
         max_length=20,
-        verbose_name=_("Code"),
+        unique=True,
+        blank=True,
+        verbose_name=_("Code")
     )
     name = models.CharField(
         max_length=50,
@@ -911,25 +858,6 @@ class ItemUnit(AuditableModel):
                 name='positive_conversion_factor'
             )
         ]
-
-    def save(self, *args, **kwargs):
-        if self.is_default:
-            ItemUnit.objects.filter(
-                item=self.item,
-                is_default=True
-            ).exclude(id=self.id).update(is_default=False)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('UNT')
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def clean(self):
         super().clean()

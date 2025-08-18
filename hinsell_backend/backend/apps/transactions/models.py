@@ -37,6 +37,7 @@ class TransactionType(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -100,24 +101,6 @@ class TransactionType(AuditableModel):
             if not (self.default_debit_account and self.default_credit_account):
                 raise ValidationError({'default_debit_account': _('Accounts are required for multi-currency transactions.')})
 
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('TT', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"TransactionType saved successfully: {self.code}", extra={'transaction_type_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('TT', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving TransactionType {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
-
     def __str__(self):
         return f"{self.code} - {self.name} ({self.get_category_display()})"
 
@@ -140,6 +123,7 @@ class TransactionHeader(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     transaction_type = models.ForeignKey(
@@ -341,24 +325,6 @@ class TransactionHeader(AuditableModel):
         else:
             if self.status != self.Status.DRAFT:
                 raise ValidationError({'status': _('New transactions must start as DRAFT.')})
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('TXN', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"TransactionHeader saved successfully: {self.code}", extra={'transaction_header_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('TXN', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving TransactionHeader {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def _is_valid_status_transition(self, old_status: str, new_status: str) -> bool:
         valid_transitions = {
@@ -746,6 +712,7 @@ class LedgerEntry(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     transaction_header = models.ForeignKey(
@@ -866,24 +833,6 @@ class LedgerEntry(AuditableModel):
             raise ValidationError({'cost_center': _('Cost center is required for this account type.')})
         if self.currency != self.branch.default_currency and not self.branch.company.has_feature('multi_currency'):
             raise ValidationError({'currency': _('Multi-currency not supported by license.')})
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('LED', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"LedgerEntry saved successfully: {self.code}", extra={'ledger_entry_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('LED', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving LedgerEntry {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def get_amount(self) -> Decimal:
         return self.debit_amount if self.debit_amount > 0 else self.credit_amount

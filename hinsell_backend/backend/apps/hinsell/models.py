@@ -45,6 +45,7 @@ class Offer(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -216,26 +217,6 @@ class Offer(AuditableModel):
         ]):
             raise ValidationError({'target_type': _('At least one target must be specified for non-ALL target types.')})
 
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('OFF', length=12)
-        if not self.slug:
-            self.slug = generate_unique_slug(self.name, Offer)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"Offer saved successfully: {self.code}", extra={'offer_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('OFF', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving Offer {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
-
     def is_valid(self, user: Optional[User] = None, country: Optional[str] = None, item: Optional[Item] = None) -> bool:
         """Check if the offer is valid for the given context."""
         now = timezone.now()
@@ -276,9 +257,9 @@ class Offer(AuditableModel):
         elif self.offer_type == self.OfferType.LOYALTY_POINTS:
             result['points_earned'] = self.loyalty_points_earned * quantity
         elif self.offer_type == self.OfferType.FREE_SHIPPING:
-            result['discounted_price'] = price  # No direct price change, handled in shipping logic
+            result['discounted_price'] = price
         elif self.offer_type == self.OfferType.BUNDLE:
-            result['discounted_price'] = price  # Bundle pricing handled in transaction logic
+            result['discounted_price'] = price
         
         self.current_uses += 1
         self.save(update_fields=['current_uses'])
@@ -327,6 +308,7 @@ class Coupon(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -422,24 +404,6 @@ class Coupon(AuditableModel):
             raise ValidationError({'end_date': _('End date must be after start date.')})
         if self.coupon_type == self.CouponType.PERCENTAGE and (self.value < 0 or self.value > 100):
             raise ValidationError({'value': _('Percentage value must be between 0 and 100.')})
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('CPN', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"Coupon saved successfully: {self.code}", extra={'coupon_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('CPN', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving Coupon {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def is_valid(self, user: Optional[User] = None, order_amount: Decimal = Decimal('0')) -> bool:
         """Check if the coupon is valid for the given context."""
@@ -579,6 +543,7 @@ class Campaign(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -700,27 +665,6 @@ class Campaign(AuditableModel):
             raise ValidationError({'end_date': _('End date must be after start date.')})
         if not self.offer and not self.coupon:
             raise ValidationError({'offer': _('At least one of offer or coupon must be specified.'), 'coupon': _('At least one of offer or coupon must be specified.')})
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('CMP', length=12)
-        if not self.slug:
-            self.slug = generate_unique_slug(self.name, Campaign)
-        self.update_conversion_rate()
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"Campaign saved successfully: {self.code}", extra={'campaign_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('CMP', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving Campaign {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def update_conversion_rate(self):
         """Update conversion rate based on impressions and conversions."""

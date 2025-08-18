@@ -3,7 +3,7 @@ from django.db import models
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-import magic  # Requires python-magic
+import magic
 from apps.core_apps.general import AuditableModel
 
 class StableFileExtensionValidator(FileExtensionValidator):

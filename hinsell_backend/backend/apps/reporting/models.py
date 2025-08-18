@@ -47,9 +47,10 @@ class ReportTemplate(AuditableModel):
     )
     
     code = models.CharField(
-        max_length=50,
+        max_length=20,
         unique=True,
-        help_text=_("Report code")
+        blank=True,
+        verbose_name=_("Code")
     )
     name = models.CharField(
         max_length=200,

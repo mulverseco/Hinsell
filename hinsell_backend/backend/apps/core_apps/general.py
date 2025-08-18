@@ -15,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework import viewsets
 from apps.core_apps.utils import Logger
+from apps.core_apps.mixins.code_generation_mixin import CodeGenerationMixin
 
 
 class Pagination(PageNumberPagination):
@@ -132,7 +133,7 @@ class TimestampedModel(models.Model):
             self.deleted_at = None
 
 
-class AuditableModel(TimestampedModel):
+class AuditableModel(CodeGenerationMixin,TimestampedModel):
     """
     Abstract model that adds creator and modifier tracking to TimestampedModel.
     """
@@ -160,7 +161,21 @@ class AuditableModel(TimestampedModel):
             models.Index(fields=['created_by']),
             models.Index(fields=['updated_by']),
         ]
+    
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.created_at = timezone.now()
+        self.updated_at = timezone.now()
 
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        if hasattr(self, 'is_deleted'):
+            self.is_deleted = True
+            self.deleted_at = timezone.now()
+            self.save(update_fields=['is_deleted', 'deleted_at'])
+        else:
+            super().delete(*args, **kwargs)
 
 class BaseViewSet(viewsets.ModelViewSet):
     """Base ViewSet for common functionality across apps."""

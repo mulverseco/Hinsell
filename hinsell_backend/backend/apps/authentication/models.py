@@ -7,10 +7,12 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from apps.core_apps.utils import generate_unique_code, get_default_data_consent, get_default_notifications
 from apps.core_apps.general import AuditableModel
+from apps.core_apps.mixins.code_generation_mixin import CodeGenerationMixin
 from phonenumber_field.modelfields import PhoneNumberField
 from decimal import Decimal
 from apps.core_apps.validators import validate_percentage
 from django.db.utils import IntegrityError
+
 
 
 def upload_avatar(instance, filename):
@@ -243,26 +245,8 @@ class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
         if self.user_type == self.UserType.GUEST and (self.first_name or self.last_name):
             raise ValidationError({'first_name': _('Guest users should not have personal information.'),
                                  'last_name': _('Guest users should not have personal information.')})
-
-    def save(self, *args, **kwargs):
-        from apps.core_apps.utils import Logger
-        logger = Logger(__name__)
-        if self.user_type in [self.UserType.EMPLOYEE, self.UserType.MANAGER, self.UserType.ADMIN] and not self.code:
-            self.code = generate_unique_code('EMP', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"User saved successfully: {self.username}", extra={'user_type': self.user_type})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('EMP', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving user {self.username}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique employee code after retries.')})
+    def get_code_prefix(self):
+        return 'EPM'
 
     def get_full_name(self) -> str:
         full_name = f"{self.first_name} {self.last_name}".strip()

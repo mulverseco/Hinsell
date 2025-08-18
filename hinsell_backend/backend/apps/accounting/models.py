@@ -24,9 +24,10 @@ class Currency(AuditableModel):
         verbose_name=_("Branch")
     )
     code = models.CharField(
-        max_length=5,
-        verbose_name=_("Code"),
-        help_text=_("ISO currency code (e.g., USD, EUR)")
+        max_length=20,
+        unique=True,
+        blank=True,
+        verbose_name=_("Code")
     )
     name = models.CharField(
         max_length=50,
@@ -105,27 +106,6 @@ class Currency(AuditableModel):
             raise ValidationError({'exchange_rate': _('Exchange rate exceeds upper limit.')})
         if self.lower_limit > 0 and self.exchange_rate < self.lower_limit:
             raise ValidationError({'exchange_rate': _('Exchange rate is below lower limit.')})
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('CUR', length=5)
-        if self.is_default:
-            Currency.objects.filter(
-                branch=self.branch,
-                is_default=True
-            ).exclude(id=self.id).update(is_default=False)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('CUR', length=5)
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def update_exchange_rate(self, new_rate: Decimal, user: User = None) -> None:
         old_rate = self.exchange_rate
@@ -214,7 +194,9 @@ class AccountType(AuditableModel):
         verbose_name=_("Branch")
     )
     code = models.CharField(
-        max_length=10,
+        max_length=20,
+        unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -248,22 +230,6 @@ class AccountType(AuditableModel):
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
 
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('ATY', length=8)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('ATY', length=8)
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
-
     def __str__(self):
         return f"{self.code} - {self.name}"
 
@@ -286,6 +252,8 @@ class Account(AuditableModel):
     )
     code = models.CharField(
         max_length=20,
+        unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -440,22 +408,6 @@ class Account(AuditableModel):
         if any(self.enable_notifications.get(channel, False) for channel in ['email', 'sms', 'whatsapp']) and not (self.email or self.phone_number):
             raise ValidationError(_('Account must have email or phone for enabled notifications.'))
 
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('ACT', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('ACT', length=12)
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
-
     def get_full_code(self) -> str:
         if self.parent:
             return f"{self.parent.get_full_code()}.{self.code}"
@@ -539,6 +491,8 @@ class CostCenter(AuditableModel):
     )
     code = models.CharField(
         max_length=20,
+        unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -594,22 +548,6 @@ class CostCenter(AuditableModel):
                 if current == self:
                     raise ValidationError({'parent': _('Circular parent relationship detected.')})
                 current = current.parent
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('CST', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('CST', length=12)
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def get_full_code(self) -> str:
         if self.parent:
@@ -709,7 +647,9 @@ class AccountingPeriod(AuditableModel):
         verbose_name=_("Branch")
     )
     code = models.CharField(
-        max_length=10,
+        max_length=20,
+        unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -765,21 +705,6 @@ class AccountingPeriod(AuditableModel):
         if self.is_closed and not self.closed_at:
             raise ValidationError({'closed_at': _('Closed at timestamp must be set when closing period.')})
 
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('PRD', length=8)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('PRD', length=8)
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def __str__(self):
         return f"{self.code} - {self.name} ({self.fiscal_year})"
@@ -794,6 +719,8 @@ class Budget(AuditableModel):
     )
     code = models.CharField(
         max_length=20,
+        unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -858,22 +785,6 @@ class Budget(AuditableModel):
             raise ValidationError({'name': _('Name cannot be empty.')})
         if not any([self.account, self.cost_center, self.item]):
             raise ValidationError({'account': _('At least one of account, cost center, or item must be set.')})
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('BDG', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('BDG', length=12)
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def calculate_variance(self) -> Decimal:
         return self.budgeted_amount - self.actual_amount

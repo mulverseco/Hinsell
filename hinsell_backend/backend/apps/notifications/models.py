@@ -43,6 +43,7 @@ class NotificationTemplate(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -100,31 +101,6 @@ class NotificationTemplate(AuditableModel):
             raise ValidationError({'content': _('Content cannot be empty.')})
         if self.channel == self.Channel.EMAIL and not self.subject.strip():
             raise ValidationError({'subject': _('Subject is required for email notifications.')})
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('NT', length=12)
-        if self.is_default:
-            NotificationTemplate.objects.filter(
-                branch=self.branch,
-                notification_type=self.notification_type,
-                channel=self.channel,
-                is_default=True
-            ).exclude(id=self.id).update(is_default=False)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"NotificationTemplate saved successfully: {self.code}")
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('NT', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving NotificationTemplate {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def render(self, context: dict) -> dict:
         """Render template with given context using Django's render_to_string."""
@@ -452,6 +428,7 @@ class InternalMessage(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     sender = models.ForeignKey(
@@ -514,23 +491,6 @@ class InternalMessage(AuditableModel):
         if self.sender == self.recipient:
             raise ValidationError({'recipient': _('Sender and recipient cannot be the same.')})
 
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('MSG', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"InternalMessage saved successfully: {self.code}")
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('MSG', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving InternalMessage {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def mark_as_read(self):
         self.is_read = True
@@ -557,6 +517,7 @@ class UserNote(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     title = models.CharField(
@@ -610,24 +571,6 @@ class UserNote(AuditableModel):
             raise ValidationError({'content': _('Content cannot be empty.')})
         if self.reminder_date and self.reminder_date < timezone.now():
             raise ValidationError({'reminder_date': _('Reminder date cannot be in the past.')})
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('NOTE', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"UserNote saved successfully: {self.code}")
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('NOTE', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving UserNote {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def mark_reminder_sent(self):
         self.is_reminder_sent = True

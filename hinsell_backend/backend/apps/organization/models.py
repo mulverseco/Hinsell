@@ -31,6 +31,7 @@ class LicenseType(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     name = models.CharField(
@@ -137,24 +138,6 @@ class LicenseType(AuditableModel):
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
 
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('LT', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"LicenseType saved successfully: {self.code}", extra={'license_type_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('LT', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving LicenseType {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
-
     def __str__(self):
         return f"{self.code} - {self.name} ({self.get_category_display()})"
 
@@ -173,9 +156,10 @@ class License(AuditableModel):
         unique=True,
         verbose_name=_("License Key")
     )
-    license_code = models.CharField(
+    code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     license_hash = models.CharField(
@@ -274,40 +258,18 @@ class License(AuditableModel):
         verbose_name = _("License")
         verbose_name_plural = _("Licenses")
         indexes = [
-            models.Index(fields=['license_code', 'license_key', 'license_hash']),
+            models.Index(fields=['code', 'license_key', 'license_hash']),
             models.Index(fields=['status', 'company']),
         ]
 
     def clean(self):
         super().clean()
-        if not self.license_code or not self.license_code.strip():
-            raise ValidationError({'license_code': _('Code cannot be empty.')})
+        if not self.code or not self.code.strip():
+            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.license_key.strip():
             raise ValidationError({'license_key': _('License key cannot be empty.')})
         if self.expiry_date and self.expiry_date <= timezone.now() and self.status == self.Status.ACTIVE:
             raise ValidationError({'expiry_date': _('Cannot set expiry date in the past for active license.')})
-
-    def save(self, *args, **kwargs):
-        if not self.license_code:
-            self.license_code = generate_unique_code('LIC', length=12)
-        if not self.license_hash:
-            self.license_hash = self.generate_license_hash(self.license_key)
-        retries = 3
-        while retries > 0:
-            try:
-                if self.license_type.category == self.license_type.Category.TRIAL and self.status == self.Status.PENDING:
-                    self.activate()
-                super().save(*args, **kwargs)
-                logger.info(f"License saved successfully: {self.license_code}", extra={'license_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'license_code' in str(e).lower():
-                    self.license_code = generate_unique_code('LIC', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving License {self.license_code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'license_code': _('Unable to generate a unique code after retries.')})
 
     @staticmethod
     def generate_license_key() -> str:
@@ -447,13 +409,14 @@ class License(AuditableModel):
         return result
 
     def __str__(self):
-        return f"{self.license_code} - {self.company.company_name} ({self.get_status_display()})"
+        return f"{self.code} - {self.company.company_name} ({self.get_status_display()})"
 
 class Company(AuditableModel):
     """Company master data with enhanced validation and features."""
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     company_name = models.CharField(
@@ -544,27 +507,6 @@ class Company(AuditableModel):
         if self.logo and self.logo.media_type != 'image':
             raise ValidationError({'logo': _('Logo must be an image media type.')})
 
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('CMP', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                if self.logo and not self.logo.alt_text:
-                    self.logo.alt_text = f"Logo of {self.company_name}"
-                    self.logo.save()
-                super().save(*args, **kwargs)
-                logger.info(f"Company saved successfully: {self.code}", extra={'company_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('CMP', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving Company {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
-
     def is_authorized(self) -> bool:
         try:
             return self.license.is_valid()
@@ -600,8 +542,10 @@ class Branch(AuditableModel):
         related_name='branches',
         verbose_name=_("Company")
     )
-    branch_code = models.CharField(
+    code = models.CharField(
         max_length=20,
+        unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     branch_name = models.CharField(
@@ -757,8 +701,8 @@ class Branch(AuditableModel):
         super().clean()
         if not self.branch_name.strip():
             raise ValidationError({'branch_name': _('Name cannot be empty.')})
-        if not self.branch_code or not self.branch_code.strip():
-            raise ValidationError({'branch_code': _('Code cannot be empty.')})
+        if not self.code or not self.code.strip():
+            raise ValidationError({'code': _('Code cannot be empty.')})
         if self.fiscal_year_start_month == self.fiscal_year_end_month:
             raise ValidationError({'fiscal_year_end_month': _('Fiscal year start and end months cannot be the same.')})
         if self.company_id:
@@ -777,33 +721,6 @@ class Branch(AuditableModel):
             except License.DoesNotExist:
                 raise ValidationError({'__all__': _('Company must have a valid license to create branches.')})
 
-    def save(self, *args, **kwargs):
-        if not self.branch_code:
-            self.branch_code = generate_unique_code('BR', length=12)
-        if not self.company.is_authorized():
-            raise ValidationError(_('Company is not authorized to use the system.'))
-        retries = 3
-        while retries > 0:
-            try:
-                if self.is_primary:
-                    Branch.objects.filter(company=self.company, is_primary=True).exclude(id=self.id).update(is_primary=False)
-                if self.is_headquarters:
-                    Branch.objects.filter(company=self.company, is_headquarters=True).exclude(id=self.id).update(is_headquarters=False)
-                super().save(*args, **kwargs)
-                logger.info(f"Branch saved successfully: {self.branch_code}", extra={'branch_id': self.id})
-                try:
-                    self.company.license.update_usage_stats()
-                except License.DoesNotExist:
-                    pass
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'branch_code' in str(e).lower():
-                    self.branch_code = generate_unique_code('BR', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving Branch {self.branch_code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'branch_code': _('Unable to generate a unique code after retries.')})
 
     def get_full_name(self) -> str:
         return f"{self.company.company_name} - {self.branch_name}"
@@ -813,7 +730,7 @@ class Branch(AuditableModel):
         return ', '.join(filter(None, address_parts))
 
     def __str__(self):
-        return f"{self.branch_code} - {self.get_full_name()}"
+        return f"{self.code} - {self.get_full_name()}"
 
 class SystemSettings(AuditableModel):
     """System-wide configuration settings with enhanced security."""
@@ -930,6 +847,7 @@ class SystemConfiguration(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     config_key = models.CharField(
@@ -977,24 +895,6 @@ class SystemConfiguration(AuditableModel):
         if not self.config_value.strip():
             raise ValidationError({'config_value': _('Value cannot be empty.')})
 
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('CFG', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"SystemConfiguration saved successfully: {self.code}", extra={'config_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('CFG', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving SystemConfiguration {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
-
     def __str__(self):
         return f"{self.code} - {self.config_key} ({self.branch.branch_name})"
 
@@ -1020,6 +920,7 @@ class KeyboardShortcuts(AuditableModel):
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
         verbose_name=_("Code")
     )
     action_name = models.CharField(
@@ -1127,24 +1028,6 @@ class KeyboardShortcuts(AuditableModel):
             raise ValidationError({'primary_key': _('Primary key cannot be empty.')})
         if not self._is_valid_key_combination(self.key_combination):
             raise ValidationError({'key_combination': _('Invalid key combination format.')})
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = generate_unique_code('KBD', length=12)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                logger.info(f"KeyboardShortcuts saved successfully: {self.code}", extra={'shortcut_id': self.id})
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'code' in str(e).lower():
-                    self.code = generate_unique_code('KBD', length=12)
-                    retries -= 1
-                else:
-                    logger.error(f"Error saving KeyboardShortcuts {self.code}: {str(e)}", exc_info=True)
-                    raise
-        raise ValidationError({'code': _('Unable to generate a unique code after retries.')})
 
     def _is_valid_key_combination(self, combination):
         if not combination:
