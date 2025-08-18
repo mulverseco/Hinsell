@@ -35,7 +35,7 @@ class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = License
         fields = [
-            'id', 'license_code', 'license_key', 'license_type', 'company', 'company_name',
+            'id', 'code', 'license_key', 'license_type', 'company', 'company_name',
             'status', 'issued_date', 'activation_date', 'expiry_date', 'last_validated',
             'current_users', 'current_branches', 'monthly_transactions', 'storage_used_gb',
             'hardware_fingerprint', 'license_data', 'violation_count', 'last_violation_date',
@@ -43,7 +43,7 @@ class LicenseSerializer(serializers.ModelSerializer):
             'is_deleted', 'deleted_at', 'created_at', 'updated_at', 'created_by', 'updated_by'
         ]
         read_only_fields = [
-            'id', 'license_code', 'license_key', 'license_hash', 'issued_date', 'last_validated',
+            'id', 'code', 'license_key', 'license_hash', 'issued_date', 'last_validated',
             'current_users', 'current_branches', 'monthly_transactions', 'storage_used_gb',
             'violation_count', 'last_violation_date', 'created_at', 'updated_at', 'created_by',
             'updated_by', 'deleted_at'

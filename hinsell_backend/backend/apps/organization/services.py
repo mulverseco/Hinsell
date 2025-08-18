@@ -34,7 +34,7 @@ class LicenseService:
             user=created_by,
             action_type=AuditLog.ActionType.LICENSE_CREATED,
             username=created_by.username if created_by else None,
-            details={'license_code': license.license_code, 'company': company.company_name}
+            details={'license_code': license.code, 'company': company.company_name}
         )
         
         # if license.licensee_email:
@@ -45,7 +45,7 @@ class LicenseService:
         #                 notification_type='license_created',
         #                 context_data={
         #                     'email': license.licensee_email,
-        #                     'license_code': license.license_code,
+        #                     'license_code': license.code,
         #                     'company_name': company.company_name,
         #                     'site_name': settings.SITE_NAME
         #                 },
@@ -67,7 +67,7 @@ class LicenseService:
                 user=user,
                 action_type=AuditLog.ActionType.LICENSE_SUSPENDED,
                 username=user.username if user else None,
-                details={'license_code': license.license_code, 'reason': reason}
+                details={'license_code': license.code, 'reason': reason}
             )
             if license.licensee_email:
                 MessagingService(branch=license.company.branches.filter(is_primary=True, is_deleted=False).first()).send_notification(
@@ -75,7 +75,7 @@ class LicenseService:
                     notification_type='license_suspended',
                     context_data={
                         'email': license.licensee_email,
-                        'license_code': license.license_code,
+                        'license_code': license.code,
                         'company_name': license.company.company_name,
                         'reason': reason,
                         'site_name': settings.SITE_NAME
@@ -94,7 +94,7 @@ class LicenseService:
                 user=user,
                 action_type=AuditLog.ActionType.LICENSE_REVOKED,
                 username=user.username if user else None,
-                details={'license_code': license.license_code, 'reason': reason}
+                details={'license_code': license.code, 'reason': reason}
             )
             if license.licensee_email:
                 MessagingService(branch=license.company.branches.filter(is_primary=True, is_deleted=False).first()).send_notification(
@@ -102,7 +102,7 @@ class LicenseService:
                     notification_type='license_revoked',
                     context_data={
                         'email': license.licensee_email,
-                        'license_code': license.license_code,
+                        'license_code': license.code,
                         'company_name': license.company.company_name,
                         'reason': reason,
                         'site_name': settings.SITE_NAME
