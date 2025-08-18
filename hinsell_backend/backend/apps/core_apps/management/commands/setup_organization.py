@@ -148,30 +148,30 @@ class Command(BaseCommand):
         """Create standard account types for e-commerce"""
         account_types_data = [
             # Assets
-            {'name': 'Current Assets', 'category': 'asset', 'is_debit_balance': True},
-            {'name': 'Fixed Assets', 'category': 'asset', 'is_debit_balance': True},
-            {'name': 'Intangible Assets', 'category': 'asset', 'is_debit_balance': True},
-            {'name': 'Other Assets', 'category': 'asset', 'is_debit_balance': True},
+            {'name': 'Current Assets', 'category': 'asset', 'normal_balance': 'debit'},
+            {'name': 'Fixed Assets', 'category': 'asset', 'normal_balance': 'debit'},
+            {'name': 'Intangible Assets', 'category': 'asset', 'normal_balance': 'debit'},
+            {'name': 'Other Assets', 'category': 'asset', 'normal_balance': 'debit'},
             
             # Liabilities
-            {'name': 'Current Liabilities', 'category': 'liability', 'is_debit_balance': False},
-            {'name': 'Long-term Liabilities', 'category': 'liability', 'is_debit_balance': False},
-            {'name': 'Other Liabilities', 'category': 'liability', 'is_debit_balance': False},
+            {'name': 'Current Liabilities', 'category': 'liability', 'normal_balance': 'credit'},
+            {'name': 'Long-term Liabilities', 'category': 'liability', 'normal_balance': 'credit'},
+            {'name': 'Other Liabilities', 'category': 'liability', 'normal_balance': 'credit'},
             
             # Equity
-            {'name': 'Owner Equity', 'category': 'equity', 'is_debit_balance': False},
-            {'name': 'Retained Earnings', 'category': 'equity', 'is_debit_balance': False},
+            {'name': 'Owner Equity', 'category': 'equity', 'normal_balance': 'credit'},
+            {'name': 'Retained Earnings', 'category': 'equity', 'normal_balance': 'credit'},
             
             # Revenue
-            {'name': 'Sales Revenue', 'category': 'revenue', 'is_debit_balance': False},
-            {'name': 'Service Revenue', 'category': 'revenue', 'is_debit_balance': False},
-            {'name': 'Other Revenue', 'category': 'revenue', 'is_debit_balance': False},
+            {'name': 'Sales Revenue', 'category': 'revenue', 'normal_balance': 'credit'},
+            {'name': 'Service Revenue', 'category': 'revenue', 'normal_balance': 'credit'},
+            {'name': 'Other Revenue', 'category': 'revenue', 'normal_balance': 'credit'},
             
             # Expenses
-            {'name': 'Cost of Goods Sold', 'category': 'expense', 'is_debit_balance': True},
-            {'name': 'Operating Expenses', 'category': 'expense', 'is_debit_balance': True},
-            {'name': 'Administrative Expenses', 'category': 'expense', 'is_debit_balance': True},
-            {'name': 'Financial Expenses', 'category': 'expense', 'is_debit_balance': True},
+            {'name': 'Cost of Goods Sold', 'category': 'expense', 'normal_balance': 'debit'},
+            {'name': 'Operating Expenses', 'category': 'expense', 'normal_balance': 'debit'},
+            {'name': 'Administrative Expenses', 'category': 'expense', 'normal_balance': 'debit'},
+            {'name': 'Financial Expenses', 'category': 'expense', 'normal_balance': 'debit'},
         ]
         
         account_types = []
@@ -180,7 +180,7 @@ class Command(BaseCommand):
                 branch=branch,
                 name=data['name'],
                 category=data['category'],
-                is_debit_balance=data['is_debit_balance']
+                normal_balance=data['normal_balance']
             )
             account_types.append(account_type)
         
