@@ -147,32 +147,33 @@ class Command(BaseCommand):
     def create_account_types(self, branch):
         """Create standard account types for e-commerce"""
         account_types_data = [
-            # Assets
-            {'name': 'Current Assets', 'category': 'asset', 'normal_balance': 'debit'},
-            {'name': 'Fixed Assets', 'category': 'asset', 'normal_balance': 'debit'},
-            {'name': 'Intangible Assets', 'category': 'asset', 'normal_balance': 'debit'},
-            {'name': 'Other Assets', 'category': 'asset', 'normal_balance': 'debit'},
+            # الأصول
+            {'name': 'الأصول المتداولة', 'category': 'asset', 'normal_balance': 'debit'},
+            {'name': 'الأصول الثابتة', 'category': 'asset', 'normal_balance': 'debit'},
+            {'name': 'الأصول غير الملموسة', 'category': 'asset', 'normal_balance': 'debit'},
+            {'name': 'أصول أخرى', 'category': 'asset', 'normal_balance': 'debit'},
             
-            # Liabilities
-            {'name': 'Current Liabilities', 'category': 'liability', 'normal_balance': 'credit'},
-            {'name': 'Long-term Liabilities', 'category': 'liability', 'normal_balance': 'credit'},
-            {'name': 'Other Liabilities', 'category': 'liability', 'normal_balance': 'credit'},
+            # الالتزامات
+            {'name': 'الالتزامات المتداولة', 'category': 'liability', 'normal_balance': 'credit'},
+            {'name': 'الالتزامات طويلة الأجل', 'category': 'liability', 'normal_balance': 'credit'},
+            {'name': 'التزامات أخرى', 'category': 'liability', 'normal_balance': 'credit'},
             
-            # Equity
-            {'name': 'Owner Equity', 'category': 'equity', 'normal_balance': 'credit'},
-            {'name': 'Retained Earnings', 'category': 'equity', 'normal_balance': 'credit'},
+            # حقوق الملكية
+            {'name': 'حقوق الملكية', 'category': 'equity', 'normal_balance': 'credit'},
+            {'name': 'الأرباح المحتجزة', 'category': 'equity', 'normal_balance': 'credit'},
             
-            # Revenue
-            {'name': 'Sales Revenue', 'category': 'revenue', 'normal_balance': 'credit'},
-            {'name': 'Service Revenue', 'category': 'revenue', 'normal_balance': 'credit'},
-            {'name': 'Other Revenue', 'category': 'revenue', 'normal_balance': 'credit'},
+            # الإيرادات
+            {'name': 'إيرادات المبيعات', 'category': 'revenue', 'normal_balance': 'credit'},
+            {'name': 'إيرادات الخدمات', 'category': 'revenue', 'normal_balance': 'credit'},
+            {'name': 'إيرادات أخرى', 'category': 'revenue', 'normal_balance': 'credit'},
             
-            # Expenses
-            {'name': 'Cost of Goods Sold', 'category': 'expense', 'normal_balance': 'debit'},
-            {'name': 'Operating Expenses', 'category': 'expense', 'normal_balance': 'debit'},
-            {'name': 'Administrative Expenses', 'category': 'expense', 'normal_balance': 'debit'},
-            {'name': 'Financial Expenses', 'category': 'expense', 'normal_balance': 'debit'},
+            # المصروفات
+            {'name': 'تكلفة البضاعة المباعة', 'category': 'expense', 'normal_balance': 'debit'},
+            {'name': 'المصروفات التشغيلية', 'category': 'expense', 'normal_balance': 'debit'},
+            {'name': 'المصروفات الإدارية', 'category': 'expense', 'normal_balance': 'debit'},
+            {'name': 'المصروفات المالية', 'category': 'expense', 'normal_balance': 'debit'},
         ]
+
         
         account_types = []
         for data in account_types_data:
@@ -192,67 +193,68 @@ class Command(BaseCommand):
         account_types_dict = {at.name: at for at in account_types}
         
         accounts_data = [
-            # ASSETS
-            {'code': '1000', 'name': 'ASSETS', 'type': 'Current Assets', 'is_header': True},
-            
-            # Current Assets
-            {'code': '1100', 'name': 'Current Assets', 'type': 'Current Assets', 'parent': '1000', 'is_header': True},
-            {'code': '1110', 'name': 'Cash and Cash Equivalents', 'type': 'Current Assets', 'parent': '1100', 'nature': 'cash'},
-            {'code': '1111', 'name': 'Petty Cash', 'type': 'Current Assets', 'parent': '1110', 'nature': 'cash'},
-            {'code': '1112', 'name': 'Bank Account - Main', 'type': 'Current Assets', 'parent': '1110', 'nature': 'bank'},
-            {'code': '1113', 'name': 'Bank Account - Payroll', 'type': 'Current Assets', 'parent': '1110', 'nature': 'bank'},
-            {'code': '1120', 'name': 'Accounts Receivable', 'type': 'Current Assets', 'parent': '1100', 'nature': 'customer'},
-            {'code': '1121', 'name': 'Trade Receivables', 'type': 'Current Assets', 'parent': '1120', 'nature': 'customer'},
-            {'code': '1122', 'name': 'Other Receivables', 'type': 'Current Assets', 'parent': '1120'},
-            {'code': '1130', 'name': 'Inventory', 'type': 'Current Assets', 'parent': '1100', 'nature': 'inventory'},
-            {'code': '1131', 'name': 'Raw Materials', 'type': 'Current Assets', 'parent': '1130', 'nature': 'inventory'},
-            {'code': '1132', 'name': 'Finished Goods', 'type': 'Current Assets', 'parent': '1130', 'nature': 'inventory'},
-            {'code': '1133', 'name': 'Work in Progress', 'type': 'Current Assets', 'parent': '1130', 'nature': 'inventory'},
-            
-            # Fixed Assets
-            {'code': '1200', 'name': 'Fixed Assets', 'type': 'Fixed Assets', 'parent': '1000', 'is_header': True},
-            {'code': '1210', 'name': 'Property, Plant & Equipment', 'type': 'Fixed Assets', 'parent': '1200', 'nature': 'fixed_asset'},
-            {'code': '1211', 'name': 'Land', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},
-            {'code': '1212', 'name': 'Buildings', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},
-            {'code': '1213', 'name': 'Equipment', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},
-            {'code': '1214', 'name': 'Vehicles', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},
-            
-            # LIABILITIES
-            {'code': '2000', 'name': 'LIABILITIES', 'type': 'Current Liabilities', 'is_header': True},
-            
-            # Current Liabilities
-            {'code': '2100', 'name': 'Current Liabilities', 'type': 'Current Liabilities', 'parent': '2000', 'is_header': True},
-            {'code': '2110', 'name': 'Accounts Payable', 'type': 'Current Liabilities', 'parent': '2100', 'nature': 'supplier'},
-            {'code': '2111', 'name': 'Trade Payables', 'type': 'Current Liabilities', 'parent': '2110', 'nature': 'supplier'},
-            {'code': '2112', 'name': 'Other Payables', 'type': 'Current Liabilities', 'parent': '2110'},
-            {'code': '2120', 'name': 'Accrued Expenses', 'type': 'Current Liabilities', 'parent': '2100'},
-            {'code': '2130', 'name': 'Sales Tax Payable', 'type': 'Current Liabilities', 'parent': '2100'},
-            {'code': '2140', 'name': 'VAT Payable', 'type': 'Current Liabilities', 'parent': '2100'},
-            
-            # EQUITY
-            {'code': '3000', 'name': 'EQUITY', 'type': 'Owner Equity', 'is_header': True},
-            {'code': '3100', 'name': 'Owner Capital', 'type': 'Owner Equity', 'parent': '3000'},
-            {'code': '3200', 'name': 'Retained Earnings', 'type': 'Retained Earnings', 'parent': '3000'},
-            
-            # REVENUE
-            {'code': '4000', 'name': 'REVENUE', 'type': 'Sales Revenue', 'is_header': True},
-            {'code': '4100', 'name': 'Sales Revenue', 'type': 'Sales Revenue', 'parent': '4000'},
-            {'code': '4110', 'name': 'Product Sales', 'type': 'Sales Revenue', 'parent': '4100'},
-            {'code': '4120', 'name': 'Service Revenue', 'type': 'Service Revenue', 'parent': '4100'},
-            {'code': '4130', 'name': 'Shipping Revenue', 'type': 'Sales Revenue', 'parent': '4100'},
-            {'code': '4200', 'name': 'Other Revenue', 'type': 'Other Revenue', 'parent': '4000'},
-            
-            # EXPENSES
-            {'code': '5000', 'name': 'COST OF GOODS SOLD', 'type': 'Cost of Goods Sold', 'is_header': True},
-            {'code': '5100', 'name': 'Product Costs', 'type': 'Cost of Goods Sold', 'parent': '5000'},
-            {'code': '5200', 'name': 'Shipping Costs', 'type': 'Cost of Goods Sold', 'parent': '5000'},
-            
-            {'code': '6000', 'name': 'OPERATING EXPENSES', 'type': 'Operating Expenses', 'is_header': True},
-            {'code': '6100', 'name': 'Marketing Expenses', 'type': 'Operating Expenses', 'parent': '6000'},
-            {'code': '6200', 'name': 'Technology Expenses', 'type': 'Operating Expenses', 'parent': '6000'},
-            {'code': '6300', 'name': 'Administrative Expenses', 'type': 'Administrative Expenses', 'parent': '6000'},
-            {'code': '6400', 'name': 'Payroll Expenses', 'type': 'Operating Expenses', 'parent': '6000'},
+            # الأصول
+            {'code': '1000', 'name': 'الأصول', 'type': 'Current Assets', 'is_header': True},        
+
+            # الأصول المتداولة
+            {'code': '1100', 'name': 'الأصول المتداولة', 'type': 'Current Assets', 'parent': '1000', 'is_header': True},
+            {'code': '1110', 'name': 'النقد وما في حكمه', 'type': 'Current Assets', 'parent': '1100', 'nature': 'cash'},
+            {'code': '1111', 'name': 'الصندوق', 'type': 'Current Assets', 'parent': '1110', 'nature': 'cash'},
+            {'code': '1112', 'name': 'الحساب البنكي الرئيسي', 'type': 'Current Assets', 'parent': '1110', 'nature': 'bank'},
+            {'code': '1113', 'name': 'حساب الرواتب', 'type': 'Current Assets', 'parent': '1110', 'nature': 'bank'},
+            {'code': '1120', 'name': 'المدينون', 'type': 'Current Assets', 'parent': '1100', 'nature': 'customer'},
+            {'code': '1121', 'name': 'العملاء', 'type': 'Current Assets', 'parent': '1120', 'nature': 'customer'},
+            {'code': '1122', 'name': 'مدينون آخرون', 'type': 'Current Assets', 'parent': '1120'},
+            {'code': '1130', 'name': 'المخزون', 'type': 'Current Assets', 'parent': '1100', 'nature': 'inventory'},
+            {'code': '1131', 'name': 'مواد خام', 'type': 'Current Assets', 'parent': '1130', 'nature': 'inventory'},
+            {'code': '1132', 'name': 'بضاعة تامة الصنع', 'type': 'Current Assets', 'parent': '1130', 'nature': 'inventory'},
+            {'code': '1133', 'name': 'بضاعة تحت التشغيل', 'type': 'Current Assets', 'parent': '1130', 'nature': 'inventory'},        
+
+            # الأصول الثابتة
+            {'code': '1200', 'name': 'الأصول الثابتة', 'type': 'Fixed Assets', 'parent': '1000', 'is_header': True},
+            {'code': '1210', 'name': 'العقارات والمعدات', 'type': 'Fixed Assets', 'parent': '1200', 'nature': 'fixed_asset'},
+            {'code': '1211', 'name': 'الأراضي', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},
+            {'code': '1212', 'name': 'المباني', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},
+            {'code': '1213', 'name': 'المعدات', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},
+            {'code': '1214', 'name': 'المركبات', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},        
+
+            # الالتزامات
+            {'code': '2000', 'name': 'الالتزامات', 'type': 'Current Liabilities', 'is_header': True},        
+
+            # الالتزامات المتداولة
+            {'code': '2100', 'name': 'الالتزامات المتداولة', 'type': 'Current Liabilities', 'parent': '2000', 'is_header': True},
+            {'code': '2110', 'name': 'الدائنون', 'type': 'Current Liabilities', 'parent': '2100', 'nature': 'supplier'},
+            {'code': '2111', 'name': 'الموردون', 'type': 'Current Liabilities', 'parent': '2110', 'nature': 'supplier'},
+            {'code': '2112', 'name': 'دائنون آخرون', 'type': 'Current Liabilities', 'parent': '2110'},
+            {'code': '2120', 'name': 'المصروفات المستحقة', 'type': 'Current Liabilities', 'parent': '2100'},
+            {'code': '2130', 'name': 'ضريبة المبيعات المستحقة', 'type': 'Current Liabilities', 'parent': '2100'},
+            {'code': '2140', 'name': 'ضريبة القيمة المضافة المستحقة', 'type': 'Current Liabilities', 'parent': '2100'},        
+
+            # حقوق الملكية
+            {'code': '3000', 'name': 'حقوق الملكية', 'type': 'Owner Equity', 'is_header': True},
+            {'code': '3100', 'name': 'رأس المال', 'type': 'Owner Equity', 'parent': '3000'},
+            {'code': '3200', 'name': 'الأرباح المحتجزة', 'type': 'Retained Earnings', 'parent': '3000'},        
+
+            # الإيرادات
+            {'code': '4000', 'name': 'الإيرادات', 'type': 'Sales Revenue', 'is_header': True},
+            {'code': '4100', 'name': 'إيرادات المبيعات', 'type': 'Sales Revenue', 'parent': '4000'},
+            {'code': '4110', 'name': 'مبيعات المنتجات', 'type': 'Sales Revenue', 'parent': '4100'},
+            {'code': '4120', 'name': 'إيرادات الخدمات', 'type': 'Service Revenue', 'parent': '4100'},
+            {'code': '4130', 'name': 'إيرادات الشحن', 'type': 'Sales Revenue', 'parent': '4100'},
+            {'code': '4200', 'name': 'إيرادات أخرى', 'type': 'Other Revenue', 'parent': '4000'},        
+
+            # المصروفات
+            {'code': '5000', 'name': 'تكلفة البضاعة المباعة', 'type': 'Cost of Goods Sold', 'is_header': True},
+            {'code': '5100', 'name': 'تكاليف المنتجات', 'type': 'Cost of Goods Sold', 'parent': '5000'},
+            {'code': '5200', 'name': 'تكاليف الشحن', 'type': 'Cost of Goods Sold', 'parent': '5000'},        
+
+            {'code': '6000', 'name': 'المصروفات التشغيلية', 'type': 'Operating Expenses', 'is_header': True},
+            {'code': '6100', 'name': 'المصروفات التسويقية', 'type': 'Operating Expenses', 'parent': '6000'},
+            {'code': '6200', 'name': 'المصروفات التقنية', 'type': 'Operating Expenses', 'parent': '6000'},
+            {'code': '6300', 'name': 'المصروفات الإدارية', 'type': 'Administrative Expenses', 'parent': '6000'},
+            {'code': '6400', 'name': 'مصروفات الرواتب', 'type': 'Operating Expenses', 'parent': '6000'},
         ]
+
         
         accounts = []
         account_objects = {}  # To store created accounts for parent reference
