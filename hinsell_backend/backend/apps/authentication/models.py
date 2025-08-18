@@ -503,6 +503,7 @@ class AuditLog(AuditableModel):
         CONSENT_UPDATED = 'consent_updated', _('Consent Updated')
         PROFILE_DELETION = 'profile_deletion', _('Profile Deletion')
         PUSH_TOKEN_UPDATED = 'push_token_updated', _('Push Token Updated')
+        LICENSE_ACTIVATED = 'license_activated', _('License Activated')
 
     class LoginStatus(models.TextChoices):
         SUCCESS = 'success', _('Success')

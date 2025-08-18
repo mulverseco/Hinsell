@@ -19,6 +19,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    restart: unless-stopped
 
   celery:
     build:
@@ -35,6 +36,7 @@ services:
     volumes:
       - ./backend:/app:z
     command: ["celery", "-A", "core", "worker", "--loglevel=info"]
+    restart: unless-stopped
 
   redis:
     image: redis:latest
@@ -48,6 +50,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    restart: unless-stopped
 
   db:
     image: postgres:latest
@@ -62,6 +65,7 @@ services:
       - mynetwork
     volumes:
       - postgres_data:/var/lib/postgresql/data:z
+    restart: unless-stopped
     
 networks:
   mynetwork:
