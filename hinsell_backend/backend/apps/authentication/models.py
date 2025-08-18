@@ -236,11 +236,13 @@ class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
 
     def clean(self):
         super().clean()
-        if self.user_type in [self.UserType.EMPLOYEE, self.UserType.MANAGER, self.UserType.ADMIN] and not self.code:
-            raise ValidationError({'code': _('Employee code is required for employee, manager, or admin users.')})
         if self.user_type == self.UserType.GUEST and (self.first_name or self.last_name):
-            raise ValidationError({'first_name': _('Guest users should not have personal information.'),
-                                 'last_name': _('Guest users should not have personal information.')})
+            raise ValidationError({'first_name': _('Guest users should not have personal information.'),'last_name': _('Guest users should not have personal information.')})
+        
+        if (self.user_type in [self.UserType.EMPLOYEE, self.UserType.MANAGER, self.UserType.ADMIN] 
+            and not self.code and not self.is_superuser):
+            raise ValidationError({'code': _('Employee code is required for employee, manager, or admin users.')})
+
     def get_code_prefix(self):
         return 'EPM'
 

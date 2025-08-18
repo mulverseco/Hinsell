@@ -1,7 +1,3 @@
-"""
-Core base models and utilities for the pharmacy management system.
-Provides common functionality and ensures consistency across all models.
-"""
 import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -19,9 +15,6 @@ from apps.core_apps.mixins.code_generation_mixin import CodeGenerationMixin
 
 
 class Pagination(PageNumberPagination):
-    """
-    Custom pagination class for consistent API responses.
-    """
     page_size = 25
     page_size_query_param = 'page_size'
     max_page_size = 100
@@ -29,10 +22,6 @@ class Pagination(PageNumberPagination):
 
 
 class TimestampedModelManager(models.Manager):
-    """
-    Custom manager for timestamped models with soft delete functionality.
-    """
-    
     def get_queryset(self):
         """Return only non-deleted records by default."""
         return super().get_queryset().filter(is_deleted=False)
@@ -55,10 +44,6 @@ class TimestampedModelManager(models.Manager):
 
 
 class TimestampedModel(models.Model):
-    """
-    Abstract base model that provides self-updating created_at and updated_at fields,
-    along with soft delete functionality and common audit fields.
-    """
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -122,9 +107,6 @@ class TimestampedModel(models.Model):
         Logger(__name__, user=user).info(f"Restored {self.__class__.__name__}({self.id})")
     
     def clean(self):
-        """
-        Validate the model instance.
-        """
         super().clean()
 
         if self.is_deleted and not self.deleted_at:
@@ -134,9 +116,6 @@ class TimestampedModel(models.Model):
 
 
 class AuditableModel(CodeGenerationMixin,TimestampedModel):
-    """
-    Abstract model that adds creator and modifier tracking to TimestampedModel.
-    """
     created_by = models.ForeignKey(
         'authentication.User',
         on_delete=models.SET_NULL,
@@ -178,7 +157,6 @@ class AuditableModel(CodeGenerationMixin,TimestampedModel):
             super().delete(*args, **kwargs)
 
 class BaseViewSet(viewsets.ModelViewSet):
-    """Base ViewSet for common functionality across apps."""
     permission_classes = [IsAuthenticated | HasAPIKey]
     permission_classes_by_action: Dict[str, List] = {}
     logger_name: str = __name__
