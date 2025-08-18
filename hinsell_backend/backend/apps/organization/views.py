@@ -47,7 +47,7 @@ class LicenseViewSet(BaseViewSet):
     }
     logger_name = __name__
     filterset_fields = ['status', 'license_type__category', 'company']
-    search_fields = ['license_code', 'license_key', 'licensee_name', 'licensee_email']
+    search_fields = ['code', 'license_key', 'licensee_name', 'licensee_email']
     ordering_fields = ['issued_date', 'expiry_date', 'created_at']
 
     @action(detail=True, methods=['post'])
@@ -55,7 +55,7 @@ class LicenseViewSet(BaseViewSet):
         license = self.get_object()
         result = license.validate_and_update()
         logger.info(
-            f"Validated license {license.license_code} for company {license.company.company_name}",
+            f"Validated license {license.code} for company {license.company.company_name}",
             extra={'action': 'validate', 'object_id': license.id, 'user_id': request.user.id}
         )
         return Response(result)
@@ -63,7 +63,7 @@ class LicenseViewSet(BaseViewSet):
     def perform_destroy(self, instance):
         instance.soft_delete(user=self.request.user)
         logger.info(
-            f"Soft deleted license {instance.license_code}",
+            f"Soft deleted license {instance.code}",
             extra={'action': 'soft_delete', 'object_id': instance.id, 'user_id': self.request.user.id}
         )
 

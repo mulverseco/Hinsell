@@ -43,7 +43,7 @@ def notify_license_activation(sender, instance, created, **kwargs):
     if instance.status in [License.Status.ACTIVE, License.Status.TRIAL] and instance.activation_date:
         logger.info(
             f"License activated for company: {instance.company.company_name}",
-            extra={'license_code': instance.license_code}
+            extra={'license_code': instance.code}
         )
         from apps.authentication.services import AuditService
         AuditService.create_audit_log(
@@ -51,7 +51,7 @@ def notify_license_activation(sender, instance, created, **kwargs):
             user=instance.created_by,
             action_type=AuditLog.ActionType.LICENSE_ACTIVATED,
             username=instance.created_by.username if instance.created_by else None,
-            details={'license_code': instance.license_code, 'status': instance.status}
+            details={'license_code': instance.code, 'status': instance.status}
         )
         # if instance.licensee_email:
         #     MessagingService(branch=instance.company.branches.filter(is_primary=True, is_deleted=False).first()).send_notification(
@@ -59,7 +59,7 @@ def notify_license_activation(sender, instance, created, **kwargs):
         #         notification_type='license_activated',
         #         context_data={
         #             'email': instance.licensee_email,
-        #             'license_code': instance.license_code,
+        #             'license_code': instance.code,
         #             'company_name': instance.company.company_name,
         #             'activation_date': instance.activation_date.strftime('%Y-%m-%d'),
         #             'site_name': settings.SITE_NAME
@@ -72,8 +72,8 @@ def notify_license_activation(sender, instance, created, **kwargs):
 def handle_license_soft_delete(sender, instance, **kwargs):
     instance.soft_delete(user=None)
     logger.info(
-        f"Soft deleted license: {instance.license_code}",
-        extra={'license_code': instance.license_code}
+        f"Soft deleted license: {instance.code}",
+        extra={'license_code': instance.code}
     )
     from apps.authentication.services import AuditService
     AuditService.create_audit_log(
@@ -81,5 +81,5 @@ def handle_license_soft_delete(sender, instance, **kwargs):
         user=None,
         action_type=AuditLog.ActionType.LICENSE_DELETED,
         username=None,
-        details={'license_code': instance.license_code, 'company': instance.company.company_name}
+        details={'license_code': instance.code, 'company': instance.company.company_name}
     )

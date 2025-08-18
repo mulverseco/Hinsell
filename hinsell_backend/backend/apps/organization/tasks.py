@@ -17,12 +17,12 @@ def validate_licenses():
             if not result['valid']:
                 logger.warning(
                     f"License validation failed for {license.company.company_name}: {result['violations']}",
-                    extra={'license_code': license.license_code}
+                    extra={'license_code': license.code}
                 )
             elif result['warnings']:
                 logger.info(
                     f"License warnings for {license.company.company_name}: {result['warnings']}",
-                    extra={'license_code': license.license_code}
+                    extra={'license_code': license.code}
                 )
     except Exception as e:
         logger.error(f"Error validating licenses: {str(e)}", exc_info=True)
