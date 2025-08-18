@@ -95,7 +95,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_celery_results',
     "apps.authentication",
-    "apps.core_apps"
+    "apps.core_apps",
     "apps.shared",
     "apps.organization",
     "apps.reporting",
