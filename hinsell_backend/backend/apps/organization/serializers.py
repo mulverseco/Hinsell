@@ -97,7 +97,7 @@ class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch
         fields = [
-            'id', 'company', 'company_name', 'branch_code', 'branch_name', 'branch_name_english',
+            'id', 'company', 'company_name', 'code', 'branch_name', 'branch_name_english',
             'is_primary', 'is_headquarters', 'fiscal_year_start_month', 'fiscal_year_end_month',
             'current_fiscal_year', 'use_cost_center', 'use_sales_tax', 'use_vat_tax',
             'use_carry_fee', 'use_expire_date', 'use_batch_no', 'use_barcode',
@@ -106,7 +106,7 @@ class BranchSerializer(serializers.ModelSerializer):
             'timezone', 'manager', 'manager_name', 'is_active', 'is_deleted',
             'deleted_at', 'created_at', 'updated_at', 'created_by', 'updated_by'
         ]
-        read_only_fields = ['id', 'branch_code', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
+        read_only_fields = ['id', 'code', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
 
     def validate(self, data):
         if data.get('use_multi_currency') and not data.get('company').has_feature('multi_currency'):

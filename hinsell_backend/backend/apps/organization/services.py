@@ -129,7 +129,7 @@ class BranchService:
             user=created_by,
             action_type=AuditLog.ActionType.BRANCH_CREATED,
             username=created_by.username if created_by else None,
-            details={'branch_code': branch.branch_code, 'name': branch.branch_name}
+            details={'code': branch.code, 'name': branch.branch_name}
         )
         # if company.email:
         #     MessagingService(branch=branch).send_notification(

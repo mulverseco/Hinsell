@@ -681,9 +681,9 @@ class Branch(AuditableModel):
     class Meta:
         verbose_name = _("Branch")
         verbose_name_plural = _("Branches")
-        unique_together = [['company', 'branch_code'], ['company', 'branch_name']]
+        unique_together = [['company', 'code'], ['company', 'branch_name']]
         indexes = [
-            models.Index(fields=['company', 'branch_code']),
+            models.Index(fields=['company', 'code']),
             models.Index(fields=['is_primary', 'is_headquarters']),
         ]
         constraints = [

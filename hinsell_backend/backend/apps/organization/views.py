@@ -103,7 +103,7 @@ class BranchViewSet(BaseViewSet):
     }
     logger_name = __name__
     filterset_fields = ['company', 'is_primary', 'is_headquarters', 'use_multi_currency']
-    search_fields = ['branch_code', 'branch_name', 'email', 'phone_number']
+    search_fields = ['code', 'branch_name', 'email', 'phone_number']
     ordering_fields = ['branch_name', 'created_at']
 
     def perform_destroy(self, instance):
@@ -126,7 +126,7 @@ class SystemSettingsViewSet(BaseViewSet):
     }
     logger_name = __name__
     filterset_fields = ['branch', 'require_two_factor_auth']
-    search_fields = ['branch__branch_name', 'branch__branch_code']
+    search_fields = ['branch__branch_name', 'branch__code']
     ordering_fields = ['branch', 'created_at']
 
     def perform_destroy(self, instance):
