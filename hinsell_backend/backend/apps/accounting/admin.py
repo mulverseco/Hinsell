@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from apps.accounting.models import Currency, CurrencyHistory, AccountType, Account, CostCenter, OpeningBalance, AccountingPeriod, Budget
+from apps.accounting.models import Currency, CurrencyHistory, AccountType, Account, CostCenter, OpeningBalance, AccountingPeriod, Budget, TaxConfiguration, PaymentMethod
 from django.utils import timezone
+
+
 @admin.register(Currency)
 class CurrencyAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'branch', 'symbol', 'is_default', 'exchange_rate', 'exchange_rate_date')
@@ -86,6 +88,44 @@ class AccountAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         if change and 'current_balance' in form.changed_data:
             obj.update_balance(user=request.user)
+
+@admin.register(TaxConfiguration)
+class TaxConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'branch', 'tax_type', 'rate', 'is_active')
+    list_filter = ('branch', 'tax_type', 'is_active')
+    search_fields = ('name', 'tax_code')
+    list_editable = ('rate', 'is_active')
+    list_per_page = 25
+    fieldsets = (
+        (None, {
+            'fields': ('branch', 'name', 'tax_code', 'tax_type', 'rate')
+        }),
+        (_('Settings'), {
+            'fields': ('is_active', 'is_inclusive', 'applies_to_shipping')
+        }),
+        (_('Accounts'), {
+            'fields': ('tax_payable_account', 'tax_receivable_account')
+        }),
+    )
+
+@admin.register(PaymentMethod)
+class PaymentMethodAdmin(admin.ModelAdmin):
+    list_display = ('name', 'branch', 'method_type', 'processing_fee_rate', 'is_active')
+    list_filter = ('branch', 'method_type', 'is_active')
+    search_fields = ('name', 'processor_name')
+    list_editable = ('processing_fee_rate', 'is_active')
+    list_per_page = 25
+    fieldsets = (
+        (None, {
+            'fields': ('branch', 'name', 'method_type', 'processor_name')
+        }),
+        (_('Fee Configuration'), {
+            'fields': ('processing_fee_rate', 'fixed_fee', 'fee_account')
+        }),
+        (_('Settings'), {
+            'fields': ('is_active', 'requires_verification', 'settlement_days')
+        }),
+    )
 
 @admin.register(CostCenter)
 class CostCenterAdmin(admin.ModelAdmin):

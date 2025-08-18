@@ -539,7 +539,7 @@ class TaxConfiguration(AuditableModel):
         verbose_name=_("Effective To")
     )
     tax_account = models.ForeignKey(
-        'user_manager.Account',
+        Account,
         on_delete=models.PROTECT,
         related_name='tax_configurations',
         verbose_name=_("Tax Account")
