@@ -93,8 +93,6 @@ class NotificationTemplate(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if not self.content.strip():
@@ -482,8 +480,6 @@ class InternalMessage(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.subject.strip():
             raise ValidationError({'subject': _('Subject cannot be empty.')})
         if not self.content.strip():
@@ -563,8 +559,6 @@ class UserNote(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.title.strip():
             raise ValidationError({'title': _('Title cannot be empty.')})
         if not self.content.strip():

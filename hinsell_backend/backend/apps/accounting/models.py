@@ -96,8 +96,6 @@ class Currency(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Currency code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Currency name cannot be empty.')})
         if self.upper_limit > 0 and self.lower_limit > 0 and self.lower_limit >= self.upper_limit:
@@ -122,6 +120,8 @@ class Currency(AuditableModel):
             new_exchange_rate=new_rate,
             changed_by=user
         )
+    def get_code_prefix(self):
+        return 'CUR'
 
     def format_amount(self, amount: Decimal) -> str:
         return f"{self.symbol or self.code}{amount:.{self.decimal_places}f}"
@@ -225,10 +225,11 @@ class AccountType(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
+
+    def get_code_prefix(self):
+        return 'ACT'
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -393,8 +394,6 @@ class Account(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.parent:
@@ -407,6 +406,9 @@ class Account(AuditableModel):
             raise ValidationError({'is_header': _('Cannot make account a header account with transactions.')})
         if any(self.enable_notifications.get(channel, False) for channel in ['email', 'sms', 'whatsapp']) and not (self.email or self.phone_number):
             raise ValidationError(_('Account must have email or phone for enabled notifications.'))
+
+    def get_code_prefix(self):
+        return 'AC'
 
     def get_full_code(self) -> str:
         if self.parent:
@@ -538,8 +540,6 @@ class CostCenter(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.parent:
@@ -548,6 +548,9 @@ class CostCenter(AuditableModel):
                 if current == self:
                     raise ValidationError({'parent': _('Circular parent relationship detected.')})
                 current = current.parent
+
+    def get_code_prefix(self):
+        return 'COC'
 
     def get_full_code(self) -> str:
         if self.parent:
@@ -694,8 +697,6 @@ class AccountingPeriod(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.start_date >= self.end_date:
@@ -705,6 +706,8 @@ class AccountingPeriod(AuditableModel):
         if self.is_closed and not self.closed_at:
             raise ValidationError({'closed_at': _('Closed at timestamp must be set when closing period.')})
 
+    def get_code_prefix(self):
+        return 'ACP'
 
     def __str__(self):
         return f"{self.code} - {self.name} ({self.fiscal_year})"
@@ -779,12 +782,13 @@ class Budget(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if not any([self.account, self.cost_center, self.item]):
             raise ValidationError({'account': _('At least one of account, cost center, or item must be set.')})
+
+    def get_code_prefix(self):
+        return 'BUG'
 
     def calculate_variance(self) -> Decimal:
         return self.budgeted_amount - self.actual_amount

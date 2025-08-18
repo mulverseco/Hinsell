@@ -133,10 +133,11 @@ class LicenseType(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
+
+    def get_code_prefix(self):
+        return 'LNT'
 
     def __str__(self):
         return f"{self.code} - {self.name} ({self.get_category_display()})"
@@ -264,12 +265,13 @@ class License(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.license_key.strip():
             raise ValidationError({'license_key': _('License key cannot be empty.')})
         if self.expiry_date and self.expiry_date <= timezone.now() and self.status == self.Status.ACTIVE:
             raise ValidationError({'expiry_date': _('Cannot set expiry date in the past for active license.')})
+
+    def get_code_prefix(self):
+        return 'LN'
 
     @staticmethod
     def generate_license_key() -> str:
@@ -500,8 +502,6 @@ class Company(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.company_name.strip():
             raise ValidationError({'company_name': _('Name cannot be empty.')})
         if self.logo and self.logo.media_type != 'image':
@@ -524,6 +524,9 @@ class Company(AuditableModel):
                 'warnings': [],
                 'expires_in_days': None,
             }
+
+    def get_code_prefix(self):
+        return 'COM'
 
     def has_feature(self, feature_name: str) -> bool:
         try:
@@ -701,8 +704,6 @@ class Branch(AuditableModel):
         super().clean()
         if not self.branch_name.strip():
             raise ValidationError({'branch_name': _('Name cannot be empty.')})
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if self.fiscal_year_start_month == self.fiscal_year_end_month:
             raise ValidationError({'fiscal_year_end_month': _('Fiscal year start and end months cannot be the same.')})
         if self.company_id:
@@ -720,7 +721,9 @@ class Branch(AuditableModel):
                     raise ValidationError({'use_multi_currency': _('Multi-currency feature not available in current license.')})
             except License.DoesNotExist:
                 raise ValidationError({'__all__': _('Company must have a valid license to create branches.')})
-
+    
+    def get_code_prefix(self):
+        return 'BR'
 
     def get_full_name(self) -> str:
         return f"{self.company.company_name} - {self.branch_name}"
@@ -888,12 +891,13 @@ class SystemConfiguration(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.config_key.strip():
             raise ValidationError({'config_key': _('Key cannot be empty.')})
         if not self.config_value.strip():
             raise ValidationError({'config_value': _('Value cannot be empty.')})
+
+    def get_code_prefix(self):
+        return 'SCF'
 
     def __str__(self):
         return f"{self.code} - {self.config_key} ({self.branch.branch_name})"
@@ -1018,8 +1022,6 @@ class KeyboardShortcuts(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.action_name.strip():
             raise ValidationError({'action_name': _('Action name cannot be empty.')})
         if not self.key_combination.strip():
@@ -1028,6 +1030,9 @@ class KeyboardShortcuts(AuditableModel):
             raise ValidationError({'primary_key': _('Primary key cannot be empty.')})
         if not self._is_valid_key_combination(self.key_combination):
             raise ValidationError({'key_combination': _('Invalid key combination format.')})
+
+    def get_code_prefix(self):
+        return 'KBS'
 
     def _is_valid_key_combination(self, combination):
         if not combination:

@@ -81,8 +81,6 @@ class StoreGroup(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
 
@@ -182,8 +180,6 @@ class ItemGroup(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.parent and self.parent.store_group != self.store_group:
@@ -565,8 +561,6 @@ class Item(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if not self.base_unit.strip():
@@ -728,8 +722,6 @@ class ItemVariant(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.size.strip() and not self.color.strip():
             raise ValidationError({
                 'size': _('At least one of size or color must be specified.'),
@@ -861,8 +853,6 @@ class ItemUnit(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
 
@@ -923,24 +913,6 @@ class ItemBarcode(AuditableModel):
             models.Index(fields=['is_primary']),
         ]
 
-    def save(self, *args, **kwargs):
-        if self.is_primary:
-            ItemBarcode.objects.filter(
-                item=self.item,
-                is_primary=True
-            ).exclude(id=self.id).update(is_primary=False)
-        retries = 3
-        while retries > 0:
-            try:
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as e:
-                if 'unique constraint' in str(e).lower() and 'barcode' in str(e).lower():
-                    self.barcode = generate_unique_code('BAR')
-                    retries -= 1
-                else:
-                    raise
-        raise ValidationError({'barcode': _('Unable to generate a unique barcode after retries.')})
 
     def clean(self):
         super().clean()

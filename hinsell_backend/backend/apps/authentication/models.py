@@ -237,10 +237,6 @@ class User(AbstractBaseUser, PermissionsMixin, AuditableModel):
     def clean(self):
         super().clean()
         if self.user_type in [self.UserType.EMPLOYEE, self.UserType.MANAGER, self.UserType.ADMIN] and not self.code:
-            self.code = generate_unique_code('EMP', length=12)
-        if self.code and not self.code.strip():
-            raise ValidationError({'code': _('Employee code cannot be empty if provided.')})
-        if self.user_type in [self.UserType.EMPLOYEE, self.UserType.MANAGER, self.UserType.ADMIN] and not self.code:
             raise ValidationError({'code': _('Employee code is required for employee, manager, or admin users.')})
         if self.user_type == self.UserType.GUEST and (self.first_name or self.last_name):
             raise ValidationError({'first_name': _('Guest users should not have personal information.'),

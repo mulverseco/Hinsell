@@ -93,8 +93,6 @@ class TransactionType(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.branch.company.has_feature('multi_currency') and self.category in [self.Category.SALES, self.Category.PURCHASE]:
@@ -306,8 +304,6 @@ class TransactionHeader(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.transaction_number.strip():
             raise ValidationError({'transaction_number': _('Transaction number cannot be empty.')})
         if self.due_date and self.due_date < self.transaction_date:
@@ -823,8 +819,6 @@ class LedgerEntry(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if self.debit_amount > 0 and self.credit_amount > 0:
             raise ValidationError(_('Entry cannot have both debit and credit amounts.'))
         if self.debit_amount == 0 and self.credit_amount == 0:

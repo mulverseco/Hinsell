@@ -192,8 +192,6 @@ class Offer(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.start_date >= self.end_date:
@@ -396,8 +394,6 @@ class Coupon(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.start_date >= self.end_date:
@@ -655,8 +651,6 @@ class Campaign(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.code or not self.code.strip():
-            raise ValidationError({'code': _('Code cannot be empty.')})
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if not self.content.strip():
