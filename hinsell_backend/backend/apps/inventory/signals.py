@@ -1,8 +1,8 @@
 import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from apps.inventory.models import Item, ItemVariant, InventoryBalance
-from apps.inventory.tasks import check_item_stock, check_variant_stock, check_inventory_balance
+from apps.inventory.models import Item, InventoryBalance
+from apps.inventory.tasks import check_item_stock, check_inventory_balance
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +15,6 @@ def handle_item_save(sender, instance, created, **kwargs):
     except Exception as e:
         logger.error(f"Error handling item {instance.code} save: {str(e)}", exc_info=True)
 
-@receiver(post_save, sender=ItemVariant)
-def handle_variant_save(sender, instance, created, **kwargs):
-    """Handle variant save to check stock levels."""
-    try:
-        check_variant_stock.delay(instance.id)
-        logger.info(f"Variant {instance.code} saved; stock check task dispatched.")
-    except Exception as e:
-        logger.error(f"Error handling variant {instance.code} save: {str(e)}", exc_info=True)
 
 @receiver(post_save, sender=InventoryBalance)
 def handle_inventory_balance_save(sender, instance, created, **kwargs):

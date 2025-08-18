@@ -279,65 +279,15 @@ class Item(AuditableModel):
         null=True,
         verbose_name=_("Brand")
     )
-    scientific_name = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True,
-        verbose_name=_("Scientific Name")
-    )
-    active_ingredient = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True,
-        verbose_name=_("Active Ingredient")
-    )
-    strength = models.CharField(
+    size = models.CharField(
         max_length=50,
         blank=True,
-        null=True,
-        verbose_name=_("Strength")
+        verbose_name=_("Size")
     )
-    dosage_form = models.CharField(
+    color = models.CharField(
         max_length=50,
         blank=True,
-        null=True,
-        verbose_name=_("Dosage Form")
-    )
-    route_of_administration = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-        verbose_name=_("Route of Administration")
-    )
-    indications = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Indications")
-    )
-    contraindications = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Contraindications")
-    )
-    side_effects = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Side Effects")
-    )
-    precautions = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Precautions")
-    )
-    drug_interactions = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Drug Interactions")
-    )
-    storage_conditions = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Storage Conditions")
+        verbose_name=_("Color")
     )
     standard_cost = models.DecimalField(
         max_digits=15,
@@ -415,7 +365,6 @@ class Item(AuditableModel):
         choices=[
             ('public', _('Public')),
             ('registered', _('Registered Users Only')),
-            ('prescription', _('Prescription Required')),
             ('hidden', _('Hidden')),
         ],
         default='public',
@@ -497,14 +446,6 @@ class Item(AuditableModel):
         default=True,
         verbose_name=_("Allow Bonus")
     )
-    is_prescription_required = models.BooleanField(
-        default=False,
-        verbose_name=_("Prescription Required")
-    )
-    is_controlled_substance = models.BooleanField(
-        default=False,
-        verbose_name=_("Controlled Substance")
-    )
     expiry_warning_days = models.PositiveIntegerField(
         default=30,
         verbose_name=_("Expiry Warning Days")
@@ -530,7 +471,8 @@ class Item(AuditableModel):
             models.Index(fields=['branch', 'code']),
             models.Index(fields=['item_group', 'slug']),
             models.Index(fields=['is_featured', 'visibility', 'average_rating']),
-            models.Index(fields=['manufacturer', 'brand', 'scientific_name']),
+            models.Index(fields=['manufacturer', 'brand']),
+            models.Index(fields=['size', 'color']),
         ]
         constraints = [
             models.CheckConstraint(
@@ -574,8 +516,6 @@ class Item(AuditableModel):
                 raise ValidationError({'sales_price': _('Sales price cannot be greater than maximum price.')})
         if self.reorder_level > 0 and self.maximum_stock > 0 and self.reorder_level >= self.maximum_stock:
             raise ValidationError({'maximum_stock': _('Maximum stock must be greater than reorder level.')})
-        if self.is_prescription_required and self.visibility != 'prescription':
-            raise ValidationError({'visibility': _('Prescription-required items must have prescription visibility.')})
 
     def calculate_selling_price(self, cost: Decimal = None) -> Decimal:
         cost = cost or self.standard_cost
@@ -591,7 +531,7 @@ class Item(AuditableModel):
 
     def get_current_stock(self) -> Decimal:
         balance = InventoryBalance.objects.filter(
-            item__in=self.variants.all()
+            item=self
         ).aggregate(
             total=models.Sum('available_quantity')
         )['total']
@@ -634,7 +574,7 @@ class Item(AuditableModel):
                         extra={'item_id': self.id, 'notification_type': 'low_stock'}, exc_info=True)
 
     def get_display_name(self) -> str:
-        return f"{self.name} ({self.scientific_name})" if self.scientific_name else self.name
+        return self.name
 
     def update_rating(self, new_rating: Decimal) -> None:
         logger = Logger(__name__, branch_id=self.branch.id)
@@ -652,145 +592,13 @@ class Item(AuditableModel):
     def __str__(self):
         return f"{self.item_group.store_group.code} - {self.code} - {self.name}"
 
-class ItemVariant(AuditableModel):
-    """Variants of an item with specific attributes."""
-    item = models.ForeignKey(
-        Item,
-        on_delete=models.CASCADE,
-        related_name='variants',
-        verbose_name=_("Item")
-    )
-    code = models.CharField(
-        max_length=20,
-        unique=True,
-        blank=True,
-        verbose_name=_("Code")
-    )
-    size = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name=_("Size")
-    )
-    color = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name=_("Color")
-    )
-    standard_cost = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Standard Cost")
-    )
-    sales_price = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Sales Price")
-    )
-    media = models.ManyToManyField(
-        Media,
-        blank=True,
-        related_name='item_variants',
-        verbose_name=_("Media")
-    )
-    reorder_level = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Reorder Level")
-    )
-    maximum_stock = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Maximum Stock")
-    )
-
-    class Meta:
-        verbose_name = _("Item Variant")
-        verbose_name_plural = _("Item Variants")
-        unique_together = [['item', 'code'], ['item', 'size', 'color']]
-        indexes = [
-            models.Index(fields=['item', 'code']),
-            models.Index(fields=['size', 'color']),
-        ]
-
-    def clean(self):
-        super().clean()
-        if not self.size.strip() and not self.color.strip():
-            raise ValidationError({
-                'size': _('At least one of size or color must be specified.'),
-                'color': _('At least one of size or color must be specified.')
-            })
-        if self.reorder_level > 0 and self.maximum_stock > 0 and self.reorder_level >= self.maximum_stock:
-            raise ValidationError({'maximum_stock': _('Maximum stock must be greater than reorder level.')})
-
-    def get_current_stock(self) -> Decimal:
-        balance = InventoryBalance.objects.filter(
-            item=self
-        ).aggregate(
-            total=models.Sum('available_quantity')
-        )['total']
-        return balance or Decimal('0.0000')
-
-    def is_low_stock(self) -> bool:
-        logger = Logger(__name__, branch_id=self.item.branch.id)
-        if self.reorder_level > 0:
-            current_stock = self.get_current_stock()
-            if current_stock <= self.reorder_level:
-                self.notify_low_stock(current_stock)
-                logger.info(f"Low stock detected for variant {self.code}", 
-                           extra={'variant_id': self.id, 'current_stock': str(current_stock)})
-                return True
-        return False
-
-    def notify_low_stock(self, current_stock: Decimal):
-        """Send notification for low stock."""
-        from apps.core_apps.services.messaging_service import MessagingService
-        logger = Logger(__name__, branch_id=self.item.branch.id)
-        try:
-            service = MessagingService(self.item.branch)
-            service.send_notification(
-                recipient=None,
-                notification_type='low_stock_variant',
-                context_data={
-                    'variant_code': self.code,
-                    'item_name': self.item.name,
-                    'size': self.size,
-                    'color': self.color,
-                    'current_stock': str(current_stock),
-                    'reorder_level': str(self.reorder_level),
-                    'email': self.item.branch.email
-                },
-                channel='email',
-                priority='high'
-            )
-            logger.info(f"Low stock notification sent for variant {self.code}", 
-                       extra={'variant_id': self.id, 'notification_type': 'low_stock_variant'})
-        except Exception as e:
-            logger.error(f"Error sending low stock notification for variant {self.code}: {str(e)}", 
-                        extra={'variant_id': self.id, 'notification_type': 'low_stock_variant'}, exc_info=True)
-
-    def __str__(self):
-        parts = [f"{self.item.code} - {self.code}"]
-        if self.size:
-            parts.append(f"Size: {self.size}")
-        if self.color:
-            parts.append(f"Color: {self.color}")
-        return " - ".join(parts)
-
 class ItemUnit(AuditableModel):
     """Multiple units of measure for item variants."""
     item = models.ForeignKey(
-        ItemVariant,
+        Item,
         on_delete=models.CASCADE,
         related_name='units',
-        verbose_name=_("Item Variant")
+        verbose_name=_("Item")
     )
     code = models.CharField(
         max_length=20,
@@ -868,10 +676,10 @@ class ItemUnit(AuditableModel):
 class ItemBarcode(AuditableModel):
     """Barcodes for item variants and their units."""
     item = models.ForeignKey(
-        ItemVariant,
+        Item,
         on_delete=models.CASCADE,
         related_name='barcodes',
-        verbose_name=_("Item Variant")
+        verbose_name=_("Item")
     )
     barcode = models.CharField(
         max_length=50,
@@ -919,7 +727,7 @@ class ItemBarcode(AuditableModel):
         if not self.barcode.strip():
             raise ValidationError({'barcode': _('Barcode cannot be empty.')})
         if self.unit and self.unit.item != self.item:
-            raise ValidationError({'unit': _('Unit must belong to the same item variant.')})
+            raise ValidationError({'unit': _('Unit must belong to the same item.')})
 
     def __str__(self):
         return f"{self.item.code} - {self.barcode}"
@@ -933,10 +741,10 @@ class InventoryBalance(AuditableModel):
         verbose_name=_("Branch")
     )
     item = models.ForeignKey(
-        ItemVariant,
+        Item,
         on_delete=models.CASCADE,
         related_name='inventory_balances',
-        verbose_name=_("Item Variant")
+        verbose_name=_("Item")
     )
     location = models.CharField(
         max_length=50,
@@ -998,9 +806,9 @@ class InventoryBalance(AuditableModel):
 
     def clean(self):
         super().clean()
-        if self.item.item.track_expiry and not self.expiry_date:
+        if self.item.track_expiry and not self.expiry_date:
             raise ValidationError({'expiry_date': _('Expiry date is required for items that track expiry.')})
-        if self.item.item.track_batches and not self.batch_number:
+        if self.item.track_batches and not self.batch_number:
             raise ValidationError({'batch_number': _('Batch number is required for items that track batches.')})
 
     def is_expired(self) -> bool:
@@ -1010,19 +818,19 @@ class InventoryBalance(AuditableModel):
             if is_expired:
                 self.notify_expiry()
                 logger.info(f"Expired stock detected for batch {self.batch_number}", 
-                           extra={'variant_id': self.item.id, 'batch_number': self.batch_number})
+                           extra={'item_id': self.item.id, 'batch_number': self.batch_number})
             return is_expired
         return False
 
     def is_near_expiry(self) -> bool:
         logger = Logger(__name__, branch_id=self.branch.id)
         if self.expiry_date:
-            warning_date = timezone.now().date() + timezone.timedelta(days=self.item.item.expiry_warning_days)
+            warning_date = timezone.now().date() + timezone.timedelta(days=self.item.expiry_warning_days)
             is_near = self.expiry_date <= warning_date
             if is_near and not self.is_expired():
                 self.notify_near_expiry()
                 logger.info(f"Near-expiry stock detected for batch {self.batch_number}", 
-                           extra={'variant_id': self.item.id, 'batch_number': self.batch_number})
+                           extra={'item_id': self.item.id, 'batch_number': self.batch_number})
             return is_near
         return False
 
@@ -1036,8 +844,7 @@ class InventoryBalance(AuditableModel):
                 recipient=None,
                 notification_type='expired_stock',
                 context_data={
-                    'item_code': self.item.item.code,
-                    'variant_code': self.item.code,
+                    'item_code': self.item.code,
                     'batch_number': self.batch_number,
                     'expiry_date': str(self.expiry_date),
                     'available_quantity': str(self.available_quantity),
@@ -1046,11 +853,11 @@ class InventoryBalance(AuditableModel):
                 channel='email',
                 priority='urgent'
             )
-            logger.info(f"Expiry notification sent for batch {self.batch_number} of variant {self.item.code}", 
-                       extra={'variant_id': self.item.id, 'notification_type': 'expired_stock'})
+            logger.info(f"Expiry notification sent for batch {self.batch_number} of item {self.item.code}", 
+                       extra={'item_id': self.item.id, 'notification_type': 'expired_stock'})
         except Exception as e:
             logger.error(f"Error sending expiry notification for batch {self.batch_number}: {str(e)}", 
-                        extra={'variant_id': self.item.id, 'notification_type': 'expired_stock'}, exc_info=True)
+                        extra={'item_id': self.item.id, 'notification_type': 'expired_stock'}, exc_info=True)
 
     def notify_near_expiry(self):
         """Send notification for near-expiry stock."""
@@ -1062,28 +869,27 @@ class InventoryBalance(AuditableModel):
                 recipient=None,
                 notification_type='near_expiry_stock',
                 context_data={
-                    'item_code': self.item.item.code,
-                    'variant_code': self.item.code,
+                    'item_code': self.item.code,
                     'batch_number': self.batch_number,
                     'expiry_date': str(self.expiry_date),
                     'available_quantity': str(self.available_quantity),
-                    'warning_days': self.item.item.expiry_warning_days,
+                    'warning_days': self.item.expiry_warning_days,
                     'email': self.branch.email
                 },
                 channel='email',
                 priority='high'
             )
-            logger.info(f"Near-expiry notification sent for batch {self.batch_number} of variant {self.item.code}", 
-                       extra={'variant_id': self.item.id, 'notification_type': 'near_expiry_stock'})
+            logger.info(f"Near-expiry notification sent for batch {self.batch_number} of item {self.item.code}", 
+                       extra={'item_id': self.item.id, 'notification_type': 'near_expiry_stock'})
         except Exception as e:
             logger.error(f"Error sending near-expiry notification for batch {self.batch_number}: {str(e)}", 
-                        extra={'variant_id': self.item.id, 'notification_type': 'near_expiry_stock'}, exc_info=True)
+                        extra={'item_id': self.item.id, 'notification_type': 'near_expiry_stock'}, exc_info=True)
 
     def get_total_quantity(self) -> Decimal:
         return self.available_quantity + self.reserved_quantity
 
     def __str__(self):
-        parts = [f"{self.item.item.item_group.store_group.code} - {self.item.code}"]
+        parts = [f"{self.item.item_group.store_group.code} - {self.item.code}"]
         if self.batch_number:
             parts.append(f"Batch: {self.batch_number}")
         if self.expiry_date:

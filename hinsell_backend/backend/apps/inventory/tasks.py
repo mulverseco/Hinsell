@@ -1,5 +1,5 @@
 from celery import shared_task
-from apps.inventory.models import Item, ItemVariant, InventoryBalance
+from apps.inventory.models import Item, InventoryBalance
 from apps.core_apps.utils import Logger
 
 @shared_task
@@ -16,21 +16,6 @@ def check_item_stock(item_id: int):
     except Exception as e:
         logger.error(f"Error checking stock for item {item_id}: {str(e)}", 
                     extra={'item_id': item_id, 'action': 'check_stock'}, exc_info=True)
-
-@shared_task
-def check_variant_stock(variant_id: int):
-    """Check variant stock levels asynchronously."""
-    logger = Logger('inventory.tasks')
-    try:
-        variant = ItemVariant.objects.get(id=variant_id)
-        variant.is_low_stock()
-        logger.info(f"Stock check completed for variant {variant.code}", 
-                   extra={'variant_id': variant_id, 'action': 'check_stock'})
-    except ItemVariant.DoesNotExist:
-        logger.error(f"Variant {variant_id} not found", extra={'variant_id': variant_id, 'action': 'check_stock'})
-    except Exception as e:
-        logger.error(f"Error checking stock for variant {variant_id}: {str(e)}", 
-                    extra={'variant_id': variant_id, 'action': 'check_stock'}, exc_info=True)
 
 @shared_task
 def check_inventory_balance(balance_id: int):

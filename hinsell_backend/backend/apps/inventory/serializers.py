@@ -1,164 +1,93 @@
 from rest_framework import serializers
-from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from apps.inventory.models import StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, ItemBarcode, InventoryBalance
-from apps.organization.models import Branch
-from apps.accounting.models import Account
-from apps.shared.models import Media
+from apps.inventory.models import (
+    StoreGroup, ItemGroup, Item, ItemUnit, ItemBarcode, InventoryBalance
+)
+from apps.organization.serializers import BranchSerializer
+from apps.accounting.serializers import AccountSerializer
+from apps.shared.serializers import MediaSerializer
 
 class StoreGroupSerializer(serializers.ModelSerializer):
-    """Serializer for StoreGroup model."""
-    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
-    stock_account = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), allow_null=True)
-    sales_account = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), allow_null=True)
-    cost_of_sales_account = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), allow_null=True)
+    branch = BranchSerializer(read_only=True)
+    stock_account = AccountSerializer(read_only=True)
+    sales_account = AccountSerializer(read_only=True)
+    cost_of_sales_account = AccountSerializer(read_only=True)
 
     class Meta:
         model = StoreGroup
-        fields = [
-            'id', 'branch', 'code', 'name', 'slug', 'cost_method',
-            'stock_account', 'sales_account', 'cost_of_sales_account',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'code', 'slug', 'created_at', 'updated_at']
+        fields = '__all__'
+        read_only_fields = ('slug', 'created_by', 'updated_by', 'created_at', 'updated_at')
 
-    def validate(self, data):
-        if not data.get('name').strip():
-            raise ValidationError(_('Name cannot be empty.'))
-        return data
+    def validate_name(self, value):
+        if not value.strip():
+            raise serializers.ValidationError(_('Name cannot be empty.'))
+        return value
 
 class ItemGroupSerializer(serializers.ModelSerializer):
-    """Serializer for ItemGroup model."""
-    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
-    store_group = serializers.PrimaryKeyRelatedField(queryset=StoreGroup.objects.all())
+    branch = BranchSerializer(read_only=True)
+    store_group = StoreGroupSerializer(read_only=True)
     parent = serializers.PrimaryKeyRelatedField(queryset=ItemGroup.objects.all(), allow_null=True)
-    media = serializers.PrimaryKeyRelatedField(many=True, queryset=Media.objects.all(), required=False)
+    media = MediaSerializer(many=True, read_only=True)
 
     class Meta:
         model = ItemGroup
-        fields = [
-            'id', 'branch', 'store_group', 'code', 'name', 'slug', 'parent',
-            'group_type', 'media', 'description', 'meta_title', 'meta_description',
-            'is_featured', 'visibility', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'code', 'slug', 'created_at', 'updated_at']
-
-    def validate(self, data):
-        if not data.get('name').strip():
-            raise ValidationError(_('Name cannot be empty.'))
-        if data.get('parent') and data.get('store_group') != data.get('parent').store_group:
-            raise ValidationError(_('Parent group must belong to the same store group.'))
-        return data
+        fields = '__all__'
+        read_only_fields = ('slug', 'created_by', 'updated_by', 'created_at', 'updated_at')
 
 class ItemSerializer(serializers.ModelSerializer):
-    """Serializer for Item model."""
-    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
-    item_group = serializers.PrimaryKeyRelatedField(queryset=ItemGroup.objects.all())
-    media = serializers.PrimaryKeyRelatedField(many=True, queryset=Media.objects.all(), required=False)
+    branch = BranchSerializer(read_only=True)
+    item_group = ItemGroupSerializer(read_only=True)
+    media = MediaSerializer(many=True, read_only=True)
 
     class Meta:
         model = Item
-        fields = [
-            'id', 'branch', 'item_group', 'code', 'name', 'slug', 'item_type',
-            'base_unit', 'shelf_location', 'weight', 'volume', 'manufacturer',
-            'brand', 'scientific_name', 'active_ingredient', 'strength',
-            'dosage_form', 'route_of_administration', 'indications',
-            'contraindications', 'side_effects', 'precautions', 'drug_interactions',
-            'storage_conditions', 'standard_cost', 'sales_price', 'wholesale_price',
-            'minimum_price', 'maximum_price', 'media', 'meta_title',
-            'meta_description', 'tags', 'average_rating', 'review_count',
-            'is_featured', 'visibility', 'reorder_level', 'maximum_stock',
-            'minimum_order_quantity', 'markup_percentage', 'discount_percentage',
-            'commission_percentage', 'vat_percentage', 'handling_fee',
-            'is_service_item', 'track_expiry', 'track_batches', 'allow_discount',
-            'allow_bonus', 'is_prescription_required', 'is_controlled_substance',
-            'expiry_warning_days', 'description', 'short_description',
-            'internal_notes', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'code', 'slug', 'average_rating', 'review_count', 'created_at', 'updated_at']
+        fields = '__all__'
+        read_only_fields = ('slug', 'average_rating', 'review_count', 'created_by', 'updated_by', 'created_at', 'updated_at')
 
     def validate(self, data):
-        if not data.get('name').strip():
-            raise ValidationError(_('Name cannot be empty.'))
-        if not data.get('base_unit').strip():
-            raise ValidationError(_('Base unit cannot be empty.'))
         if data.get('minimum_price', 0) > 0 and data.get('maximum_price', 0) > 0 and data.get('minimum_price') >= data.get('maximum_price'):
-            raise ValidationError(_('Maximum price must be greater than minimum price.'))
-        if data.get('is_prescription_required') and data.get('visibility') != 'prescription':
-            raise ValidationError(_('Prescription-required items must have prescription visibility.'))
-        return data
-
-class ItemVariantSerializer(serializers.ModelSerializer):
-    """Serializer for ItemVariant model."""
-    item = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all())
-    media = serializers.PrimaryKeyRelatedField(many=True, queryset=Media.objects.all(), required=False)
-
-    class Meta:
-        model = ItemVariant
-        fields = [
-            'id', 'item', 'code', 'size', 'color', 'standard_cost', 'sales_price',
-            'media', 'reorder_level', 'maximum_stock', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'code', 'created_at', 'updated_at']
-
-    def validate(self, data):
-        if not (data.get('size').strip() or data.get('color').strip()):
-            raise ValidationError(_('At least one of size or color must be specified.'))
+            raise serializers.ValidationError({'maximum_price': _('Maximum price must be greater than minimum price.')})
+        sales_price = data.get('sales_price', 0)
+        if sales_price > 0:
+            if data.get('minimum_price', 0) > 0 and sales_price < data.get('minimum_price'):
+                raise serializers.ValidationError({'sales_price': _('Sales price cannot be less than minimum price.')})
+            if data.get('maximum_price', 0) > 0 and sales_price > data.get('maximum_price'):
+                raise serializers.ValidationError({'sales_price': _('Sales price cannot be greater than maximum price.')})
+        if data.get('reorder_level', 0) > 0 and data.get('maximum_stock', 0) > 0 and data.get('reorder_level') >= data.get('maximum_stock'):
+            raise serializers.ValidationError({'maximum_stock': _('Maximum stock must be greater than reorder level.')})
         return data
 
 class ItemUnitSerializer(serializers.ModelSerializer):
-    """Serializer for ItemUnit model."""
-    item = serializers.PrimaryKeyRelatedField(queryset=ItemVariant.objects.all())
+    item = ItemSerializer(read_only=True)
 
     class Meta:
         model = ItemUnit
-        fields = [
-            'id', 'item', 'code', 'name', 'conversion_factor', 'unit_price',
-            'unit_cost', 'is_default', 'is_purchase_unit', 'is_sales_unit',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'code', 'created_at', 'updated_at']
-
-    def validate(self, data):
-        if not data.get('name').strip():
-            raise ValidationError(_('Name cannot be empty.'))
-        return data
+        fields = '__all__'
+        read_only_fields = ('created_by', 'updated_by', 'created_at', 'updated_at')
 
 class ItemBarcodeSerializer(serializers.ModelSerializer):
-    """Serializer for ItemBarcode model."""
-    item = serializers.PrimaryKeyRelatedField(queryset=ItemVariant.objects.all())
-    unit = serializers.PrimaryKeyRelatedField(queryset=ItemUnit.objects.all(), allow_null=True)
+    item = ItemSerializer(read_only=True)
+    unit = ItemUnitSerializer(read_only=True)
 
     class Meta:
         model = ItemBarcode
-        fields = [
-            'id', 'item', 'barcode', 'barcode_type', 'unit', 'is_primary',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'barcode', 'created_at', 'updated_at']
+        fields = '__all__'
+        read_only_fields = ('created_by', 'updated_by', 'created_at', 'updated_at')
 
-    def validate(self, data):
-        if data.get('unit') and data.get('unit').item != data.get('item'):
-            raise ValidationError(_('Unit must belong to the same item variant.'))
-        return data
 
 class InventoryBalanceSerializer(serializers.ModelSerializer):
-    """Serializer for InventoryBalance model."""
-    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
-    item = serializers.PrimaryKeyRelatedField(queryset=ItemVariant.objects.all())
+    branch = BranchSerializer(read_only=True)
+    item = ItemSerializer(read_only=True)
 
     class Meta:
         model = InventoryBalance
-        fields = [
-            'id', 'branch', 'item', 'location', 'batch_number', 'expiry_date',
-            'available_quantity', 'reserved_quantity', 'average_cost',
-            'last_movement_date', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'last_movement_date', 'created_at', 'updated_at']
+        fields = '__all__'
+        read_only_fields = ('last_movement_date', 'created_by', 'updated_by', 'created_at', 'updated_at')
 
     def validate(self, data):
-        if data.get('item').item.track_expiry and not data.get('expiry_date'):
-            raise ValidationError(_('Expiry date is required for items that track expiry.'))
-        if data.get('item').item.track_batches and not data.get('batch_number'):
-            raise ValidationError(_('Batch number is required for items that track batches.'))
+        item = data.get('item')
+        if item.track_expiry and not data.get('expiry_date'):
+            raise serializers.ValidationError({'expiry_date': _('Expiry date is required for items that track expiry.')})
+        if item.track_batches and not data.get('batch_number'):
+            raise serializers.ValidationError({'batch_number': _('Batch number is required for items that track batches.')})
         return data

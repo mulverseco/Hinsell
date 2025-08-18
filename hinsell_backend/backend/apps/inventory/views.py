@@ -1,10 +1,10 @@
 from rest_framework.permissions import IsAuthenticated
 from apps.core_apps.general import BaseViewSet
 from apps.core_apps.permissions import HasRolePermission
-from apps.inventory.models import StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, ItemBarcode, InventoryBalance
+from apps.inventory.models import StoreGroup, ItemGroup, Item, ItemUnit, ItemBarcode, InventoryBalance
 from apps.inventory.serializers import (
     StoreGroupSerializer, ItemGroupSerializer, ItemSerializer,
-    ItemVariantSerializer, ItemUnitSerializer, ItemBarcodeSerializer, InventoryBalanceSerializer
+    ItemUnitSerializer, ItemBarcodeSerializer, InventoryBalanceSerializer
 )
 
 class StoreGroupViewSet(BaseViewSet):
@@ -63,26 +63,6 @@ class ItemViewSet(BaseViewSet):
     ]
     ordering_fields = ['code', 'name', 'sales_price', 'average_rating', 'created_at', 'updated_at']
     ordering = ['-created_at']
-    
-    permission_classes_by_action = {
-        'list': [IsAuthenticated],
-        'retrieve': [IsAuthenticated],
-        'create': [IsAuthenticated, HasRolePermission],
-        'update': [IsAuthenticated, HasRolePermission],
-        'partial_update': [IsAuthenticated, HasRolePermission],
-        'destroy': [IsAuthenticated, HasRolePermission],
-    }
-
-class ItemVariantViewSet(BaseViewSet):
-    """ViewSet for ItemVariant model."""
-    queryset = ItemVariant.objects.all()
-    serializer_class = ItemVariantSerializer
-    logger_name = 'inventory.item_variant'
-    
-    filterset_fields = ['item', 'code', 'size', 'color']
-    search_fields = ['code', 'size', 'color']
-    ordering_fields = ['code', 'sales_price', 'created_at', 'updated_at']
-    ordering = ['code']
     
     permission_classes_by_action = {
         'list': [IsAuthenticated],
