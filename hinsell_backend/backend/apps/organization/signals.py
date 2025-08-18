@@ -53,20 +53,20 @@ def notify_license_activation(sender, instance, created, **kwargs):
             username=instance.created_by.username if instance.created_by else None,
             details={'license_code': instance.license_code, 'status': instance.status}
         )
-        if instance.licensee_email:
-            MessagingService(branch=instance.company.branches.filter(is_primary=True, is_deleted=False).first()).send_notification(
-                recipient=None,
-                notification_type='license_activated',
-                context_data={
-                    'email': instance.licensee_email,
-                    'license_code': instance.license_code,
-                    'company_name': instance.company.company_name,
-                    'activation_date': instance.activation_date.strftime('%Y-%m-%d'),
-                    'site_name': settings.SITE_NAME
-                },
-                channel='email',
-                priority='high'
-            )
+        # if instance.licensee_email:
+        #     MessagingService(branch=instance.company.branches.filter(is_primary=True, is_deleted=False).first()).send_notification(
+        #         recipient=None,
+        #         notification_type='license_activated',
+        #         context_data={
+        #             'email': instance.licensee_email,
+        #             'license_code': instance.license_code,
+        #             'company_name': instance.company.company_name,
+        #             'activation_date': instance.activation_date.strftime('%Y-%m-%d'),
+        #             'site_name': settings.SITE_NAME
+        #         },
+        #         channel='email',
+        #         priority='high'
+        #     )
 
 @receiver(pre_delete, sender=License)
 def handle_license_soft_delete(sender, instance, **kwargs):
