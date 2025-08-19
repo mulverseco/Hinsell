@@ -1,9 +1,10 @@
+
 import uuid
 from algoliasearch_django import AlgoliaIndex
 from algoliasearch_django.decorators import register
 from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
 
-# Monkey patch methods for should_index
+# Monkey patch methods for should_index on hinsell models
 def offer_is_indexable(self):
     return self.is_active
 Offer.is_indexable = offer_is_indexable

@@ -3,7 +3,7 @@ from algoliasearch_django import AlgoliaIndex
 from algoliasearch_django.decorators import register
 from apps.inventory.models import ItemGroup, Item, ItemUnit, ItemBarcode
 
-# Monkey patch methods for should_index
+# Monkey patch methods for should_index on inventory models
 def item_group_is_indexable(self):
     return self.visibility != 'hidden'
 ItemGroup.is_indexable = item_group_is_indexable
