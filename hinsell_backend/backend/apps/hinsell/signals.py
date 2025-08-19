@@ -92,7 +92,7 @@ def handle_offer_save(sender, instance, **kwargs):
     update_algolia_index.delay('hinsell', 'Offer', str(instance.pk))
 
 
-@receiver(pre_delete, sender=Offer)
+@receiver(post_delete, sender=Offer)
 def handle_offer_delete(sender, instance, **kwargs):
     delete_algolia_index.delay('hinsell', 'Offer', str(instance.pk))
 
@@ -102,7 +102,7 @@ def handle_coupon_save(sender, instance, **kwargs):
     update_algolia_index.delay('hinsell', 'Coupon', str(instance.pk))
 
 
-@receiver(pre_delete, sender=Coupon)
+@receiver(post_delete, sender=Coupon)
 def handle_coupon_delete(sender, instance, **kwargs):
     delete_algolia_index.delay('hinsell', 'Coupon', str(instance.pk))
 
@@ -112,7 +112,7 @@ def handle_user_coupon_save(sender, instance, **kwargs):
     update_algolia_index.delay('hinsell', 'UserCoupon', str(instance.pk))
 
 
-@receiver(pre_delete, sender=UserCoupon)
+@receiver(post_delete, sender=UserCoupon)
 def handle_user_coupon_delete(sender, instance, **kwargs):
     delete_algolia_index.delay('hinsell', 'UserCoupon', str(instance.pk))
 
@@ -122,6 +122,6 @@ def handle_campaign_save(sender, instance, **kwargs):
     update_algolia_index.delay('hinsell', 'Campaign', str(instance.pk))
 
 
-@receiver(pre_delete, sender=Campaign)
+@receiver(post_delete, sender=Campaign)
 def handle_campaign_delete(sender, instance, **kwargs):
     delete_algolia_index.delay('hinsell', 'Campaign', str(instance.pk))
