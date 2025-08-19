@@ -127,11 +127,11 @@ class InventoryBalanceViewSet(BaseViewSet):
     ordering_fields = ['available_quantity', 'last_movement_date', 'created_at', 'updated_at']
     ordering = ['-last_movement_date']
     
-    permission_classes_by_action = {
-        'list': [],
-        'retrieve': [],
-        'create': [IsAuthenticated, HasRolePermission],
-        'update': [IsAuthenticated, HasRolePermission],
-        'partial_update': [IsAuthenticated, HasRolePermission],
-        'destroy': [IsAuthenticated, HasRolePermission],
-    } 
+    # permission_classes_by_action = {
+    #     'list': [],
+    #     'retrieve': [],
+    #     'create': [IsAuthenticated, HasRolePermission],
+    #     'update': [IsAuthenticated, HasRolePermission],
+    #     'partial_update': [IsAuthenticated, HasRolePermission],
+    #     'destroy': [IsAuthenticated, HasRolePermission],
+    # } 

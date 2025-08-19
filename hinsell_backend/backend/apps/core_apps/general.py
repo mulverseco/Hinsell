@@ -168,20 +168,8 @@ class BaseViewSet(viewsets.ModelViewSet):
     ordering: List[str] = ['-created_at']
 
     def get_queryset(self) -> QuerySet:
-        """Filter queryset based on user's branch permissions."""
-        user = self.request.user
-        if not user.is_authenticated or not hasattr(user, 'profile'):
-            return self.queryset.none()
-        
-        queryset = self.queryset
-        if hasattr(self.queryset.model, 'branch'):
-            queryset = queryset.filter(branch__in=user.profile.branches.all())
-        elif hasattr(self.queryset.model, 'item') and hasattr(self.queryset.model.item.field.related_model, 'branch'):
-            queryset = queryset.filter(item__branch__in=user.profile.branches.all())
-        elif hasattr(self.queryset.model, 'item') and hasattr(self.queryset.model.item.field.related_model, 'item'):
-            queryset = queryset.filter(item__item__branch__in=user.profile.branches.all())
-        
-        return queryset
+        """Return the full queryset without filtering by branch or user."""
+        return self.queryset
 
     def get_permissions(self):
         """Return permission classes based on action."""
