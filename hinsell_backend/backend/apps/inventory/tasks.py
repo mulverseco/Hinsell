@@ -1,5 +1,5 @@
 from celery import shared_task
-from apps.inventory.models import Item, InventoryBalance
+from apps.inventory.models import Item, InventoryBalance,ItemGroup, ItemUnit, ItemBarcode
 from apps.core_apps.utils import Logger
 
 @shared_task
@@ -33,3 +33,70 @@ def check_inventory_balance(balance_id: int):
     except Exception as e:
         logger.error(f"Error checking expiry for balance {balance_id}: {str(e)}", 
                     extra={'balance_id': balance_id, 'action': 'check_expiry'}, exc_info=True)
+
+
+@shared_task
+def update_algolia_index(app_label, model_name, instance_pk):
+    from django.apps import apps
+    from algoliasearch_django import registry
+
+    model = apps.get_model(app_label, model_name)
+    try:
+        instance = model.objects.get(pk=instance_pk)
+    except model.DoesNotExist:
+        return
+
+    index = registry.get(model)
+    if index:
+        index.update_object(instance)
+
+
+@shared_task
+def delete_algolia_index(app_label, model_name, instance_pk):
+    from django.apps import apps
+    from algoliasearch_django import registry
+
+    model = apps.get_model(app_label, model_name)
+    index = registry.get(model)
+    if index:
+        index.delete_object(str(instance_pk))
+
+
+@receiver(post_save, sender=ItemGroup)
+def save_item_group_index(sender, instance, **kwargs):
+    update_algolia_index.delay('inventory', 'ItemGroup', str(instance.pk))
+
+
+@receiver(pre_delete, sender=ItemGroup)
+def delete_item_group_index(sender, instance, **kwargs):
+    delete_algolia_index.delay('inventory', 'ItemGroup', str(instance.pk))
+
+
+@receiver(post_save, sender=Item)
+def save_item_index(sender, instance, **kwargs):
+    update_algolia_index.delay('inventory', 'Item', str(instance.pk))
+
+
+@receiver(pre_delete, sender=Item)
+def delete_item_index(sender, instance, **kwargs):
+    delete_algolia_index.delay('inventory', 'Item', str(instance.pk))
+
+
+@receiver(post_save, sender=ItemUnit)
+def save_item_unit_index(sender, instance, **kwargs):
+    update_algolia_index.delay('inventory', 'ItemUnit', str(instance.pk))
+
+
+@receiver(pre_delete, sender=ItemUnit)
+def delete_item_unit_index(sender, instance, **kwargs):
+    delete_algolia_index.delay('inventory', 'ItemUnit', str(instance.pk))
+
+
+@receiver(post_save, sender=ItemBarcode)
+def save_item_barcode_index(sender, instance, **kwargs):
+    update_algolia_index.delay('inventory', 'ItemBarcode', str(instance.pk))
+
+
+@receiver(pre_delete, sender=ItemBarcode)
+def delete_item_barcode_index(sender, instance, **kwargs):
+    delete_algolia_index.delay('inventory', 'ItemBarcode', str(instance.pk))

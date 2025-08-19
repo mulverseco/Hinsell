@@ -5,6 +5,8 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.core.cache import cache
 from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
+from apps.hinsell.tasks import update_algolia_index, delete_algolia_index
+from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
 from apps.transactions.models import TransactionHeader
 from apps.notifications.models import Notification
 from apps.core_apps.utils import Logger
@@ -84,3 +86,42 @@ def launch_new_campaign(sender, instance, created, **kwargs):
     if created and instance.is_active and instance.start_date <= timezone.now():
         instance.launch()
         logger.info(f"Launched new campaign {instance.code}", extra={'campaign_id': instance.id})
+
+@receiver(post_save, sender=Offer)
+def handle_offer_save(sender, instance, **kwargs):
+    update_algolia_index.delay('hinsell', 'Offer', str(instance.pk))
+
+
+@receiver(pre_delete, sender=Offer)
+def handle_offer_delete(sender, instance, **kwargs):
+    delete_algolia_index.delay('hinsell', 'Offer', str(instance.pk))
+
+
+@receiver(post_save, sender=Coupon)
+def handle_coupon_save(sender, instance, **kwargs):
+    update_algolia_index.delay('hinsell', 'Coupon', str(instance.pk))
+
+
+@receiver(pre_delete, sender=Coupon)
+def handle_coupon_delete(sender, instance, **kwargs):
+    delete_algolia_index.delay('hinsell', 'Coupon', str(instance.pk))
+
+
+@receiver(post_save, sender=UserCoupon)
+def handle_user_coupon_save(sender, instance, **kwargs):
+    update_algolia_index.delay('hinsell', 'UserCoupon', str(instance.pk))
+
+
+@receiver(pre_delete, sender=UserCoupon)
+def handle_user_coupon_delete(sender, instance, **kwargs):
+    delete_algolia_index.delay('hinsell', 'UserCoupon', str(instance.pk))
+
+
+@receiver(post_save, sender=Campaign)
+def handle_campaign_save(sender, instance, **kwargs):
+    update_algolia_index.delay('hinsell', 'Campaign', str(instance.pk))
+
+
+@receiver(pre_delete, sender=Campaign)
+def handle_campaign_delete(sender, instance, **kwargs):
+    delete_algolia_index.delay('hinsell', 'Campaign', str(instance.pk))
