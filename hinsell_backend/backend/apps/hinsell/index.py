@@ -4,13 +4,16 @@ from algoliasearch_django.decorators import register
 from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
 
 def serialize_record(record):
-    """Recursively convert UUIDs to strings in dicts, lists, or single values."""
+    """Recursively convert UUIDs to strings and related objects to IDs."""
     if isinstance(record, dict):
         return {k: serialize_record(v) for k, v in record.items()}
     elif isinstance(record, list):
         return [serialize_record(v) for v in record]
     elif isinstance(record, uuid.UUID):
         return str(record)
+    # Convert Django model instances to their primary key
+    elif hasattr(record, "pk"):
+        return serialize_record(record.pk)
     return record
 
 @register(Offer)
@@ -21,6 +24,7 @@ class OfferIndex(AlgoliaIndex):
     def get_record(self, obj):
         record = super().get_record(obj)
         return serialize_record(record)
+
 
 
 @register(Coupon)
