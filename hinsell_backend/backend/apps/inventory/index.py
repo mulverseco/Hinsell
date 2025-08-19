@@ -3,17 +3,24 @@ from algoliasearch_django import AlgoliaIndex
 from algoliasearch_django.decorators import register
 from apps.inventory.models import ItemGroup,Item,ItemUnit,ItemBarcode
 
-def uuid_to_str(value):
-    return str(value) if isinstance(value, uuid.UUID) else value
+def serialize_record(record):
+    """Recursively convert UUIDs to strings in dicts, lists, or single values."""
+    if isinstance(record, dict):
+        return {k: serialize_record(v) for k, v in record.items()}
+    elif isinstance(record, list):
+        return [serialize_record(v) for v in record]
+    elif isinstance(record, uuid.UUID):
+        return str(record)
+    return record
 
+    
 @register(ItemGroup)
 class ItemGroupIndex(AlgoliaIndex):
     fields = ('id', 'code', 'name', 'slug', 'visibility')
 
     def get_record(self, obj):
         record = super().get_record(obj)
-        record['id'] = uuid_to_str(obj.id)
-        return record
+        return serialize_record(record)
 
 
 @register(Item)
@@ -22,8 +29,7 @@ class ItemIndex(AlgoliaIndex):
 
     def get_record(self, obj):
         record = super().get_record(obj)
-        record['id'] = uuid_to_str(obj.id)
-        return record
+        return serialize_record(record)
 
 
 @register(ItemUnit)
@@ -32,8 +38,7 @@ class ItemUnitIndex(AlgoliaIndex):
 
     def get_record(self, obj):
         record = super().get_record(obj)
-        record['id'] = uuid_to_str(obj.id)
-        return record
+        return serialize_record(record)
 
 
 @register(ItemBarcode)
@@ -42,7 +47,4 @@ class ItemBarcodeIndex(AlgoliaIndex):
 
     def get_record(self, obj):
         record = super().get_record(obj)
-        record['id'] = uuid_to_str(obj.id)
-        record['item'] = uuid_to_str(obj.item_id)
-        record['unit'] = uuid_to_str(obj.unit_id)
-        return record
+        return serialize_record(record)

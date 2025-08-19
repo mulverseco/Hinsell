@@ -3,9 +3,16 @@ from algoliasearch_django import AlgoliaIndex
 from algoliasearch_django.decorators import register
 from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
 
-def uuid_to_str(value):
-    return str(value) if isinstance(value, uuid.UUID) else value
-    
+def serialize_record(record):
+    """Recursively convert UUIDs to strings in dicts, lists, or single values."""
+    if isinstance(record, dict):
+        return {k: serialize_record(v) for k, v in record.items()}
+    elif isinstance(record, list):
+        return [serialize_record(v) for v in record]
+    elif isinstance(record, uuid.UUID):
+        return str(record)
+    return record
+
 @register(Offer)
 class OfferIndex(AlgoliaIndex):
     fields = ('id', 'code', 'name', 'slug', 'offer_type', 'target_type',
@@ -13,8 +20,7 @@ class OfferIndex(AlgoliaIndex):
 
     def get_record(self, obj):
         record = super().get_record(obj)
-        record['id'] = uuid_to_str(obj.id)
-        return record
+        return serialize_record(record)
 
 
 @register(Coupon)
@@ -24,8 +30,7 @@ class CouponIndex(AlgoliaIndex):
 
     def get_record(self, obj):
         record = super().get_record(obj)
-        record['id'] = uuid_to_str(obj.id)
-        return record
+        return serialize_record(record)
 
 
 @register(UserCoupon)
@@ -34,11 +39,7 @@ class UserCouponIndex(AlgoliaIndex):
 
     def get_record(self, obj):
         record = super().get_record(obj)
-        record['id'] = uuid_to_str(obj.id)
-        record['user_id'] = uuid_to_str(obj.user_id)
-        record['coupon_id'] = uuid_to_str(obj.coupon_id)
-        record['branch_id'] = uuid_to_str(obj.branch_id)
-        return record
+        return serialize_record(record)
 
 
 @register(Campaign)
@@ -49,7 +50,4 @@ class CampaignIndex(AlgoliaIndex):
 
     def get_record(self, obj):
         record = super().get_record(obj)
-        record['id'] = uuid_to_str(obj.id)
-        record['offer_id'] = uuid_to_str(obj.offer_id) if obj.offer_id else None
-        record['coupon_id'] = uuid_to_str(obj.coupon_id) if obj.coupon_id else None
-        return record
+        return serialize_record(record)
