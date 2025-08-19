@@ -1,4 +1,3 @@
-import type { PlatformVariant } from "lib/shopify/types"
 import type { CommerceProduct } from "types"
 import type { Combination } from "utils/product-options-utils"
 import { create } from "zustand"
@@ -11,7 +10,7 @@ interface AddProductStore {
     combination,
   }: {
     product: CommerceProduct
-    combination: Combination | PlatformVariant
+    combination: Combination 
   }) => void
   clean: () => void
 }

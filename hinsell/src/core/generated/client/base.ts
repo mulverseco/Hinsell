@@ -229,9 +229,9 @@ export class BaseApiClient {
       console.warn("Failed to get auth token:", error)
     }
 
-    const secureApiKey = process.env.SECURE_API_KEY
+    const secureApiKey = process.env.NEXT_SECURE_API_KEY
     if (secureApiKey) {
-      getAuthHeaders["X-API-Key"] = secureApiKey
+      getAuthHeaders["Authorization"] = `Api-Key ${secureApiKey}`
     }
 
     return getAuthHeaders

@@ -153,9 +153,9 @@ export const AuditLogSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
   branch: z.string().uuid("Invalid UUID format").optional(),
   branch_name: z.string().min(1, "Minimum length is 1").optional(),
-  user: z.string().uuid("Invalid UUID format"),
+  user: z.string().uuid("Invalid UUID format").optional(),
   user_full_name: z.string().min(1, "Minimum length is 1").optional(),
-  action_type: z.enum(["login", "logout", "login_failed", "password_change", "profile_update", "permission_change", "data_access", "data_modification", "system_access", "account_locked", "account_unlocked", "loyalty_points_added", "loyalty_points_redeemed", "terms_accepted", "consent_updated", "profile_deletion", "push_token_updated"]).optional(),
+  action_type: z.enum(["login", "logout", "login_failed", "password_change", "profile_update", "permission_change", "data_access", "data_modification", "system_access", "account_locked", "account_unlocked", "loyalty_points_added", "loyalty_points_redeemed", "terms_accepted", "consent_updated", "profile_deletion", "push_token_updated", "license_activated"]).optional(),
   username: z.string().max(100, "Maximum length is 100").optional(),
   ip_address: z.string().min(1, "Minimum length is 1").optional(),
   user_agent: z.string().optional(),
@@ -240,7 +240,7 @@ export const BranchSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
   company: z.string().uuid("Invalid UUID format"),
   company_name: z.string().min(1, "Minimum length is 1").optional(),
-  branch_code: z.string().min(1, "Minimum length is 1").optional(),
+  code: z.string().min(1, "Minimum length is 1").optional(),
   branch_name: z.string().min(1, "Minimum length is 1").max(200, "Maximum length is 200"),
   branch_name_english: z.string().max(200, "Maximum length is 200").optional(),
   is_primary: z.boolean().optional(),
@@ -358,7 +358,7 @@ export const LicenseTypeSchema = z.object({
 export type LicenseType = z.infer<typeof LicenseTypeSchema>
 export const LicenseSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
-  license_code: z.string().min(1, "Minimum length is 1").optional(),
+  code: z.string().min(1, "Minimum length is 1").optional(),
   license_key: z.string().min(1, "Minimum length is 1").optional(),
   license_type: LicenseTypeSchema.optional(),
   company: z.string().uuid("Invalid UUID format"),
@@ -477,86 +477,60 @@ export const CurrencyHistorySchema = z.object({
   updated_at: z.string().optional()
 })
 export type CurrencyHistory = z.infer<typeof CurrencyHistorySchema>
-export const InventoryBalanceSchema = z.object({
+export const StoreGroupSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
-  branch: z.string().uuid("Invalid UUID format"),
-  item: z.string().uuid("Invalid UUID format"),
-  location: z.string().max(50, "Maximum length is 50").optional(),
-  batch_number: z.string().max(50, "Maximum length is 50").optional(),
-  expiry_date: z.string().optional(),
-  available_quantity: z.string().optional(),
-  reserved_quantity: z.string().optional(),
-  average_cost: z.string().optional(),
-  last_movement_date: z.string().optional(),
+  branch: BranchSchema.optional(),
+  stock_account: AccountSchema.optional(),
+  sales_account: AccountSchema.optional(),
+  cost_of_sales_account: AccountSchema.optional(),
   created_at: z.string().optional(),
-  updated_at: z.string().optional()
-})
-export type InventoryBalance = z.infer<typeof InventoryBalanceSchema>
-export const ItemBarcodeSchema = z.object({
-  id: z.string().uuid("Invalid UUID format").optional(),
-  item: z.string().uuid("Invalid UUID format"),
-  barcode: z.string().min(1, "Minimum length is 1").optional(),
-  barcode_type: z.enum(["ean13", "ean8", "upc", "code128", "code39", "qr", "other"]).optional(),
-  unit: z.string().uuid("Invalid UUID format"),
-  is_primary: z.boolean().optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional()
-})
-export type ItemBarcode = z.infer<typeof ItemBarcodeSchema>
-export const ItemGroupSchema = z.object({
-  id: z.string().uuid("Invalid UUID format").optional(),
-  branch: z.string().uuid("Invalid UUID format"),
-  store_group: z.string().uuid("Invalid UUID format"),
-  code: z.string().min(1, "Minimum length is 1").optional(),
+  updated_at: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_deleted: z.boolean().optional(),
+  deleted_at: z.string().optional(),
+  code: z.string().max(20, "Maximum length is 20").optional(),
   name: z.string().min(1, "Minimum length is 1").max(100, "Maximum length is 100"),
   slug: z.string().min(1, "Minimum length is 1").regex(/^[-a-zA-Z0-9_]+$/, "Invalid format").optional(),
+  cost_method: z.enum(["average", "fifo", "lifo", "standard"]).optional(),
+  created_by: z.string().uuid("Invalid UUID format").optional(),
+  updated_by: z.string().uuid("Invalid UUID format").optional()
+})
+export type StoreGroup = z.infer<typeof StoreGroupSchema>
+export const ItemGroupSchema = z.object({
+  id: z.string().uuid("Invalid UUID format").optional(),
+  branch: BranchSchema.optional(),
+  store_group: StoreGroupSchema.optional(),
   parent: z.string().uuid("Invalid UUID format"),
+  media: z.array(MediaSchema).optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_deleted: z.boolean().optional(),
+  deleted_at: z.string().optional(),
+  code: z.string().max(20, "Maximum length is 20").optional(),
+  name: z.string().min(1, "Minimum length is 1").max(100, "Maximum length is 100"),
+  slug: z.string().min(1, "Minimum length is 1").regex(/^[-a-zA-Z0-9_]+$/, "Invalid format").optional(),
   group_type: z.enum(["product", "service", "both"]).optional(),
-  media: z.array(z.string().uuid("Invalid UUID format")).optional(),
   description: z.string().optional(),
   meta_title: z.string().max(60, "Maximum length is 60").optional(),
   meta_description: z.string().max(160, "Maximum length is 160").optional(),
   is_featured: z.boolean().optional(),
   visibility: z.enum(["public", "registered", "hidden"]).optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional()
+  created_by: z.string().uuid("Invalid UUID format").optional(),
+  updated_by: z.string().uuid("Invalid UUID format").optional()
 })
 export type ItemGroup = z.infer<typeof ItemGroupSchema>
-export const ItemUnitSchema = z.object({
-  id: z.string().uuid("Invalid UUID format").optional(),
-  item: z.string().uuid("Invalid UUID format"),
-  code: z.string().min(1, "Minimum length is 1").optional(),
-  name: z.string().min(1, "Minimum length is 1").max(50, "Maximum length is 50"),
-  conversion_factor: z.string().optional(),
-  unit_price: z.string().optional(),
-  unit_cost: z.string().optional(),
-  is_default: z.boolean().optional(),
-  is_purchase_unit: z.boolean().optional(),
-  is_sales_unit: z.boolean().optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional()
-})
-export type ItemUnit = z.infer<typeof ItemUnitSchema>
-export const ItemVariantSchema = z.object({
-  id: z.string().uuid("Invalid UUID format").optional(),
-  item: z.string().uuid("Invalid UUID format"),
-  code: z.string().min(1, "Minimum length is 1").optional(),
-  size: z.string().max(50, "Maximum length is 50"),
-  color: z.string().max(50, "Maximum length is 50"),
-  standard_cost: z.string().optional(),
-  sales_price: z.string().optional(),
-  media: z.array(z.string().uuid("Invalid UUID format")).optional(),
-  reorder_level: z.string().optional(),
-  maximum_stock: z.string().optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional()
-})
-export type ItemVariant = z.infer<typeof ItemVariantSchema>
 export const ItemSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
-  branch: z.string().uuid("Invalid UUID format"),
-  item_group: z.string().uuid("Invalid UUID format"),
-  code: z.string().min(1, "Minimum length is 1").optional(),
+  branch: BranchSchema.optional(),
+  item_group: ItemGroupSchema.optional(),
+  media: z.array(MediaSchema).optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_deleted: z.boolean().optional(),
+  deleted_at: z.string().optional(),
+  code: z.string().max(20, "Maximum length is 20").optional(),
   name: z.string().min(1, "Minimum length is 1").max(200, "Maximum length is 200"),
   slug: z.string().min(1, "Minimum length is 1").regex(/^[-a-zA-Z0-9_]+$/, "Invalid format").optional(),
   item_type: z.enum(["product", "service", "kit"]).optional(),
@@ -566,30 +540,20 @@ export const ItemSchema = z.object({
   volume: z.string().optional(),
   manufacturer: z.string().max(100, "Maximum length is 100").optional(),
   brand: z.string().max(100, "Maximum length is 100").optional(),
-  scientific_name: z.string().max(200, "Maximum length is 200").optional(),
-  active_ingredient: z.string().max(200, "Maximum length is 200").optional(),
-  strength: z.string().max(50, "Maximum length is 50").optional(),
-  dosage_form: z.string().max(50, "Maximum length is 50").optional(),
-  route_of_administration: z.string().max(50, "Maximum length is 50").optional(),
-  indications: z.string().optional(),
-  contraindications: z.string().optional(),
-  side_effects: z.string().optional(),
-  precautions: z.string().optional(),
-  drug_interactions: z.string().optional(),
-  storage_conditions: z.string().optional(),
+  size: z.string().max(50, "Maximum length is 50").optional(),
+  color: z.string().max(50, "Maximum length is 50").optional(),
   standard_cost: z.string().optional(),
   sales_price: z.string().optional(),
   wholesale_price: z.string().optional(),
   minimum_price: z.string().optional(),
   maximum_price: z.string().optional(),
-  media: z.array(z.string().uuid("Invalid UUID format")).optional(),
   meta_title: z.string().max(60, "Maximum length is 60").optional(),
   meta_description: z.string().max(160, "Maximum length is 160").optional(),
   tags: z.string().max(255, "Maximum length is 255").optional(),
   average_rating: z.string().optional(),
   review_count: z.number().int().optional(),
   is_featured: z.boolean().optional(),
-  visibility: z.enum(["public", "registered", "prescription", "hidden"]).optional(),
+  visibility: z.enum(["public", "registered", "hidden"]).optional(),
   reorder_level: z.string().optional(),
   maximum_stock: z.string().optional(),
   minimum_order_quantity: z.string().optional(),
@@ -603,16 +567,70 @@ export const ItemSchema = z.object({
   track_batches: z.boolean().optional(),
   allow_discount: z.boolean().optional(),
   allow_bonus: z.boolean().optional(),
-  is_prescription_required: z.boolean().optional(),
-  is_controlled_substance: z.boolean().optional(),
   expiry_warning_days: z.number().int().min(0, "Minimum value is 0").max(2147483647, "Maximum value is 2147483647").optional(),
   description: z.string().optional(),
   short_description: z.string().max(255, "Maximum length is 255").optional(),
   internal_notes: z.string().optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional()
+  created_by: z.string().uuid("Invalid UUID format").optional(),
+  updated_by: z.string().uuid("Invalid UUID format").optional()
 })
 export type Item = z.infer<typeof ItemSchema>
+export const InventoryBalanceSchema = z.object({
+  id: z.string().uuid("Invalid UUID format").optional(),
+  branch: BranchSchema.optional(),
+  item: ItemSchema.optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_deleted: z.boolean().optional(),
+  deleted_at: z.string().optional(),
+  location: z.string().max(50, "Maximum length is 50").optional(),
+  batch_number: z.string().max(50, "Maximum length is 50").optional(),
+  expiry_date: z.string().optional(),
+  available_quantity: z.string().optional(),
+  reserved_quantity: z.string().optional(),
+  average_cost: z.string().optional(),
+  last_movement_date: z.string().optional(),
+  created_by: z.string().uuid("Invalid UUID format").optional(),
+  updated_by: z.string().uuid("Invalid UUID format").optional()
+})
+export type InventoryBalance = z.infer<typeof InventoryBalanceSchema>
+export const ItemUnitSchema = z.object({
+  id: z.string().uuid("Invalid UUID format").optional(),
+  item: ItemSchema.optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_deleted: z.boolean().optional(),
+  deleted_at: z.string().optional(),
+  code: z.string().max(20, "Maximum length is 20"),
+  name: z.string().min(1, "Minimum length is 1").max(50, "Maximum length is 50"),
+  conversion_factor: z.string().optional(),
+  unit_price: z.string().optional(),
+  unit_cost: z.string().optional(),
+  is_default: z.boolean().optional(),
+  is_purchase_unit: z.boolean().optional(),
+  is_sales_unit: z.boolean().optional(),
+  created_by: z.string().uuid("Invalid UUID format").optional(),
+  updated_by: z.string().uuid("Invalid UUID format").optional()
+})
+export type ItemUnit = z.infer<typeof ItemUnitSchema>
+export const ItemBarcodeSchema = z.object({
+  id: z.string().uuid("Invalid UUID format").optional(),
+  item: ItemSchema.optional(),
+  unit: ItemUnitSchema.optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_deleted: z.boolean().optional(),
+  deleted_at: z.string().optional(),
+  barcode: z.string().min(1, "Minimum length is 1").max(50, "Maximum length is 50"),
+  barcode_type: z.enum(["ean13", "ean8", "upc", "code128", "code39", "qr", "other"]).optional(),
+  is_primary: z.boolean().optional(),
+  created_by: z.string().uuid("Invalid UUID format").optional(),
+  updated_by: z.string().uuid("Invalid UUID format").optional()
+})
+export type ItemBarcode = z.infer<typeof ItemBarcodeSchema>
 export const KeyboardShortcutsSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
   branch: z.string().uuid("Invalid UUID format"),
@@ -808,7 +826,7 @@ export type ReportCategory = z.infer<typeof ReportCategorySchema>
 export const ReportTemplateSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
   category: ReportCategorySchema.optional(),
-  code: z.string().min(1, "Minimum length is 1").max(50, "Maximum length is 50"),
+  code: z.string().max(20, "Maximum length is 20").optional(),
   name: z.string().min(1, "Minimum length is 1").max(200, "Maximum length is 200"),
   description: z.string().optional(),
   report_type: z.enum(["tabular", "chart", "dashboard", "export"]).optional(),
@@ -822,20 +840,6 @@ export const ReportTemplateSchema = z.object({
   updated_at: z.string().optional()
 })
 export type ReportTemplate = z.infer<typeof ReportTemplateSchema>
-export const StoreGroupSchema = z.object({
-  id: z.string().uuid("Invalid UUID format").optional(),
-  branch: z.string().uuid("Invalid UUID format"),
-  code: z.string().min(1, "Minimum length is 1").optional(),
-  name: z.string().min(1, "Minimum length is 1").max(100, "Maximum length is 100"),
-  slug: z.string().min(1, "Minimum length is 1").regex(/^[-a-zA-Z0-9_]+$/, "Invalid format").optional(),
-  cost_method: z.enum(["average", "fifo", "lifo", "standard"]).optional(),
-  stock_account: z.string().uuid("Invalid UUID format"),
-  sales_account: z.string().uuid("Invalid UUID format"),
-  cost_of_sales_account: z.string().uuid("Invalid UUID format"),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional()
-})
-export type StoreGroup = z.infer<typeof StoreGroupSchema>
 export const InsuranceSubscriberSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
   created_at: z.string().optional(),
@@ -1242,13 +1246,14 @@ export const AccountsDeleteParamsSchema = z.object({
 })
 
 export type AccountsDeleteParams = z.infer<typeof AccountsDeleteParamsSchema>
+
 /**
- * Request schema for POST /accounts/{id}/update-balance/
+ * Request schema for POST /accounts/{id}/update_balance/
  */
 export const AccountsUpdateBalanceRequestSchema = AccountSchema
 export type AccountsUpdateBalanceRequest = z.infer<typeof AccountsUpdateBalanceRequestSchema>
 /**
- * Success response schema for POST /accounts/{id}/update-balance/
+ * Success response schema for POST /accounts/{id}/update_balance/
  * Status: 201
  * 
  */
@@ -1256,7 +1261,7 @@ export const AccountsUpdateBalanceResponseSchema = AccountSchema
 
 export type AccountsUpdateBalanceResponse = z.infer<typeof AccountsUpdateBalanceResponseSchema>
 /**
- * Parameters schema for POST /accounts/{id}/update-balance/
+ * Parameters schema for POST /accounts/{id}/update_balance/
  * Path params: id
  * Query params: none
  * Header params: none
@@ -1269,10 +1274,10 @@ export const AccountsUpdateBalanceParamsSchema = z.object({
 
 export type AccountsUpdateBalanceParams = z.infer<typeof AccountsUpdateBalanceParamsSchema>
 /**
- * Request schema for POST /accounts/{id}/update_balance/
+ * Success response schema for GET /api/webhooks/deliveries/
+ * Status: 200
+ * 
  */
-
-
 export const ApiWebhooksDeliveriesListResponseSchema = z.array(WebhookDeliverySchema)
 
 export type ApiWebhooksDeliveriesListResponse = z.infer<typeof ApiWebhooksDeliveriesListResponseSchema>
@@ -3890,135 +3895,6 @@ export const ItemUnitsDeleteParamsSchema = z.object({
 })
 
 export type ItemUnitsDeleteParams = z.infer<typeof ItemUnitsDeleteParamsSchema>
-/**
- * Success response schema for GET /item-variants/
- * Status: 200
- * 
- */
-export const ItemVariantsListResponseSchema = z.array(ItemVariantSchema)
-
-export type ItemVariantsListResponse = z.infer<typeof ItemVariantsListResponseSchema>
-/**
- * Parameters schema for GET /item-variants/
- * Path params: none
- * Query params: search, ordering
- * Header params: none
- */
-export const ItemVariantsListParamsSchema = z.object({
-  query: z.object({
-    search: z.string().optional(),
-    ordering: z.string().optional()
-  }).optional()
-})
-
-export type ItemVariantsListParams = z.infer<typeof ItemVariantsListParamsSchema>
-/**
- * Request schema for POST /item-variants/
- */
-export const ItemVariantsCreateRequestSchema = ItemVariantSchema
-export type ItemVariantsCreateRequest = z.infer<typeof ItemVariantsCreateRequestSchema>
-/**
- * Success response schema for POST /item-variants/
- * Status: 201
- * 
- */
-export const ItemVariantsCreateResponseSchema = ItemVariantSchema
-
-export type ItemVariantsCreateResponse = z.infer<typeof ItemVariantsCreateResponseSchema>
-/**
- * Success response schema for GET /item-variants/{id}/
- * Status: 200
- * 
- */
-export const ItemVariantsReadResponseSchema = ItemVariantSchema
-
-export type ItemVariantsReadResponse = z.infer<typeof ItemVariantsReadResponseSchema>
-/**
- * Parameters schema for GET /item-variants/{id}/
- * Path params: id
- * Query params: none
- * Header params: none
- */
-export const ItemVariantsReadParamsSchema = z.object({
-  path: z.object({
-    id: z.string().uuid("Invalid UUID format")
-  })
-})
-
-export type ItemVariantsReadParams = z.infer<typeof ItemVariantsReadParamsSchema>
-/**
- * Request schema for PUT /item-variants/{id}/
- */
-export const ItemVariantsUpdateRequestSchema = ItemVariantSchema
-export type ItemVariantsUpdateRequest = z.infer<typeof ItemVariantsUpdateRequestSchema>
-/**
- * Success response schema for PUT /item-variants/{id}/
- * Status: 200
- * 
- */
-export const ItemVariantsUpdateResponseSchema = ItemVariantSchema
-
-export type ItemVariantsUpdateResponse = z.infer<typeof ItemVariantsUpdateResponseSchema>
-/**
- * Parameters schema for PUT /item-variants/{id}/
- * Path params: id
- * Query params: none
- * Header params: none
- */
-export const ItemVariantsUpdateParamsSchema = z.object({
-  path: z.object({
-    id: z.string().uuid("Invalid UUID format")
-  })
-})
-
-export type ItemVariantsUpdateParams = z.infer<typeof ItemVariantsUpdateParamsSchema>
-/**
- * Request schema for PATCH /item-variants/{id}/
- */
-export const ItemVariantsPartialUpdateRequestSchema = ItemVariantSchema
-export type ItemVariantsPartialUpdateRequest = z.infer<typeof ItemVariantsPartialUpdateRequestSchema>
-/**
- * Success response schema for PATCH /item-variants/{id}/
- * Status: 200
- * 
- */
-export const ItemVariantsPartialUpdateResponseSchema = ItemVariantSchema
-
-export type ItemVariantsPartialUpdateResponse = z.infer<typeof ItemVariantsPartialUpdateResponseSchema>
-/**
- * Parameters schema for PATCH /item-variants/{id}/
- * Path params: id
- * Query params: none
- * Header params: none
- */
-export const ItemVariantsPartialUpdateParamsSchema = z.object({
-  path: z.object({
-    id: z.string().uuid("Invalid UUID format")
-  })
-})
-
-export type ItemVariantsPartialUpdateParams = z.infer<typeof ItemVariantsPartialUpdateParamsSchema>
-/**
- * Success response schema for DELETE /item-variants/{id}/
- * Status: 204
- * 
- */
-export const ItemVariantsDeleteResponseSchema = z.void()
-
-export type ItemVariantsDeleteResponse = z.infer<typeof ItemVariantsDeleteResponseSchema>
-/**
- * Parameters schema for DELETE /item-variants/{id}/
- * Path params: id
- * Query params: none
- * Header params: none
- */
-export const ItemVariantsDeleteParamsSchema = z.object({
-  path: z.object({
-    id: z.string().uuid("Invalid UUID format")
-  })
-})
-
-export type ItemVariantsDeleteParams = z.infer<typeof ItemVariantsDeleteParamsSchema>
 /**
  * Success response schema for GET /items/
  * Status: 200
