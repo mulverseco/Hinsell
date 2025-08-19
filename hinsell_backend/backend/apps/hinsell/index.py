@@ -56,7 +56,7 @@ class CouponIndex(AlgoliaIndex):
 
 @register(UserCoupon)
 class UserCouponIndex(AlgoliaIndex):
-    fields = ('id', 'user_id', 'coupon_id', 'branch_id', 'is_used', 'redemption_date', 'order_id')
+    fields = ('id', 'user_id', 'coupon_id', 'branch_id', 'is_used', 'redemption_date')
 
     settings = {
         'searchableAttributes': [],
@@ -69,6 +69,7 @@ class UserCouponIndex(AlgoliaIndex):
 
     def get_raw_record(self, obj):
         record = super().get_raw_record(obj)
+        record['order_id'] = self.order_id(obj)
         return serialize_record(record)
 
 @register(Campaign)

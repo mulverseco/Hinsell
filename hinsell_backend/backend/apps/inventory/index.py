@@ -19,7 +19,7 @@ def serialize_record(record):
 @register(ItemGroup)
 class ItemGroupIndex(AlgoliaIndex):
     fields = ('id', 'code', 'name', 'slug', 'visibility', 'group_type', 'description',
-              'is_featured', 'store_group_id', 'parent_id', 'category_path')
+              'is_featured')
 
     settings = {
         'searchableAttributes': ['name', 'code', 'description'],
@@ -44,6 +44,9 @@ class ItemGroupIndex(AlgoliaIndex):
 
     def get_raw_record(self, obj):
         record = super().get_raw_record(obj)
+        record['category_path'] = self.category_path(obj)
+        record['store_group_id'] = self.store_group_id(obj)
+        record['parent_id'] = self.parent_id(obj)
         return serialize_record(record)
 
     def should_index(self, obj):
@@ -53,10 +56,7 @@ class ItemGroupIndex(AlgoliaIndex):
 class ItemIndex(AlgoliaIndex):
     fields = ('id', 'code', 'name', 'slug', 'size', 'color', 'sales_price', 'item_type',
               'visibility', 'is_featured', 'brand', 'manufacturer', 'description',
-              'short_description', 'tags', 'average_rating', 'item_group_id',
-              'hierarchical_categories', 'image_url')
-
-    tags = 'tags'
+              'short_description', 'average_rating')
 
     settings = {
         'searchableAttributes': ['name', 'code', 'description', 'short_description', 'brand', 'manufacturer', 'tags'],
@@ -94,6 +94,10 @@ class ItemIndex(AlgoliaIndex):
 
     def get_raw_record(self, obj):
         record = super().get_raw_record(obj)
+        record['tags'] = self.tags(obj)
+        record['item_group_id'] = self.item_group_id(obj)
+        record['hierarchical_categories'] = self.hierarchical_categories(obj)
+        record['image_url'] = self.image_url(obj)
         return serialize_record(record)
 
     def should_index(self, obj):
@@ -101,7 +105,7 @@ class ItemIndex(AlgoliaIndex):
 
 @register(ItemUnit)
 class ItemUnitIndex(AlgoliaIndex):
-    fields = ('id', 'name', 'code', 'unit_cost', 'item_id', 'conversion_factor',
+    fields = ('id', 'name', 'code', 'unit_cost', 'conversion_factor',
               'is_default', 'is_purchase_unit', 'is_sales_unit')
 
     settings = {
@@ -115,11 +119,12 @@ class ItemUnitIndex(AlgoliaIndex):
 
     def get_raw_record(self, obj):
         record = super().get_raw_record(obj)
+        record['item_id'] = self.item_id(obj)
         return serialize_record(record)
 
 @register(ItemBarcode)
 class ItemBarcodeIndex(AlgoliaIndex):
-    fields = ('id', 'item_id', 'barcode', 'barcode_type', 'unit_id', 'is_primary')
+    fields = ('id', 'barcode', 'barcode_type', 'is_primary')
 
     settings = {
         'searchableAttributes': ['barcode'],
@@ -135,4 +140,6 @@ class ItemBarcodeIndex(AlgoliaIndex):
 
     def get_raw_record(self, obj):
         record = super().get_raw_record(obj)
+        record['item_id'] = self.item_id(obj)
+        record['unit_id'] = self.unit_id(obj)
         return serialize_record(record)
