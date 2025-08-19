@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -98,7 +98,8 @@ export const keyboardShortcutsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: KeyboardShortcutsListResponseSchema
           }
         })
         
@@ -157,7 +158,8 @@ export const keyboardShortcutsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: KeyboardShortcutsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -231,7 +233,8 @@ export const keyboardShortcutsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: KeyboardShortcutsReadResponseSchema
           }
         })
         
@@ -299,7 +302,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: KeyboardShortcutsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -381,7 +385,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: KeyboardShortcutsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -454,7 +459,8 @@ export const keyboardShortcutsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: KeyboardShortcutsDeleteResponseSchema
         }
       })
         // Handle streaming responses

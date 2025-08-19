@@ -34,7 +34,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof BudgetsListResponseSchema>
  */
-export function useBudgetsList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useBudgetsList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof BudgetsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['budgetsList'],
     queryFn: async ({ signal }) => {
@@ -54,7 +56,8 @@ export function useBudgetsList(options?: { enabled?: boolean; suspense?: boolean
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -62,7 +65,9 @@ export function useBudgetsList(options?: { enabled?: boolean; suspense?: boolean
  * Suspense version for /budgets/
  * @returns useSuspenseQuery result with data of type z.infer<typeof BudgetsListResponseSchema>
  */
-export function useSuspenseBudgetsList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseBudgetsList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof BudgetsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['budgetsList'],
     queryFn: async () => {
@@ -70,7 +75,8 @@ export function useSuspenseBudgetsList(options?: { enabled?: boolean; suspense?:
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -79,7 +85,9 @@ export function useSuspenseBudgetsList(options?: { enabled?: boolean; suspense?:
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof BudgetsReadResponseSchema>
  */
-export function useBudgetsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useBudgetsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof BudgetsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['budgetsRead', id],
     queryFn: async ({ signal }) => {
@@ -99,7 +107,8 @@ export function useBudgetsRead(id: string, options?: { enabled?: boolean; suspen
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -107,7 +116,9 @@ export function useBudgetsRead(id: string, options?: { enabled?: boolean; suspen
  * Suspense version for /budgets/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof BudgetsReadResponseSchema>
  */
-export function useSuspenseBudgetsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseBudgetsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof BudgetsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['budgetsRead', id],
     queryFn: async () => {
@@ -115,7 +126,8 @@ export function useSuspenseBudgetsRead(id: string, options?: { enabled?: boolean
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

@@ -52,7 +52,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CampaignsListResponseSchema>
  */
-export function useCampaignsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useCampaignsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CampaignsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['campaignsList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -72,7 +74,8 @@ export function useCampaignsList(search?: string, ordering?: string, options?: {
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -80,7 +83,9 @@ export function useCampaignsList(search?: string, ordering?: string, options?: {
  * Suspense version for /campaigns/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CampaignsListResponseSchema>
  */
-export function useSuspenseCampaignsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseCampaignsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CampaignsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['campaignsList', search, ordering],
     queryFn: async () => {
@@ -88,7 +93,8 @@ export function useSuspenseCampaignsList(search?: string, ordering?: string, opt
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -97,7 +103,9 @@ export function useSuspenseCampaignsList(search?: string, ordering?: string, opt
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CampaignsReadResponseSchema>
  */
-export function useCampaignsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useCampaignsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CampaignsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['campaignsRead', id],
     queryFn: async ({ signal }) => {
@@ -117,7 +125,8 @@ export function useCampaignsRead(id: string, options?: { enabled?: boolean; susp
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -125,7 +134,9 @@ export function useCampaignsRead(id: string, options?: { enabled?: boolean; susp
  * Suspense version for /campaigns/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CampaignsReadResponseSchema>
  */
-export function useSuspenseCampaignsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseCampaignsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CampaignsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['campaignsRead', id],
     queryFn: async () => {
@@ -133,7 +144,8 @@ export function useSuspenseCampaignsRead(id: string, options?: { enabled?: boole
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

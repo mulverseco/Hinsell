@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -98,7 +98,8 @@ export const storeGroupsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: StoreGroupsListResponseSchema
           }
         })
         
@@ -157,7 +158,8 @@ export const storeGroupsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: StoreGroupsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -231,7 +233,8 @@ export const storeGroupsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: StoreGroupsReadResponseSchema
           }
         })
         
@@ -299,7 +302,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: StoreGroupsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -381,7 +385,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: StoreGroupsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -454,7 +459,8 @@ export const storeGroupsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: StoreGroupsDeleteResponseSchema
         }
       })
         // Handle streaming responses

@@ -43,7 +43,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof KeyboardShortcutsListResponseSchema>
  */
-export function useKeyboardShortcutsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useKeyboardShortcutsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof KeyboardShortcutsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['keyboardShortcutsList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -63,7 +65,8 @@ export function useKeyboardShortcutsList(search?: string, ordering?: string, opt
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -71,7 +74,9 @@ export function useKeyboardShortcutsList(search?: string, ordering?: string, opt
  * Suspense version for /keyboard-shortcuts/
  * @returns useSuspenseQuery result with data of type z.infer<typeof KeyboardShortcutsListResponseSchema>
  */
-export function useSuspenseKeyboardShortcutsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseKeyboardShortcutsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof KeyboardShortcutsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['keyboardShortcutsList', search, ordering],
     queryFn: async () => {
@@ -79,7 +84,8 @@ export function useSuspenseKeyboardShortcutsList(search?: string, ordering?: str
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -88,7 +94,9 @@ export function useSuspenseKeyboardShortcutsList(search?: string, ordering?: str
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof KeyboardShortcutsReadResponseSchema>
  */
-export function useKeyboardShortcutsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useKeyboardShortcutsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof KeyboardShortcutsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['keyboardShortcutsRead', id],
     queryFn: async ({ signal }) => {
@@ -108,7 +116,8 @@ export function useKeyboardShortcutsRead(id: string, options?: { enabled?: boole
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -116,7 +125,9 @@ export function useKeyboardShortcutsRead(id: string, options?: { enabled?: boole
  * Suspense version for /keyboard-shortcuts/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof KeyboardShortcutsReadResponseSchema>
  */
-export function useSuspenseKeyboardShortcutsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseKeyboardShortcutsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof KeyboardShortcutsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['keyboardShortcutsRead', id],
     queryFn: async () => {
@@ -124,7 +135,8 @@ export function useSuspenseKeyboardShortcutsRead(id: string, options?: { enabled
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

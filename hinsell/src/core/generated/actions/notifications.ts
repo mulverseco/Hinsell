@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -101,7 +101,8 @@ export const notificationsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: NotificationsListResponseSchema
           }
         })
         
@@ -160,7 +161,8 @@ export const notificationsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: NotificationsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -234,7 +236,8 @@ export const notificationsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: NotificationsReadResponseSchema
           }
         })
         
@@ -302,7 +305,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: NotificationsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -384,7 +388,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: NotificationsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -457,7 +462,8 @@ export const notificationsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: NotificationsDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -539,7 +545,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: NotificationsMarkAsReadResponseSchema
         }
       })
         // Handle streaming responses

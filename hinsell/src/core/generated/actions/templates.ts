@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -98,7 +98,8 @@ export const templatesList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: TemplatesListResponseSchema
           }
         })
         
@@ -157,7 +158,8 @@ export const templatesCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: TemplatesCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -231,7 +233,8 @@ export const templatesRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: TemplatesReadResponseSchema
           }
         })
         
@@ -299,7 +302,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: TemplatesUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -381,7 +385,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: TemplatesPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -454,7 +459,8 @@ export const templatesDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: TemplatesDeleteResponseSchema
         }
       })
         // Handle streaming responses

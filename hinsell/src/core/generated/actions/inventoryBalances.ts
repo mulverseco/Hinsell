@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -98,7 +98,8 @@ export const inventoryBalancesList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: InventoryBalancesListResponseSchema
           }
         })
         
@@ -157,7 +158,8 @@ export const inventoryBalancesCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: InventoryBalancesCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -231,7 +233,8 @@ export const inventoryBalancesRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: InventoryBalancesReadResponseSchema
           }
         })
         
@@ -299,7 +302,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: InventoryBalancesUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -381,7 +385,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: InventoryBalancesPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -454,7 +459,8 @@ export const inventoryBalancesDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: InventoryBalancesDeleteResponseSchema
         }
       })
         // Handle streaming responses

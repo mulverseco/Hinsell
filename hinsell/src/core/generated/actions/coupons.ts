@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -101,7 +101,8 @@ export const couponsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: CouponsListResponseSchema
           }
         })
         
@@ -160,7 +161,8 @@ export const couponsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CouponsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -234,7 +236,8 @@ export const couponsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: CouponsReadResponseSchema
           }
         })
         
@@ -302,7 +305,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CouponsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -384,7 +388,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CouponsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -457,7 +462,8 @@ export const couponsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CouponsDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -539,7 +545,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CouponsApplyResponseSchema
         }
       })
         // Handle streaming responses

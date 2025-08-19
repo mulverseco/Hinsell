@@ -1,28 +1,17 @@
 "use client"
 
-import useSWR from "swr"
-import { navigationFetcher } from "lib/navigation"
+import { ItemGroup } from "@/core/generated/schemas"
 import { NavigationBar } from "./navigation-bar"
-import type { NavItem } from "./types"
+import { useItemGroupsList } from "@/core/generated/hooks/itemGroups"
 
-interface NavigationData {
-  items: NavItem[]
+
+
+interface NavigationBarProps {
+  initialItemGroups : ItemGroup[] | null
 }
 
-interface NavigationBarWrapperProps {
-  fallbackData: NavigationData
-}
-
-export function NavigationBarWrapper({ fallbackData }: NavigationBarWrapperProps) {
-  const { data: navigationData } = useSWR<NavigationData>("/api/navigation", navigationFetcher, {
-    fallbackData,
-    revalidateOnFocus: false,
-    revalidateOnMount: true,
-    revalidateOnReconnect: true,
-    refreshInterval: 10000,
-  })
-
-  const items = navigationData?.items || fallbackData.items
-
-  return <NavigationBar items={items} />
+export function NavigationBarWrapper({initialItemGroups}:NavigationBarProps) {
+  const { data: itemGroups } = useItemGroupsList(undefined, undefined)
+  const finalItemGroups = itemGroups?.data ?? initialItemGroups ?? null
+  return <NavigationBar initialItemGroups={finalItemGroups} />
 }

@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -98,7 +98,8 @@ export const systemSettingsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: SystemSettingsListResponseSchema
           }
         })
         
@@ -157,7 +158,8 @@ export const systemSettingsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: SystemSettingsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -231,7 +233,8 @@ export const systemSettingsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: SystemSettingsReadResponseSchema
           }
         })
         
@@ -299,7 +302,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: SystemSettingsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -381,7 +385,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: SystemSettingsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -454,7 +459,8 @@ export const systemSettingsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: SystemSettingsDeleteResponseSchema
         }
       })
         // Handle streaming responses

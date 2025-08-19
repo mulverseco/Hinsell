@@ -43,7 +43,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof AuditLogsListResponseSchema>
  */
-export function useAuditLogsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useAuditLogsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AuditLogsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['auditLogsList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -63,7 +65,8 @@ export function useAuditLogsList(search?: string, ordering?: string, options?: {
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -71,7 +74,9 @@ export function useAuditLogsList(search?: string, ordering?: string, options?: {
  * Suspense version for /audit-logs/
  * @returns useSuspenseQuery result with data of type z.infer<typeof AuditLogsListResponseSchema>
  */
-export function useSuspenseAuditLogsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseAuditLogsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AuditLogsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['auditLogsList', search, ordering],
     queryFn: async () => {
@@ -79,7 +84,8 @@ export function useSuspenseAuditLogsList(search?: string, ordering?: string, opt
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -88,7 +94,9 @@ export function useSuspenseAuditLogsList(search?: string, ordering?: string, opt
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof AuditLogsReadResponseSchema>
  */
-export function useAuditLogsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useAuditLogsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AuditLogsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['auditLogsRead', id],
     queryFn: async ({ signal }) => {
@@ -108,7 +116,8 @@ export function useAuditLogsRead(id: string, options?: { enabled?: boolean; susp
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -116,7 +125,9 @@ export function useAuditLogsRead(id: string, options?: { enabled?: boolean; susp
  * Suspense version for /audit-logs/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof AuditLogsReadResponseSchema>
  */
-export function useSuspenseAuditLogsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseAuditLogsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AuditLogsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['auditLogsRead', id],
     queryFn: async () => {
@@ -124,7 +135,8 @@ export function useSuspenseAuditLogsRead(id: string, options?: { enabled?: boole
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

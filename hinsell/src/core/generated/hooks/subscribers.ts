@@ -43,7 +43,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof SubscribersListResponseSchema>
  */
-export function useSubscribersList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSubscribersList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof SubscribersListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['subscribersList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -63,7 +65,8 @@ export function useSubscribersList(search?: string, ordering?: string, options?:
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -71,7 +74,9 @@ export function useSubscribersList(search?: string, ordering?: string, options?:
  * Suspense version for /subscribers/
  * @returns useSuspenseQuery result with data of type z.infer<typeof SubscribersListResponseSchema>
  */
-export function useSuspenseSubscribersList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseSubscribersList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof SubscribersListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['subscribersList', search, ordering],
     queryFn: async () => {
@@ -79,7 +84,8 @@ export function useSuspenseSubscribersList(search?: string, ordering?: string, o
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -88,7 +94,9 @@ export function useSuspenseSubscribersList(search?: string, ordering?: string, o
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof SubscribersReadResponseSchema>
  */
-export function useSubscribersRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSubscribersRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof SubscribersReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['subscribersRead', id],
     queryFn: async ({ signal }) => {
@@ -108,7 +116,8 @@ export function useSubscribersRead(id: string, options?: { enabled?: boolean; su
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -116,7 +125,9 @@ export function useSubscribersRead(id: string, options?: { enabled?: boolean; su
  * Suspense version for /subscribers/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof SubscribersReadResponseSchema>
  */
-export function useSuspenseSubscribersRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseSubscribersRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof SubscribersReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['subscribersRead', id],
     queryFn: async () => {
@@ -124,7 +135,8 @@ export function useSuspenseSubscribersRead(id: string, options?: { enabled?: boo
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

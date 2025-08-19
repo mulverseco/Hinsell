@@ -1,4 +1,4 @@
-import { Suspense } from "react"
+import React, { Suspense } from "react"
 import { ChevronIcon } from "components/icons/chevron-icon"
 import dynamic from "next/dynamic"
 
@@ -6,15 +6,11 @@ import { cn } from "utils/cn"
 import { Autocomplete } from "./autocomplete"
 import { Cart } from "./cart"
 import { Favorites } from "./favorites"
-import { ImageGridItem, NavItem, TextGridItem, TextImageGridItem } from "./types"
-import { ImageGridVariant } from "./variants/image-grid"
-import { TextGridVariant } from "./variants/text-grid"
-import { TextImageGridVariant } from "./variants/text-image-grid"
 import { Skeleton } from "components/ui/skeleton"
 import { CloseIcon } from "components/icons/close-icon"
 import { SearchButton } from "./search-button"
-import { NavigationItem } from "./navigation-item"
 import Link from "next/link"
+import { ItemGroup } from "@/core/generated/schemas"
 import { useItemGroupsList } from "@/core/generated/hooks/itemGroups"
 
 const ProductAddedAlert = dynamic(() =>
@@ -22,49 +18,28 @@ const ProductAddedAlert = dynamic(() =>
 )
 
 interface NavigationBarProps {
-  items: NavItem[]
+  initialItemGroups: ItemGroup[] | null
 }
 
-function VariantGrid({
-  variant,
-  items,
-}: {
-  variant?: "text-grid" | "image-grid" | "text-image-grid"
-  items?: TextGridItem[] | ImageGridItem[] | TextImageGridItem[]
-}) {
-  if (!items) return null
+export function NavigationBar({ initialItemGroups  }: NavigationBarProps) {
+  const { data: itemGroups } = useItemGroupsList(undefined, undefined)
 
-  switch (variant) {
-    case "text-grid":
-      return <TextGridVariant items={items as TextGridItem[]} />
-    case "image-grid":
-      return <ImageGridVariant items={items as ImageGridItem[]} />
-    case "text-image-grid":
-      return <TextImageGridVariant items={items as TextImageGridItem[]} />
-    default:
-      return null
-  }
-}
+  const groups = (Array.isArray(itemGroups) ? itemGroups : initialItemGroups ?? []) as ItemGroup[]
 
-export function NavigationBar({ items }: NavigationBarProps) {
-  const ItemGroups = useItemGroupsList()
-  console.log("ItemGroups", ItemGroups)
-  const itemsMarkup = items.map((singleMenuItem) => (
-    <li
-      data-content={singleMenuItem.text}
-      className={cn(
-        "menu__item not-supports-[container-type]:md:h-full relative z-50 supports-[container-type]:@3xl:h-full",
-        { menu__dropdown: !!singleMenuItem.submenu }
-      )}
-      key={singleMenuItem.text}
-    >
-      <NavigationItem singleMenuItem={singleMenuItem} />
-
-      <div className="submenu megamenu__text w-full border-b border-black/10 shadow-sm">
-        <VariantGrid items={singleMenuItem.submenu?.items} variant={singleMenuItem.submenu?.variant} />
-      </div>
-    </li>
-  ))
+  const itemsMarkup = groups.length
+    ? groups.map((itemGroup) => (
+        <li
+          data-content={itemGroup.name}
+          className={cn(
+            "menu__item not-supports-[container-type]:md:h-full relative z-50 supports-[container-type]:@3xl:h-full",
+            { menu__dropdown: groups.length > 0 }
+          )}
+          key={itemGroup.id ?? itemGroup.name}
+        >
+          <span className="menu__link">{itemGroup.name}</span>
+        </li>
+      ))
+    : null
 
   return (
     <header className="mega-navbar sticky top-0 z-50 mx-auto my-0 flex w-full flex-wrap content-center items-center justify-between border-b border-black/10 bg-white p-4 py-6">

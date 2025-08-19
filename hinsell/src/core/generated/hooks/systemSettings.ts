@@ -43,7 +43,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof SystemSettingsListResponseSchema>
  */
-export function useSystemSettingsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSystemSettingsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof SystemSettingsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['systemSettingsList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -63,7 +65,8 @@ export function useSystemSettingsList(search?: string, ordering?: string, option
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -71,7 +74,9 @@ export function useSystemSettingsList(search?: string, ordering?: string, option
  * Suspense version for /system-settings/
  * @returns useSuspenseQuery result with data of type z.infer<typeof SystemSettingsListResponseSchema>
  */
-export function useSuspenseSystemSettingsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseSystemSettingsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof SystemSettingsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['systemSettingsList', search, ordering],
     queryFn: async () => {
@@ -79,7 +84,8 @@ export function useSuspenseSystemSettingsList(search?: string, ordering?: string
       return result
     },
     staleTime: 600000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -88,7 +94,9 @@ export function useSuspenseSystemSettingsList(search?: string, ordering?: string
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof SystemSettingsReadResponseSchema>
  */
-export function useSystemSettingsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSystemSettingsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof SystemSettingsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['systemSettingsRead', id],
     queryFn: async ({ signal }) => {
@@ -108,7 +116,8 @@ export function useSystemSettingsRead(id: string, options?: { enabled?: boolean;
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -116,7 +125,9 @@ export function useSystemSettingsRead(id: string, options?: { enabled?: boolean;
  * Suspense version for /system-settings/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof SystemSettingsReadResponseSchema>
  */
-export function useSuspenseSystemSettingsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseSystemSettingsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof SystemSettingsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['systemSettingsRead', id],
     queryFn: async () => {
@@ -124,7 +135,8 @@ export function useSuspenseSystemSettingsRead(id: string, options?: { enabled?: 
       return result
     },
     staleTime: 600000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

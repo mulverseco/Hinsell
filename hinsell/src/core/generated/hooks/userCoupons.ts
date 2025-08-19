@@ -43,7 +43,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof UserCouponsListResponseSchema>
  */
-export function useUserCouponsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useUserCouponsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof UserCouponsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['userCouponsList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -63,7 +65,8 @@ export function useUserCouponsList(search?: string, ordering?: string, options?:
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -71,7 +74,9 @@ export function useUserCouponsList(search?: string, ordering?: string, options?:
  * Suspense version for /user-coupons/
  * @returns useSuspenseQuery result with data of type z.infer<typeof UserCouponsListResponseSchema>
  */
-export function useSuspenseUserCouponsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseUserCouponsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof UserCouponsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['userCouponsList', search, ordering],
     queryFn: async () => {
@@ -79,7 +84,8 @@ export function useSuspenseUserCouponsList(search?: string, ordering?: string, o
       return result
     },
     staleTime: 300000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -88,7 +94,9 @@ export function useSuspenseUserCouponsList(search?: string, ordering?: string, o
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof UserCouponsReadResponseSchema>
  */
-export function useUserCouponsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useUserCouponsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof UserCouponsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['userCouponsRead', id],
     queryFn: async ({ signal }) => {
@@ -108,7 +116,8 @@ export function useUserCouponsRead(id: string, options?: { enabled?: boolean; su
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -116,7 +125,9 @@ export function useUserCouponsRead(id: string, options?: { enabled?: boolean; su
  * Suspense version for /user-coupons/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof UserCouponsReadResponseSchema>
  */
-export function useSuspenseUserCouponsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseUserCouponsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof UserCouponsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['userCouponsRead', id],
     queryFn: async () => {
@@ -124,7 +135,8 @@ export function useSuspenseUserCouponsRead(id: string, options?: { enabled?: boo
       return result
     },
     staleTime: 300000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

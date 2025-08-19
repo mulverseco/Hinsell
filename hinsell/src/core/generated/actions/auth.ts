@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -129,7 +129,8 @@ export const authJwtCreateCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthJwtCreateCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -203,7 +204,8 @@ export const authJwtRefreshCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthJwtRefreshCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -277,7 +279,8 @@ export const authJwtVerifyCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthJwtVerifyCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -351,7 +354,8 @@ export const authSocialORead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: AuthSocialOReadResponseSchema
           }
         })
         
@@ -419,7 +423,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthSocialOCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -491,7 +496,8 @@ export const authUsersList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: AuthUsersListResponseSchema
           }
         })
         
@@ -548,7 +554,8 @@ export const authUsersCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -621,7 +628,8 @@ export const authUsersActivation = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersActivationResponseSchema
         }
       })
         // Handle streaming responses
@@ -693,7 +701,8 @@ export const authUsersMeRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: AuthUsersMeReadResponseSchema
           }
         })
         
@@ -752,7 +761,8 @@ export const authUsersMeUpdate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersMeUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -825,7 +835,8 @@ export const authUsersMePartialUpdate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersMePartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -896,7 +907,8 @@ export const authUsersMeDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersMeDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -969,7 +981,8 @@ export const authUsersResendActivation = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersResendActivationResponseSchema
         }
       })
         // Handle streaming responses
@@ -1042,7 +1055,8 @@ export const authUsersResetUsername = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersResetUsernameResponseSchema
         }
       })
         // Handle streaming responses
@@ -1115,7 +1129,8 @@ export const authUsersResetUsernameConfirm = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersResetUsernameConfirmResponseSchema
         }
       })
         // Handle streaming responses
@@ -1188,7 +1203,8 @@ export const authUsersResetPassword = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersResetPasswordResponseSchema
         }
       })
         // Handle streaming responses
@@ -1261,7 +1277,8 @@ export const authUsersResetPasswordConfirm = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersResetPasswordConfirmResponseSchema
         }
       })
         // Handle streaming responses
@@ -1334,7 +1351,8 @@ export const authUsersSetUsername = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersSetUsernameResponseSchema
         }
       })
         // Handle streaming responses
@@ -1407,7 +1425,8 @@ export const authUsersSetPassword = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersSetPasswordResponseSchema
         }
       })
         // Handle streaming responses
@@ -1481,7 +1500,8 @@ export const authUsersRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: AuthUsersReadResponseSchema
           }
         })
         
@@ -1549,7 +1569,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -1631,7 +1652,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -1704,7 +1726,8 @@ export const authUsersDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AuthUsersDeleteResponseSchema
         }
       })
         // Handle streaming responses

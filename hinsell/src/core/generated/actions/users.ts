@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -100,7 +100,8 @@ export const usersList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: UsersListResponseSchema
           }
         })
         
@@ -159,7 +160,8 @@ export const usersCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: UsersCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -233,7 +235,8 @@ export const usersRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: UsersReadResponseSchema
           }
         })
         
@@ -301,7 +304,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: UsersUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -383,7 +387,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: UsersPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -456,7 +461,8 @@ export const usersDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: UsersDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -530,7 +536,8 @@ export const usersLoyaltyHistory = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: UsersLoyaltyHistoryResponseSchema
           }
         })
         

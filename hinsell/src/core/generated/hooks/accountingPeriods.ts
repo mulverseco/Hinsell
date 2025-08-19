@@ -34,7 +34,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof AccountingPeriodsListResponseSchema>
  */
-export function useAccountingPeriodsList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useAccountingPeriodsList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountingPeriodsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['accountingPeriodsList'],
     queryFn: async ({ signal }) => {
@@ -54,7 +56,8 @@ export function useAccountingPeriodsList(options?: { enabled?: boolean; suspense
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -62,7 +65,9 @@ export function useAccountingPeriodsList(options?: { enabled?: boolean; suspense
  * Suspense version for /accounting-periods/
  * @returns useSuspenseQuery result with data of type z.infer<typeof AccountingPeriodsListResponseSchema>
  */
-export function useSuspenseAccountingPeriodsList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseAccountingPeriodsList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountingPeriodsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['accountingPeriodsList'],
     queryFn: async () => {
@@ -70,7 +75,8 @@ export function useSuspenseAccountingPeriodsList(options?: { enabled?: boolean; 
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -79,7 +85,9 @@ export function useSuspenseAccountingPeriodsList(options?: { enabled?: boolean; 
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof AccountingPeriodsReadResponseSchema>
  */
-export function useAccountingPeriodsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useAccountingPeriodsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountingPeriodsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['accountingPeriodsRead', id],
     queryFn: async ({ signal }) => {
@@ -99,7 +107,8 @@ export function useAccountingPeriodsRead(id: string, options?: { enabled?: boole
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -107,7 +116,9 @@ export function useAccountingPeriodsRead(id: string, options?: { enabled?: boole
  * Suspense version for /accounting-periods/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof AccountingPeriodsReadResponseSchema>
  */
-export function useSuspenseAccountingPeriodsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseAccountingPeriodsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountingPeriodsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['accountingPeriodsRead', id],
     queryFn: async () => {
@@ -115,7 +126,8 @@ export function useSuspenseAccountingPeriodsRead(id: string, options?: { enabled
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -101,7 +101,8 @@ export const notesList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: NotesListResponseSchema
           }
         })
         
@@ -160,7 +161,8 @@ export const notesCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: NotesCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -234,7 +236,8 @@ export const notesRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: NotesReadResponseSchema
           }
         })
         
@@ -302,7 +305,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: NotesUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -384,7 +388,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: NotesPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -457,7 +462,8 @@ export const notesDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: NotesDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -539,7 +545,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: NotesMarkReminderSentResponseSchema
         }
       })
         // Handle streaming responses

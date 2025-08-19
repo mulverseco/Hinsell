@@ -34,7 +34,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CurrenciesListResponseSchema>
  */
-export function useCurrenciesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useCurrenciesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CurrenciesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['currenciesList'],
     queryFn: async ({ signal }) => {
@@ -54,7 +56,8 @@ export function useCurrenciesList(options?: { enabled?: boolean; suspense?: bool
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -62,7 +65,9 @@ export function useCurrenciesList(options?: { enabled?: boolean; suspense?: bool
  * Suspense version for /currencies/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CurrenciesListResponseSchema>
  */
-export function useSuspenseCurrenciesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseCurrenciesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CurrenciesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['currenciesList'],
     queryFn: async () => {
@@ -70,7 +75,8 @@ export function useSuspenseCurrenciesList(options?: { enabled?: boolean; suspens
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -79,7 +85,9 @@ export function useSuspenseCurrenciesList(options?: { enabled?: boolean; suspens
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CurrenciesReadResponseSchema>
  */
-export function useCurrenciesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useCurrenciesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CurrenciesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['currenciesRead', id],
     queryFn: async ({ signal }) => {
@@ -99,7 +107,8 @@ export function useCurrenciesRead(id: string, options?: { enabled?: boolean; sus
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -107,7 +116,9 @@ export function useCurrenciesRead(id: string, options?: { enabled?: boolean; sus
  * Suspense version for /currencies/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CurrenciesReadResponseSchema>
  */
-export function useSuspenseCurrenciesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseCurrenciesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CurrenciesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['currenciesRead', id],
     queryFn: async () => {
@@ -115,7 +126,8 @@ export function useSuspenseCurrenciesRead(id: string, options?: { enabled?: bool
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

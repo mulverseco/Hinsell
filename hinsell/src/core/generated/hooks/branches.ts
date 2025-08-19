@@ -43,7 +43,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof BranchesListResponseSchema>
  */
-export function useBranchesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useBranchesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof BranchesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['branchesList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -63,7 +65,8 @@ export function useBranchesList(search?: string, ordering?: string, options?: { 
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -71,7 +74,9 @@ export function useBranchesList(search?: string, ordering?: string, options?: { 
  * Suspense version for /branches/
  * @returns useSuspenseQuery result with data of type z.infer<typeof BranchesListResponseSchema>
  */
-export function useSuspenseBranchesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseBranchesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof BranchesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['branchesList', search, ordering],
     queryFn: async () => {
@@ -79,7 +84,8 @@ export function useSuspenseBranchesList(search?: string, ordering?: string, opti
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -88,7 +94,9 @@ export function useSuspenseBranchesList(search?: string, ordering?: string, opti
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof BranchesReadResponseSchema>
  */
-export function useBranchesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useBranchesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof BranchesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['branchesRead', id],
     queryFn: async ({ signal }) => {
@@ -108,7 +116,8 @@ export function useBranchesRead(id: string, options?: { enabled?: boolean; suspe
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -116,7 +125,9 @@ export function useBranchesRead(id: string, options?: { enabled?: boolean; suspe
  * Suspense version for /branches/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof BranchesReadResponseSchema>
  */
-export function useSuspenseBranchesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseBranchesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof BranchesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['branchesRead', id],
     queryFn: async () => {
@@ -124,7 +135,8 @@ export function useSuspenseBranchesRead(id: string, options?: { enabled?: boolea
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -95,7 +95,8 @@ export const costCentersList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: CostCentersListResponseSchema
           }
         })
         
@@ -154,7 +155,8 @@ export const costCentersCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CostCentersCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -228,7 +230,8 @@ export const costCentersRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: CostCentersReadResponseSchema
           }
         })
         
@@ -296,7 +299,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CostCentersUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -378,7 +382,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CostCentersPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -451,7 +456,8 @@ export const costCentersDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CostCentersDeleteResponseSchema
         }
       })
         // Handle streaming responses

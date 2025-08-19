@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -95,7 +95,8 @@ export const budgetsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: BudgetsListResponseSchema
           }
         })
         
@@ -154,7 +155,8 @@ export const budgetsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: BudgetsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -228,7 +230,8 @@ export const budgetsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: BudgetsReadResponseSchema
           }
         })
         
@@ -296,7 +299,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: BudgetsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -378,7 +382,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: BudgetsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -451,7 +456,8 @@ export const budgetsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: BudgetsDeleteResponseSchema
         }
       })
         // Handle streaming responses

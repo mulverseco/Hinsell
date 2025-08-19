@@ -46,7 +46,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ProfilesListResponseSchema>
  */
-export function useProfilesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useProfilesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ProfilesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['profilesList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -66,7 +68,8 @@ export function useProfilesList(search?: string, ordering?: string, options?: { 
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -74,7 +77,9 @@ export function useProfilesList(search?: string, ordering?: string, options?: { 
  * Suspense version for /profiles/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ProfilesListResponseSchema>
  */
-export function useSuspenseProfilesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseProfilesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ProfilesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['profilesList', search, ordering],
     queryFn: async () => {
@@ -82,7 +87,8 @@ export function useSuspenseProfilesList(search?: string, ordering?: string, opti
       return result
     },
     staleTime: 300000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -91,7 +97,9 @@ export function useSuspenseProfilesList(search?: string, ordering?: string, opti
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ProfilesReadResponseSchema>
  */
-export function useProfilesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useProfilesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ProfilesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['profilesRead', id],
     queryFn: async ({ signal }) => {
@@ -111,7 +119,8 @@ export function useProfilesRead(id: string, options?: { enabled?: boolean; suspe
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -119,7 +128,9 @@ export function useProfilesRead(id: string, options?: { enabled?: boolean; suspe
  * Suspense version for /profiles/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ProfilesReadResponseSchema>
  */
-export function useSuspenseProfilesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseProfilesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ProfilesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['profilesRead', id],
     queryFn: async () => {
@@ -127,7 +138,8 @@ export function useSuspenseProfilesRead(id: string, options?: { enabled?: boolea
       return result
     },
     staleTime: 300000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

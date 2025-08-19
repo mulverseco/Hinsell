@@ -34,7 +34,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CostCentersListResponseSchema>
  */
-export function useCostCentersList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useCostCentersList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CostCentersListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['costCentersList'],
     queryFn: async ({ signal }) => {
@@ -54,7 +56,8 @@ export function useCostCentersList(options?: { enabled?: boolean; suspense?: boo
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -62,7 +65,9 @@ export function useCostCentersList(options?: { enabled?: boolean; suspense?: boo
  * Suspense version for /cost-centers/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CostCentersListResponseSchema>
  */
-export function useSuspenseCostCentersList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseCostCentersList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CostCentersListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['costCentersList'],
     queryFn: async () => {
@@ -70,7 +75,8 @@ export function useSuspenseCostCentersList(options?: { enabled?: boolean; suspen
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -79,7 +85,9 @@ export function useSuspenseCostCentersList(options?: { enabled?: boolean; suspen
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CostCentersReadResponseSchema>
  */
-export function useCostCentersRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useCostCentersRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CostCentersReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['costCentersRead', id],
     queryFn: async ({ signal }) => {
@@ -99,7 +107,8 @@ export function useCostCentersRead(id: string, options?: { enabled?: boolean; su
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -107,7 +116,9 @@ export function useCostCentersRead(id: string, options?: { enabled?: boolean; su
  * Suspense version for /cost-centers/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CostCentersReadResponseSchema>
  */
-export function useSuspenseCostCentersRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseCostCentersRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CostCentersReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['costCentersRead', id],
     queryFn: async () => {
@@ -115,7 +126,8 @@ export function useSuspenseCostCentersRead(id: string, options?: { enabled?: boo
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

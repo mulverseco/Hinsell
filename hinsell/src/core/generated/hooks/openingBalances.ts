@@ -34,7 +34,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof OpeningBalancesListResponseSchema>
  */
-export function useOpeningBalancesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useOpeningBalancesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof OpeningBalancesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['openingBalancesList'],
     queryFn: async ({ signal }) => {
@@ -54,7 +56,8 @@ export function useOpeningBalancesList(options?: { enabled?: boolean; suspense?:
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -62,7 +65,9 @@ export function useOpeningBalancesList(options?: { enabled?: boolean; suspense?:
  * Suspense version for /opening-balances/
  * @returns useSuspenseQuery result with data of type z.infer<typeof OpeningBalancesListResponseSchema>
  */
-export function useSuspenseOpeningBalancesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseOpeningBalancesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof OpeningBalancesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['openingBalancesList'],
     queryFn: async () => {
@@ -70,7 +75,8 @@ export function useSuspenseOpeningBalancesList(options?: { enabled?: boolean; su
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -79,7 +85,9 @@ export function useSuspenseOpeningBalancesList(options?: { enabled?: boolean; su
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof OpeningBalancesReadResponseSchema>
  */
-export function useOpeningBalancesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useOpeningBalancesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof OpeningBalancesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['openingBalancesRead', id],
     queryFn: async ({ signal }) => {
@@ -99,7 +107,8 @@ export function useOpeningBalancesRead(id: string, options?: { enabled?: boolean
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -107,7 +116,9 @@ export function useOpeningBalancesRead(id: string, options?: { enabled?: boolean
  * Suspense version for /opening-balances/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof OpeningBalancesReadResponseSchema>
  */
-export function useSuspenseOpeningBalancesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseOpeningBalancesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof OpeningBalancesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['openingBalancesRead', id],
     queryFn: async () => {
@@ -115,7 +126,8 @@ export function useSuspenseOpeningBalancesRead(id: string, options?: { enabled?:
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

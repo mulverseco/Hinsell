@@ -1,9 +1,9 @@
 // The HTTP client is automatically created by " @mulverse/bridge "
-import "server-only"
-import { z } from "zod"
-import { cache } from "react"
-import { cookies, headers } from "next/headers"
-import { after } from "next/server"
+import 'server-only'
+import { z } from 'zod'
+import { cache } from 'react'
+import { cookies, headers } from 'next/headers'
+import { after } from 'next/server'
 
 // Types and interfaces
 export interface RequestConfiguration extends RequestInit {
@@ -12,6 +12,7 @@ export interface RequestConfiguration extends RequestInit {
   retryDelay?: number
   retryCondition?: (error: Error, attempt: number) => boolean
   validateResponse?: boolean
+  responseSchema?: z.ZodSchema<any>
   skipAuth?: boolean
   skipCache?: boolean
   cacheKey?: string
@@ -62,10 +63,10 @@ export class ApiError extends Error {
     public readonly statusText: string,
     public readonly response?: Response,
     public readonly data?: any,
-    public readonly requestId?: string,
+    public readonly requestId?: string
   ) {
     super(message)
-    this.name = "ApiError"
+    this.name = 'ApiError'
   }
 
   get isClientError(): boolean {
@@ -89,10 +90,10 @@ export class ValidationError extends Error {
   constructor(
     message: string,
     public readonly errors: z.ZodError,
-    public readonly requestId?: string,
+    public readonly requestId?: string
   ) {
     super(message)
-    this.name = "ValidationError"
+    this.name = 'ValidationError'
   }
 }
 
@@ -100,10 +101,10 @@ export class TimeoutError extends Error {
   constructor(
     message: string,
     public readonly timeout: number,
-    public readonly requestId?: string,
+    public readonly requestId?: string
   ) {
     super(message)
-    this.name = "TimeoutError"
+    this.name = 'TimeoutError'
   }
 }
 
@@ -111,14 +112,14 @@ export class NetworkError extends Error {
   constructor(
     message: string,
     public readonly originalError: Error,
-    public readonly requestId?: string,
+    public readonly requestId?: string
   ) {
     super(message)
-    this.name = "NetworkError"
+    this.name = 'NetworkError'
   }
 }
 
-export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS"
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
 
 // Request deduplication cache
 const requestCache = new Map<string, Promise<any>>()
@@ -126,16 +127,16 @@ const requestCache = new Map<string, Promise<any>>()
 // Metrics collection
 const metricsCollector = {
   requests: new Map<string, RequestMetrics>(),
-
+  
   startRequest(requestId: string, method: string, url: string): void {
     this.requests.set(requestId, {
       requestId,
       method,
       url,
-      startTime: Date.now(),
+      startTime: Date.now()
     })
   },
-
+  
   endRequest(requestId: string, status?: number, cached?: boolean, retryCount?: number, error?: string): void {
     const metrics = this.requests.get(requestId)
     if (metrics) {
@@ -145,22 +146,22 @@ const metricsCollector = {
       metrics.cached = cached
       metrics.retryCount = retryCount
       metrics.error = error
-
+      
       // Send metrics in background
       after(async () => {
         await this.sendMetrics(metrics)
       })
     }
   },
-
+  
   async sendMetrics(metrics: RequestMetrics): Promise<void> {
-    if (process.env.NODE_ENV === "development") {
-      console.log("[API_METRICS]", metrics)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API_METRICS]', metrics)
     }
-
+    
     // In production, send to your analytics service
     // await analytics.track('api_request', metrics)
-  },
+  }
 }
 
 export class BaseApiClient {
@@ -171,20 +172,20 @@ export class BaseApiClient {
   private readonly middleware: RequestMiddleware[] = []
 
   constructor() {
-    this.baseUrl = process.env.API_BASE_URL || "http://localhost:8000/api"
+    this.baseUrl = process.env.API_BASE_URL || 'https://hinsell.mulverse.com/api'
     this.defaultTimeout = 30000
     this.defaultRetries = 3
     this.defaultHeaders = {}
-
+    
     // Add default middleware
     this.addMiddleware({
-      name: "request-id",
-      onRequest: this.addRequestId.bind(this),
+      name: 'request-id',
+      onRequest: this.addRequestId.bind(this)
     })
-
+    
     this.addMiddleware({
-      name: "security-headers",
-      onRequest: this.addSecurityHeaders.bind(this),
+      name: 'security-headers',
+      onRequest: this.addSecurityHeaders.bind(this)
     })
   }
 
@@ -194,7 +195,7 @@ export class BaseApiClient {
   }
 
   removeMiddleware(name: string): void {
-    const index = this.middleware.findIndex((m) => m.name === name)
+    const index = this.middleware.findIndex(m => m.name === name)
     if (index > -1) {
       this.middleware.splice(index, 1)
     }
@@ -203,37 +204,35 @@ export class BaseApiClient {
   // Enhanced authentication
   private async getAuthHeaders(): Promise<Record<string, string>> {
     const getAuthHeaders: Record<string, string> = {}
-
+    
     try {
       // Get auth token from various sources
       const cookieStore = await cookies()
       const headersList = await headers()
-
+      
       // Try cookie first
-      const tokenFromCookie = cookieStore.get("auth-token")?.value
+      const tokenFromCookie = cookieStore.get('auth-token')?.value
       if (tokenFromCookie) {
         getAuthHeaders.Authorization = `Bearer ${tokenFromCookie}`
         return getAuthHeaders
       }
-
+      
       // Try header
-      const tokenFromHeader = headersList.get("authorization")
+      const tokenFromHeader = headersList.get('authorization')
       if (tokenFromHeader) {
         getAuthHeaders.Authorization = tokenFromHeader
         return getAuthHeaders
       }
-
+      
       // Try external auth service
       // No external auth configured
     } catch (error) {
-      console.warn("Failed to get auth token:", error)
+      console.warn('Failed to get auth token:', error)
     }
-
     const secureApiKey = process.env.NEXT_SECURE_API_KEY
     if (secureApiKey) {
-      getAuthHeaders["Authorization"] = `Api-Key ${secureApiKey}`
-    }
-
+      getAuthHeaders["Authorization"] =  `Api-Key ${secureApiKey}`    }
+    
     return getAuthHeaders
   }
 
@@ -241,55 +240,55 @@ export class BaseApiClient {
   private async addSecurityHeaders(config: RequestConfiguration): Promise<RequestConfiguration> {
     const headersList = await headers()
     const securityHeaders: Record<string, string> = {}
-
+    
     // CSRF protection
-    const csrfToken = headersList.get("x-csrf-token")
+    const csrfToken = headersList.get('x-csrf-token')
     if (csrfToken) {
-      securityHeaders["X-CSRF-Token"] = csrfToken
+      securityHeaders['X-CSRF-Token'] = csrfToken
     }
-
+    
     // Request origin
-    const origin = headersList.get("origin")
+    const origin = headersList.get('origin')
     if (origin) {
-      securityHeaders["Origin"] = origin
+      securityHeaders['Origin'] = origin
     }
-
+    
     // User agent
-    const userAgent = headersList.get("user-agent")
+    const userAgent = headersList.get('user-agent')
     if (userAgent) {
-      securityHeaders["User-Agent"] = userAgent
+      securityHeaders['User-Agent'] = userAgent
     }
-
+    
     return {
       ...config,
       headers: {
         ...config.headers,
-        ...securityHeaders,
-      },
+        ...securityHeaders
+      }
     }
   }
 
   // Request ID middleware
   private async addRequestId(config: RequestConfiguration): Promise<RequestConfiguration> {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
+    
     return {
       ...config,
       headers: {
         ...config.headers,
-        "X-Request-ID": requestId,
-      },
+        'X-Request-ID': requestId
+      }
     }
   }
 
   // Enhanced URL building with validation
   private buildUrl(
-    path: string,
-    pathParameters: Record<string, string> = {},
-    queryParameters: Record<string, any> = {},
+    path: string, 
+    pathParameters: Record<string, string> = {}, 
+    queryParameters: Record<string, any> = {}
   ): string {
     let url = path
-
+    
     // Replace path parameters with validation
     for (const [key, value] of Object.entries(pathParameters)) {
       if (!value) {
@@ -297,39 +296,44 @@ export class BaseApiClient {
       }
       url = url.replace(`{${key}}`, encodeURIComponent(String(value)))
     }
-
+    
     // Validate no unreplaced parameters remain
     const unreplacedParams = url.match(/{[^}]+}/g)
     if (unreplacedParams) {
-      throw new ValidationError(`Unreplaced path parameters: ${unreplacedParams.join(", ")}`, {} as z.ZodError)
+      throw new ValidationError(
+        `Unreplaced path parameters: ${unreplacedParams.join(', ')}`,
+        {} as z.ZodError
+      )
     }
-
+    
     // Add query parameters with proper encoding
     const searchParams = new URLSearchParams()
     for (const [key, value] of Object.entries(queryParameters)) {
-      if (value !== undefined && value !== null && value !== "") {
+      if (value !== undefined && value !== null && value !== '') {
         if (Array.isArray(value)) {
-          value.forEach((v) => searchParams.append(key, String(v)))
-        } else if (typeof value === "object") {
+          value.forEach(v => searchParams.append(key, String(v)))
+        } else if (typeof value === 'object') {
           searchParams.append(key, JSON.stringify(value))
         } else {
           searchParams.append(key, String(value))
         }
       }
     }
-
+    
     const queryString = searchParams.toString()
-    const fullUrl = `${this.baseUrl}${url}${queryString ? `?${queryString}` : ""}`
-
+    const fullUrl = `${this.baseUrl}${url}${queryString ? `?${queryString}` : ''}`
+    
+    // URL validation
     try {
       new URL(fullUrl)
     } catch {
       throw new ValidationError(`Invalid URL constructed: ${fullUrl}`, {} as z.ZodError)
     }
-
+    
     return fullUrl
   }
 
+  // Enhanced request execution with caching and deduplication
   private async executeRequest<TData>(
     method: HttpMethod,
     path: string,
@@ -340,9 +344,16 @@ export class BaseApiClient {
       headers?: Record<string, string>
       config?: RequestConfiguration
       responseSchema?: z.ZodSchema<TData>
-    } = {},
+    } = {}
   ): Promise<ClientResponse<TData>> {
-    const { pathParams = {}, queryParams = {}, body, headers = {}, config = {}, responseSchema } = options
+    const {
+      pathParams = {},
+      queryParams = {},
+      body,
+      headers = {},
+      config = {},
+      responseSchema
+    } = options
 
     const {
       timeout = this.defaultTimeout,
@@ -366,63 +377,43 @@ export class BaseApiClient {
 
     const url = this.buildUrl(path, pathParams, queryParams)
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
+    
+    // Start metrics collection
     metricsCollector.startRequest(requestId, method, url)
 
-    if (method === "GET" && !skipCache) {
+    // Request deduplication for GET requests
+    if (method === 'GET' && !skipCache) {
       const dedupeKey = cacheKey || `${method}:${url}`
       const existingRequest = requestCache.get(dedupeKey)
-
+      
       if (existingRequest) {
         console.log(`[DEDUPE] Using existing request for ${dedupeKey}`)
         const result = await existingRequest
         metricsCollector.endRequest(requestId, result.status, true)
         return { ...result, fromCache: true, requestId }
       }
-
+      
       // Cache the promise
       const requestPromise = this.executeRequestInternal<TData>(
-        method,
-        url,
-        body,
-        headers,
-        fetchOptions,
-        timeout,
-        retries,
-        retryDelay,
-        retryCondition,
-        validateResponse,
-        skipAuth,
-        responseSchema,
-        requestId,
-        [...this.middleware, ...middleware],
+        method, url, body, headers, fetchOptions, timeout, retries, 
+        retryDelay, retryCondition, validateResponse, skipAuth, 
+        responseSchema, requestId, [...this.middleware, ...middleware]
       )
-
+      
       requestCache.set(dedupeKey, requestPromise)
-
+      
       // Clean up cache after request completes
       requestPromise.finally(() => {
         requestCache.delete(dedupeKey)
       })
-
+      
       return requestPromise
     }
 
     return this.executeRequestInternal<TData>(
-      method,
-      url,
-      body,
-      headers,
-      fetchOptions,
-      timeout,
-      retries,
-      retryDelay,
-      retryCondition,
-      validateResponse,
-      skipAuth,
-      responseSchema,
-      requestId,
-      [...this.middleware, ...middleware],
+      method, url, body, headers, fetchOptions, timeout, retries,
+      retryDelay, retryCondition, validateResponse, skipAuth,
+      responseSchema, requestId, [...this.middleware, ...middleware]
     )
   }
 
@@ -441,7 +432,7 @@ export class BaseApiClient {
     skipAuth: boolean,
     responseSchema?: z.ZodSchema<TData>,
     requestId?: string,
-    middleware: RequestMiddleware[] = [],
+    middleware: RequestMiddleware[] = []
   ): Promise<ClientResponse<TData>> {
     const startTime = Date.now()
 
@@ -449,13 +440,13 @@ export class BaseApiClient {
     let requestConfig: RequestConfiguration = {
       method,
       headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
         ...this.defaultHeaders,
         ...(skipAuth ? {} : await this.getAuthHeaders()),
-        ...headers,
+        ...headers
       },
-      ...fetchOptions,
+      ...fetchOptions
     }
 
     // Apply request middleware
@@ -466,12 +457,12 @@ export class BaseApiClient {
     }
 
     // Add body for non-GET requests
-    if (body && method !== "GET" && method !== "HEAD") {
+    if (body && method !== 'GET' && method !== 'HEAD') {
       if (body instanceof FormData || body instanceof URLSearchParams) {
         requestConfig.body = body
         // Remove content-type for FormData (browser sets it with boundary)
         if (body instanceof FormData) {
-          delete (requestConfig.headers as Record<string, string>)["Content-Type"]
+          delete (requestConfig.headers as Record<string, string>)['Content-Type']
         }
       } else {
         requestConfig.body = JSON.stringify(body)
@@ -479,21 +470,21 @@ export class BaseApiClient {
     }
 
     // Execute with retries and middleware
-    let lastError: Error = new Error("Unknown error")
+    let lastError: Error = new Error('Unknown error')
     let retryCount = 0
-
+    
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => {
           controller.abort()
         }, timeout)
-
+        
         const response = await fetch(url, {
           ...requestConfig,
-          signal: controller.signal,
+          signal: controller.signal
         })
-
+        
         clearTimeout(timeoutId)
         const responseTime = Date.now() - startTime
 
@@ -506,7 +497,7 @@ export class BaseApiClient {
             response.statusText,
             response,
             errorData,
-            requestId,
+            requestId
           )
 
           // Apply error middleware
@@ -529,7 +520,7 @@ export class BaseApiClient {
           headers: response.headers,
           retryCount,
           responseTime,
-          requestId,
+          requestId
         }
 
         // Apply response middleware
@@ -551,7 +542,7 @@ export class BaseApiClient {
         if (attempt < retries && retryCondition(lastError, attempt)) {
           // Exponential backoff with jitter
           const delay = retryDelay * Math.pow(2, attempt) + Math.random() * 1000
-          await new Promise((resolve) => setTimeout(resolve, delay))
+          await new Promise(resolve => setTimeout(resolve, delay))
           continue
         }
 
@@ -560,15 +551,21 @@ export class BaseApiClient {
     }
 
     // End metrics collection with error
-    metricsCollector.endRequest(requestId!, undefined, false, retryCount, lastError.message)
+    metricsCollector.endRequest(
+      requestId!, 
+      undefined, 
+      false, 
+      retryCount, 
+      lastError.message
+    )
 
     // Enhance error with context
-    if (lastError instanceof Error && lastError.name === "AbortError") {
+    if (lastError instanceof Error && lastError.name === 'AbortError') {
       throw new TimeoutError(`Request timeout after ${timeout}ms`, timeout, requestId)
     }
 
-    if (lastError instanceof TypeError && lastError.message.includes("fetch")) {
-      throw new NetworkError("Network request failed", lastError, requestId)
+    if (lastError instanceof TypeError && lastError.message.includes('fetch')) {
+      throw new NetworkError('Network request failed', lastError, requestId)
     }
 
     throw lastError
@@ -578,19 +575,19 @@ export class BaseApiClient {
   private async parseResponse<TData>(
     response: Response,
     schema?: z.ZodSchema<TData>,
-    shouldValidate = true,
+    shouldValidate = true
   ): Promise<TData> {
-    const contentType = response.headers.get("content-type") || ""
+    const contentType = response.headers.get('content-type') || ''
     let data: any
 
     // Handle different content types
-    if (contentType.includes("application/json")) {
+    if (contentType.includes('application/json')) {
       data = await response.json()
-    } else if (contentType.includes("text/")) {
+    } else if (contentType.includes('text/')) {
       data = await response.text()
-    } else if (contentType.includes("application/octet-stream") || contentType.includes("application/pdf")) {
+    } else if (contentType.includes('application/octet-stream') || contentType.includes('application/pdf')) {
       data = await response.blob()
-    } else if (contentType.includes("multipart/form-data")) {
+    } else if (contentType.includes('multipart/form-data')) {
       data = await response.formData()
     } else {
       // Try JSON first, fallback to text
@@ -607,7 +604,7 @@ export class BaseApiClient {
         return await schema.parseAsync(data)
       } catch (error) {
         if (error instanceof z.ZodError) {
-          throw new ValidationError("Response validation failed", error)
+          throw new ValidationError('Response validation failed', error)
         }
         throw error
       }
@@ -619,18 +616,18 @@ export class BaseApiClient {
   // Enhanced error response parsing
   private async parseErrorResponse(response: Response): Promise<any> {
     try {
-      const contentType = response.headers.get("content-type") || ""
-
-      if (contentType.includes("application/json")) {
+      const contentType = response.headers.get('content-type') || ''
+      
+      if (contentType.includes('application/json')) {
         return await response.json()
-      } else if (contentType.includes("text/")) {
+      } else if (contentType.includes('text/')) {
         const text = await response.text()
         return { message: text }
       } else {
         return { message: response.statusText }
       }
     } catch {
-      return { message: response.statusText || "Unknown error" }
+      return { message: response.statusText || 'Unknown error' }
     }
   }
 
@@ -645,50 +642,50 @@ export class BaseApiClient {
       headers?: Record<string, string>
       config?: RequestConfiguration
       responseSchema?: z.ZodSchema<TData>
-    },
+    }
   ): Promise<ClientResponse<TData>> {
     return this.executeRequest(method, path, options)
   }
 
   // Cached convenience methods
-  async get<TData>(
-    path: string,
-    options?: Omit<Parameters<typeof this.request>[2], "body">,
-  ): Promise<ClientResponse<TData>> {
-    return cache(async () => {
-      return this.request<TData>("GET", path, options)
-    })()
-  }
+async get<TData>(
+  path: string, 
+  options?: Omit<Parameters<typeof this.request>[2], 'body'>
+): Promise<ClientResponse<TData>> {
+  return cache(async () => {
+    return this.request<TData>('GET', path, options)
+  })()
+}
 
   async post<TData>(
-    path: string,
-    body?: any,
-    options?: Omit<Parameters<typeof this.request>[2], "body">,
+    path: string, 
+    body?: any, 
+    options?: Omit<Parameters<typeof this.request>[2], 'body'>
   ): Promise<ClientResponse<TData>> {
-    return this.request("POST", path, { ...options, body })
+    return this.request('POST', path, { ...options, body })
   }
 
   async put<TData>(
-    path: string,
-    body?: any,
-    options?: Omit<Parameters<typeof this.request>[2], "body">,
+    path: string, 
+    body?: any, 
+    options?: Omit<Parameters<typeof this.request>[2], 'body'>
   ): Promise<ClientResponse<TData>> {
-    return this.request("PUT", path, { ...options, body })
+    return this.request('PUT', path, { ...options, body })
   }
 
   async patch<TData>(
-    path: string,
-    body?: any,
-    options?: Omit<Parameters<typeof this.request>[2], "body">,
+    path: string, 
+    body?: any, 
+    options?: Omit<Parameters<typeof this.request>[2], 'body'>
   ): Promise<ClientResponse<TData>> {
-    return this.request("PATCH", path, { ...options, body })
+    return this.request('PATCH', path, { ...options, body })
   }
 
   async delete<TData>(
-    path: string,
-    options?: Omit<Parameters<typeof this.request>[2], "body">,
+    path: string, 
+    options?: Omit<Parameters<typeof this.request>[2], 'body'>
   ): Promise<ClientResponse<TData>> {
-    return this.request("DELETE", path, options)
+    return this.request('DELETE', path, options)
   }
 
   // Utility methods

@@ -34,7 +34,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof AccountTypesListResponseSchema>
  */
-export function useAccountTypesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useAccountTypesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountTypesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['accountTypesList'],
     queryFn: async ({ signal }) => {
@@ -54,7 +56,8 @@ export function useAccountTypesList(options?: { enabled?: boolean; suspense?: bo
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -62,7 +65,9 @@ export function useAccountTypesList(options?: { enabled?: boolean; suspense?: bo
  * Suspense version for /account-types/
  * @returns useSuspenseQuery result with data of type z.infer<typeof AccountTypesListResponseSchema>
  */
-export function useSuspenseAccountTypesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseAccountTypesList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountTypesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['accountTypesList'],
     queryFn: async () => {
@@ -70,7 +75,8 @@ export function useSuspenseAccountTypesList(options?: { enabled?: boolean; suspe
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -79,7 +85,9 @@ export function useSuspenseAccountTypesList(options?: { enabled?: boolean; suspe
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof AccountTypesReadResponseSchema>
  */
-export function useAccountTypesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useAccountTypesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountTypesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['accountTypesRead', id],
     queryFn: async ({ signal }) => {
@@ -99,7 +107,8 @@ export function useAccountTypesRead(id: string, options?: { enabled?: boolean; s
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -107,7 +116,9 @@ export function useAccountTypesRead(id: string, options?: { enabled?: boolean; s
  * Suspense version for /account-types/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof AccountTypesReadResponseSchema>
  */
-export function useSuspenseAccountTypesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseAccountTypesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountTypesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['accountTypesRead', id],
     queryFn: async () => {
@@ -115,7 +126,8 @@ export function useSuspenseAccountTypesRead(id: string, options?: { enabled?: bo
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

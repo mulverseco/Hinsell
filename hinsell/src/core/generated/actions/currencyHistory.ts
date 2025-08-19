@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -84,7 +84,8 @@ export const currencyHistoryList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: CurrencyHistoryListResponseSchema
           }
         })
         
@@ -144,7 +145,8 @@ export const currencyHistoryRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: CurrencyHistoryReadResponseSchema
           }
         })
         

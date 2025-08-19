@@ -46,7 +46,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof MessagesListResponseSchema>
  */
-export function useMessagesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useMessagesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof MessagesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['messagesList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -66,7 +68,8 @@ export function useMessagesList(search?: string, ordering?: string, options?: { 
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -74,7 +77,9 @@ export function useMessagesList(search?: string, ordering?: string, options?: { 
  * Suspense version for /messages/
  * @returns useSuspenseQuery result with data of type z.infer<typeof MessagesListResponseSchema>
  */
-export function useSuspenseMessagesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseMessagesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof MessagesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['messagesList', search, ordering],
     queryFn: async () => {
@@ -82,7 +87,8 @@ export function useSuspenseMessagesList(search?: string, ordering?: string, opti
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -91,7 +97,9 @@ export function useSuspenseMessagesList(search?: string, ordering?: string, opti
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof MessagesReadResponseSchema>
  */
-export function useMessagesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useMessagesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof MessagesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['messagesRead', id],
     queryFn: async ({ signal }) => {
@@ -111,7 +119,8 @@ export function useMessagesRead(id: string, options?: { enabled?: boolean; suspe
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -119,7 +128,9 @@ export function useMessagesRead(id: string, options?: { enabled?: boolean; suspe
  * Suspense version for /messages/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof MessagesReadResponseSchema>
  */
-export function useSuspenseMessagesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseMessagesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof MessagesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['messagesRead', id],
     queryFn: async () => {
@@ -127,7 +138,8 @@ export function useSuspenseMessagesRead(id: string, options?: { enabled?: boolea
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -101,7 +101,8 @@ export const offersList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: OffersListResponseSchema
           }
         })
         
@@ -160,7 +161,8 @@ export const offersCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: OffersCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -234,7 +236,8 @@ export const offersRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: OffersReadResponseSchema
           }
         })
         
@@ -302,7 +305,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: OffersUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -384,7 +388,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: OffersPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -457,7 +462,8 @@ export const offersDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: OffersDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -539,7 +545,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: OffersApplyResponseSchema
         }
       })
         // Handle streaming responses

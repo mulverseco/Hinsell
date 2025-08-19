@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -101,7 +101,8 @@ export const licensesList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: LicensesListResponseSchema
           }
         })
         
@@ -160,7 +161,8 @@ export const licensesCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: LicensesCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -234,7 +236,8 @@ export const licensesRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: LicensesReadResponseSchema
           }
         })
         
@@ -302,7 +305,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: LicensesUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -384,7 +388,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: LicensesPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -457,7 +462,8 @@ export const licensesDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: LicensesDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -539,7 +545,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: LicensesValidateResponseSchema
         }
       })
         // Handle streaming responses

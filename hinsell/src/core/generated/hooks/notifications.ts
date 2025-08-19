@@ -46,7 +46,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof NotificationsListResponseSchema>
  */
-export function useNotificationsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useNotificationsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof NotificationsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['notificationsList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -66,7 +68,8 @@ export function useNotificationsList(search?: string, ordering?: string, options
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -74,7 +77,9 @@ export function useNotificationsList(search?: string, ordering?: string, options
  * Suspense version for /notifications/
  * @returns useSuspenseQuery result with data of type z.infer<typeof NotificationsListResponseSchema>
  */
-export function useSuspenseNotificationsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseNotificationsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof NotificationsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['notificationsList', search, ordering],
     queryFn: async () => {
@@ -82,7 +87,8 @@ export function useSuspenseNotificationsList(search?: string, ordering?: string,
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -91,7 +97,9 @@ export function useSuspenseNotificationsList(search?: string, ordering?: string,
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof NotificationsReadResponseSchema>
  */
-export function useNotificationsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useNotificationsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof NotificationsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['notificationsRead', id],
     queryFn: async ({ signal }) => {
@@ -111,7 +119,8 @@ export function useNotificationsRead(id: string, options?: { enabled?: boolean; 
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -119,7 +128,9 @@ export function useNotificationsRead(id: string, options?: { enabled?: boolean; 
  * Suspense version for /notifications/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof NotificationsReadResponseSchema>
  */
-export function useSuspenseNotificationsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseNotificationsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof NotificationsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['notificationsRead', id],
     queryFn: async () => {
@@ -127,7 +138,8 @@ export function useSuspenseNotificationsRead(id: string, options?: { enabled?: b
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

@@ -43,7 +43,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof TemplatesListResponseSchema>
  */
-export function useTemplatesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useTemplatesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof TemplatesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['templatesList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -63,7 +65,8 @@ export function useTemplatesList(search?: string, ordering?: string, options?: {
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -71,7 +74,9 @@ export function useTemplatesList(search?: string, ordering?: string, options?: {
  * Suspense version for /templates/
  * @returns useSuspenseQuery result with data of type z.infer<typeof TemplatesListResponseSchema>
  */
-export function useSuspenseTemplatesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseTemplatesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof TemplatesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['templatesList', search, ordering],
     queryFn: async () => {
@@ -79,7 +84,8 @@ export function useSuspenseTemplatesList(search?: string, ordering?: string, opt
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -88,7 +94,9 @@ export function useSuspenseTemplatesList(search?: string, ordering?: string, opt
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof TemplatesReadResponseSchema>
  */
-export function useTemplatesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useTemplatesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof TemplatesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['templatesRead', id],
     queryFn: async ({ signal }) => {
@@ -108,7 +116,8 @@ export function useTemplatesRead(id: string, options?: { enabled?: boolean; susp
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -116,7 +125,9 @@ export function useTemplatesRead(id: string, options?: { enabled?: boolean; susp
  * Suspense version for /templates/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof TemplatesReadResponseSchema>
  */
-export function useSuspenseTemplatesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseTemplatesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof TemplatesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['templatesRead', id],
     queryFn: async () => {
@@ -124,7 +135,8 @@ export function useSuspenseTemplatesRead(id: string, options?: { enabled?: boole
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

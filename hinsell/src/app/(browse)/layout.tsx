@@ -10,19 +10,20 @@ import { Metadata } from "next"
 import { sharedMetadata } from "../shared-metadata"
 import { GithubBadge } from "components/github-badge"
 import { CartView } from "components/cart/cart-view"
-import { NavigationBarWrapper } from "components/navigation-bar/navigation-bar-wrapper"
 import { mobileInlineScript } from "components/navigation-bar/mobile-inline-script"
 import { Footer } from "components/footer"
 import { Modals } from "components/modals/modals"
 import DraftToolbar from "components/draft-toolbar"
-import { getNavigationData } from "lib/navigation"
 import { Providers } from "./providers"
+import { itemGroupsList } from "@/core/generated/actions/itemGroups"
+import { NavigationBar } from "@/components/navigation-bar/navigation-bar"
+import { NavigationBarWrapper } from "@/components/navigation-bar/navigation-bar-wrapper"
 
 export const revalidate = 86400
 
 export const metadata: Metadata = {
   metadataBase: sharedMetadata.metadataBase,
-  title: "Next.js Enterprise Commerce | Blazity",
+  title: "Hinsell Enterprise Commerce | Mulverse",
   description: sharedMetadata.openGraph.description,
   openGraph: sharedMetadata.openGraph,
   twitter: sharedMetadata.twitter,
@@ -36,33 +37,24 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const navigationData = await getNavigationData()
-
+  const itemGroups = await itemGroupsList({})
   return (
     <html lang="en">
       <body className="@container">
         <Providers locale={""}>
         <NuqsAdapter>
           <Script id="mobileMegaMenuLogic" strategy="lazyOnload">{`${mobileInlineScript}`}</Script>
-
-          <NavigationBarWrapper fallbackData={navigationData} />
+          <NavigationBarWrapper initialItemGroups={itemGroups.data || null} />
           {children}
-
           <Footer />
           <Modals />
-
           <CartView />
-
           <Toaster position="bottom-left" />
-
           <DraftToolbar />
-
           <Suspense>
             <FlagValues />
           </Suspense>
-
           <ThirdParties />
-
           <GithubBadge />
         </NuqsAdapter>
         </Providers>

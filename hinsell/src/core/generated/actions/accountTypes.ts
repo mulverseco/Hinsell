@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -95,7 +95,8 @@ export const accountTypesList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: AccountTypesListResponseSchema
           }
         })
         
@@ -154,7 +155,8 @@ export const accountTypesCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AccountTypesCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -228,7 +230,8 @@ export const accountTypesRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: AccountTypesReadResponseSchema
           }
         })
         
@@ -296,7 +299,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AccountTypesUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -378,7 +382,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AccountTypesPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -451,7 +456,8 @@ export const accountTypesDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AccountTypesDeleteResponseSchema
         }
       })
         // Handle streaming responses

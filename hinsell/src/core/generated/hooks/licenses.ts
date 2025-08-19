@@ -46,7 +46,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof LicensesListResponseSchema>
  */
-export function useLicensesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useLicensesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof LicensesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['licensesList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -66,7 +68,8 @@ export function useLicensesList(search?: string, ordering?: string, options?: { 
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -74,7 +77,9 @@ export function useLicensesList(search?: string, ordering?: string, options?: { 
  * Suspense version for /licenses/
  * @returns useSuspenseQuery result with data of type z.infer<typeof LicensesListResponseSchema>
  */
-export function useSuspenseLicensesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseLicensesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof LicensesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['licensesList', search, ordering],
     queryFn: async () => {
@@ -82,7 +87,8 @@ export function useSuspenseLicensesList(search?: string, ordering?: string, opti
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -91,7 +97,9 @@ export function useSuspenseLicensesList(search?: string, ordering?: string, opti
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof LicensesReadResponseSchema>
  */
-export function useLicensesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useLicensesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof LicensesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['licensesRead', id],
     queryFn: async ({ signal }) => {
@@ -111,7 +119,8 @@ export function useLicensesRead(id: string, options?: { enabled?: boolean; suspe
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -119,7 +128,9 @@ export function useLicensesRead(id: string, options?: { enabled?: boolean; suspe
  * Suspense version for /licenses/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof LicensesReadResponseSchema>
  */
-export function useSuspenseLicensesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseLicensesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof LicensesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['licensesRead', id],
     queryFn: async () => {
@@ -127,7 +138,8 @@ export function useSuspenseLicensesRead(id: string, options?: { enabled?: boolea
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

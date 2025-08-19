@@ -46,7 +46,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CouponsListResponseSchema>
  */
-export function useCouponsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useCouponsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CouponsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['couponsList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -66,7 +68,8 @@ export function useCouponsList(search?: string, ordering?: string, options?: { e
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -74,7 +77,9 @@ export function useCouponsList(search?: string, ordering?: string, options?: { e
  * Suspense version for /coupons/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CouponsListResponseSchema>
  */
-export function useSuspenseCouponsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseCouponsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CouponsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['couponsList', search, ordering],
     queryFn: async () => {
@@ -82,7 +87,8 @@ export function useSuspenseCouponsList(search?: string, ordering?: string, optio
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -91,7 +97,9 @@ export function useSuspenseCouponsList(search?: string, ordering?: string, optio
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CouponsReadResponseSchema>
  */
-export function useCouponsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useCouponsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CouponsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['couponsRead', id],
     queryFn: async ({ signal }) => {
@@ -111,7 +119,8 @@ export function useCouponsRead(id: string, options?: { enabled?: boolean; suspen
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -119,7 +128,9 @@ export function useCouponsRead(id: string, options?: { enabled?: boolean; suspen
  * Suspense version for /coupons/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CouponsReadResponseSchema>
  */
-export function useSuspenseCouponsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseCouponsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CouponsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['couponsRead', id],
     queryFn: async () => {
@@ -127,7 +138,8 @@ export function useSuspenseCouponsRead(id: string, options?: { enabled?: boolean
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -107,7 +107,8 @@ export const reportsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ReportsListResponseSchema
           }
         })
         
@@ -166,7 +167,8 @@ export const reportsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ReportsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -240,7 +242,8 @@ export const reportsAvailableModels = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ReportsAvailableModelsResponseSchema
           }
         })
         
@@ -299,7 +302,8 @@ export const reportsValidateQuery = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ReportsValidateQueryResponseSchema
         }
       })
         // Handle streaming responses
@@ -373,7 +377,8 @@ export const reportsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ReportsReadResponseSchema
           }
         })
         
@@ -441,7 +446,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ReportsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -523,7 +529,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ReportsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -596,7 +603,8 @@ export const reportsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ReportsDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -678,7 +686,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ReportsExecuteResponseSchema
         }
       })
         // Handle streaming responses
@@ -752,7 +761,8 @@ export const reportsPreview = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ReportsPreviewResponseSchema
           }
         })
         

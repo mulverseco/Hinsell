@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -154,7 +154,8 @@ export const apiWebhooksDeliveriesList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ApiWebhooksDeliveriesListResponseSchema
           }
         })
         
@@ -213,7 +214,8 @@ export const apiWebhooksDeliveriesCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksDeliveriesCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -287,7 +289,8 @@ export const apiWebhooksDeliveriesRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ApiWebhooksDeliveriesReadResponseSchema
           }
         })
         
@@ -355,7 +358,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksDeliveriesUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -437,7 +441,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksDeliveriesPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -510,7 +515,8 @@ export const apiWebhooksDeliveriesDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksDeliveriesDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -592,7 +598,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksDeliveriesRetryResponseSchema
         }
       })
         // Handle streaming responses
@@ -666,7 +673,8 @@ export const apiWebhooksEndpointsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ApiWebhooksEndpointsListResponseSchema
           }
         })
         
@@ -725,7 +733,8 @@ export const apiWebhooksEndpointsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEndpointsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -799,7 +808,8 @@ export const apiWebhooksEndpointsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ApiWebhooksEndpointsReadResponseSchema
           }
         })
         
@@ -867,7 +877,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEndpointsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -949,7 +960,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEndpointsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -1022,7 +1034,8 @@ export const apiWebhooksEndpointsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEndpointsDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -1104,7 +1117,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEndpointsReactivateResponseSchema
         }
       })
         // Handle streaming responses
@@ -1178,7 +1192,8 @@ export const apiWebhooksEndpointsStatistics = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ApiWebhooksEndpointsStatisticsResponseSchema
           }
         })
         
@@ -1246,7 +1261,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEndpointsSuspendResponseSchema
         }
       })
         // Handle streaming responses
@@ -1328,7 +1344,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEndpointsTestResponseSchema
         }
       })
         // Handle streaming responses
@@ -1402,7 +1419,8 @@ export const apiWebhooksEventsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ApiWebhooksEventsListResponseSchema
           }
         })
         
@@ -1461,7 +1479,8 @@ export const apiWebhooksEventsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEventsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -1535,7 +1554,8 @@ export const apiWebhooksEventsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ApiWebhooksEventsReadResponseSchema
           }
         })
         
@@ -1603,7 +1623,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEventsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -1685,7 +1706,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEventsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -1758,7 +1780,8 @@ export const apiWebhooksEventsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksEventsDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -1832,7 +1855,8 @@ export const apiWebhooksLogsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ApiWebhooksLogsListResponseSchema
           }
         })
         
@@ -1891,7 +1915,8 @@ export const apiWebhooksLogsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksLogsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -1965,7 +1990,8 @@ export const apiWebhooksLogsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: ApiWebhooksLogsReadResponseSchema
           }
         })
         
@@ -2033,7 +2059,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksLogsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -2115,7 +2142,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksLogsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -2188,7 +2216,8 @@ export const apiWebhooksLogsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: ApiWebhooksLogsDeleteResponseSchema
         }
       })
         // Handle streaming responses

@@ -99,7 +99,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ApiWebhooksDeliveriesListResponseSchema>
  */
-export function useApiWebhooksDeliveriesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useApiWebhooksDeliveriesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksDeliveriesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['apiWebhooksDeliveriesList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -119,7 +121,8 @@ export function useApiWebhooksDeliveriesList(search?: string, ordering?: string,
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -127,7 +130,9 @@ export function useApiWebhooksDeliveriesList(search?: string, ordering?: string,
  * Suspense version for /api/webhooks/deliveries/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ApiWebhooksDeliveriesListResponseSchema>
  */
-export function useSuspenseApiWebhooksDeliveriesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseApiWebhooksDeliveriesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksDeliveriesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['apiWebhooksDeliveriesList', search, ordering],
     queryFn: async () => {
@@ -135,7 +140,8 @@ export function useSuspenseApiWebhooksDeliveriesList(search?: string, ordering?:
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -144,7 +150,9 @@ export function useSuspenseApiWebhooksDeliveriesList(search?: string, ordering?:
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ApiWebhooksDeliveriesReadResponseSchema>
  */
-export function useApiWebhooksDeliveriesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useApiWebhooksDeliveriesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksDeliveriesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['apiWebhooksDeliveriesRead', id],
     queryFn: async ({ signal }) => {
@@ -164,7 +172,8 @@ export function useApiWebhooksDeliveriesRead(id: string, options?: { enabled?: b
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -172,7 +181,9 @@ export function useApiWebhooksDeliveriesRead(id: string, options?: { enabled?: b
  * Suspense version for /api/webhooks/deliveries/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ApiWebhooksDeliveriesReadResponseSchema>
  */
-export function useSuspenseApiWebhooksDeliveriesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseApiWebhooksDeliveriesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksDeliveriesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['apiWebhooksDeliveriesRead', id],
     queryFn: async () => {
@@ -180,7 +191,8 @@ export function useSuspenseApiWebhooksDeliveriesRead(id: string, options?: { ena
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -189,7 +201,9 @@ export function useSuspenseApiWebhooksDeliveriesRead(id: string, options?: { ena
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ApiWebhooksEndpointsListResponseSchema>
  */
-export function useApiWebhooksEndpointsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useApiWebhooksEndpointsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksEndpointsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['apiWebhooksEndpointsList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -209,7 +223,8 @@ export function useApiWebhooksEndpointsList(search?: string, ordering?: string, 
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -217,7 +232,9 @@ export function useApiWebhooksEndpointsList(search?: string, ordering?: string, 
  * Suspense version for /api/webhooks/endpoints/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ApiWebhooksEndpointsListResponseSchema>
  */
-export function useSuspenseApiWebhooksEndpointsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseApiWebhooksEndpointsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksEndpointsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['apiWebhooksEndpointsList', search, ordering],
     queryFn: async () => {
@@ -225,7 +242,8 @@ export function useSuspenseApiWebhooksEndpointsList(search?: string, ordering?: 
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -234,7 +252,9 @@ export function useSuspenseApiWebhooksEndpointsList(search?: string, ordering?: 
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ApiWebhooksEndpointsReadResponseSchema>
  */
-export function useApiWebhooksEndpointsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useApiWebhooksEndpointsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksEndpointsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['apiWebhooksEndpointsRead', id],
     queryFn: async ({ signal }) => {
@@ -254,7 +274,8 @@ export function useApiWebhooksEndpointsRead(id: string, options?: { enabled?: bo
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -262,7 +283,9 @@ export function useApiWebhooksEndpointsRead(id: string, options?: { enabled?: bo
  * Suspense version for /api/webhooks/endpoints/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ApiWebhooksEndpointsReadResponseSchema>
  */
-export function useSuspenseApiWebhooksEndpointsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseApiWebhooksEndpointsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksEndpointsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['apiWebhooksEndpointsRead', id],
     queryFn: async () => {
@@ -270,7 +293,8 @@ export function useSuspenseApiWebhooksEndpointsRead(id: string, options?: { enab
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -279,7 +303,9 @@ export function useSuspenseApiWebhooksEndpointsRead(id: string, options?: { enab
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ApiWebhooksEndpointsStatisticsResponseSchema>
  */
-export function useApiWebhooksEndpointsStatistics(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useApiWebhooksEndpointsStatistics(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksEndpointsStatisticsResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['apiWebhooksEndpointsStatistics', id],
     queryFn: async ({ signal }) => {
@@ -299,7 +325,8 @@ export function useApiWebhooksEndpointsStatistics(id: string, options?: { enable
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -307,7 +334,9 @@ export function useApiWebhooksEndpointsStatistics(id: string, options?: { enable
  * Suspense version for /api/webhooks/endpoints/{id}/statistics/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ApiWebhooksEndpointsStatisticsResponseSchema>
  */
-export function useSuspenseApiWebhooksEndpointsStatistics(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseApiWebhooksEndpointsStatistics(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksEndpointsStatisticsResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['apiWebhooksEndpointsStatistics', id],
     queryFn: async () => {
@@ -315,7 +344,8 @@ export function useSuspenseApiWebhooksEndpointsStatistics(id: string, options?: 
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -324,7 +354,9 @@ export function useSuspenseApiWebhooksEndpointsStatistics(id: string, options?: 
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ApiWebhooksEventsListResponseSchema>
  */
-export function useApiWebhooksEventsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useApiWebhooksEventsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksEventsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['apiWebhooksEventsList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -344,7 +376,8 @@ export function useApiWebhooksEventsList(search?: string, ordering?: string, opt
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -352,7 +385,9 @@ export function useApiWebhooksEventsList(search?: string, ordering?: string, opt
  * Suspense version for /api/webhooks/events/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ApiWebhooksEventsListResponseSchema>
  */
-export function useSuspenseApiWebhooksEventsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseApiWebhooksEventsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksEventsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['apiWebhooksEventsList', search, ordering],
     queryFn: async () => {
@@ -360,7 +395,8 @@ export function useSuspenseApiWebhooksEventsList(search?: string, ordering?: str
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -369,7 +405,9 @@ export function useSuspenseApiWebhooksEventsList(search?: string, ordering?: str
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ApiWebhooksEventsReadResponseSchema>
  */
-export function useApiWebhooksEventsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useApiWebhooksEventsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksEventsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['apiWebhooksEventsRead', id],
     queryFn: async ({ signal }) => {
@@ -389,7 +427,8 @@ export function useApiWebhooksEventsRead(id: string, options?: { enabled?: boole
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -397,7 +436,9 @@ export function useApiWebhooksEventsRead(id: string, options?: { enabled?: boole
  * Suspense version for /api/webhooks/events/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ApiWebhooksEventsReadResponseSchema>
  */
-export function useSuspenseApiWebhooksEventsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseApiWebhooksEventsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksEventsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['apiWebhooksEventsRead', id],
     queryFn: async () => {
@@ -405,7 +446,8 @@ export function useSuspenseApiWebhooksEventsRead(id: string, options?: { enabled
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -414,7 +456,9 @@ export function useSuspenseApiWebhooksEventsRead(id: string, options?: { enabled
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ApiWebhooksLogsListResponseSchema>
  */
-export function useApiWebhooksLogsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useApiWebhooksLogsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksLogsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['apiWebhooksLogsList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -434,7 +478,8 @@ export function useApiWebhooksLogsList(search?: string, ordering?: string, optio
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -442,7 +487,9 @@ export function useApiWebhooksLogsList(search?: string, ordering?: string, optio
  * Suspense version for /api/webhooks/logs/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ApiWebhooksLogsListResponseSchema>
  */
-export function useSuspenseApiWebhooksLogsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseApiWebhooksLogsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksLogsListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['apiWebhooksLogsList', search, ordering],
     queryFn: async () => {
@@ -450,7 +497,8 @@ export function useSuspenseApiWebhooksLogsList(search?: string, ordering?: strin
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -459,7 +507,9 @@ export function useSuspenseApiWebhooksLogsList(search?: string, ordering?: strin
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ApiWebhooksLogsReadResponseSchema>
  */
-export function useApiWebhooksLogsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useApiWebhooksLogsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksLogsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['apiWebhooksLogsRead', id],
     queryFn: async ({ signal }) => {
@@ -479,7 +529,8 @@ export function useApiWebhooksLogsRead(id: string, options?: { enabled?: boolean
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -487,7 +538,9 @@ export function useApiWebhooksLogsRead(id: string, options?: { enabled?: boolean
  * Suspense version for /api/webhooks/logs/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ApiWebhooksLogsReadResponseSchema>
  */
-export function useSuspenseApiWebhooksLogsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseApiWebhooksLogsRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ApiWebhooksLogsReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['apiWebhooksLogsRead', id],
     queryFn: async () => {
@@ -495,7 +548,8 @@ export function useSuspenseApiWebhooksLogsRead(id: string, options?: { enabled?:
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -95,7 +95,8 @@ export const openingBalancesList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: OpeningBalancesListResponseSchema
           }
         })
         
@@ -154,7 +155,8 @@ export const openingBalancesCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: OpeningBalancesCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -228,7 +230,8 @@ export const openingBalancesRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: OpeningBalancesReadResponseSchema
           }
         })
         
@@ -296,7 +299,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: OpeningBalancesUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -378,7 +382,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: OpeningBalancesPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -451,7 +456,8 @@ export const openingBalancesDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: OpeningBalancesDeleteResponseSchema
         }
       })
         // Handle streaming responses

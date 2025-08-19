@@ -43,7 +43,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ItemBarcodesListResponseSchema>
  */
-export function useItemBarcodesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useItemBarcodesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ItemBarcodesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['itemBarcodesList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -63,7 +65,8 @@ export function useItemBarcodesList(search?: string, ordering?: string, options?
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -71,7 +74,9 @@ export function useItemBarcodesList(search?: string, ordering?: string, options?
  * Suspense version for /item-barcodes/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ItemBarcodesListResponseSchema>
  */
-export function useSuspenseItemBarcodesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseItemBarcodesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ItemBarcodesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['itemBarcodesList', search, ordering],
     queryFn: async () => {
@@ -79,7 +84,8 @@ export function useSuspenseItemBarcodesList(search?: string, ordering?: string, 
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -88,7 +94,9 @@ export function useSuspenseItemBarcodesList(search?: string, ordering?: string, 
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof ItemBarcodesReadResponseSchema>
  */
-export function useItemBarcodesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useItemBarcodesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ItemBarcodesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['itemBarcodesRead', id],
     queryFn: async ({ signal }) => {
@@ -108,7 +116,8 @@ export function useItemBarcodesRead(id: string, options?: { enabled?: boolean; s
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -116,7 +125,9 @@ export function useItemBarcodesRead(id: string, options?: { enabled?: boolean; s
  * Suspense version for /item-barcodes/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof ItemBarcodesReadResponseSchema>
  */
-export function useSuspenseItemBarcodesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseItemBarcodesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ItemBarcodesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['itemBarcodesRead', id],
     queryFn: async () => {
@@ -124,7 +135,8 @@ export function useSuspenseItemBarcodesRead(id: string, options?: { enabled?: bo
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

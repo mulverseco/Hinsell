@@ -17,7 +17,9 @@ import type { z } from 'zod'
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CurrencyHistoryListResponseSchema>
  */
-export function useCurrencyHistoryList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useCurrencyHistoryList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CurrencyHistoryListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['currencyHistoryList'],
     queryFn: async ({ signal }) => {
@@ -37,7 +39,8 @@ export function useCurrencyHistoryList(options?: { enabled?: boolean; suspense?:
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -45,7 +48,9 @@ export function useCurrencyHistoryList(options?: { enabled?: boolean; suspense?:
  * Suspense version for /currency-history/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CurrencyHistoryListResponseSchema>
  */
-export function useSuspenseCurrencyHistoryList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseCurrencyHistoryList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CurrencyHistoryListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['currencyHistoryList'],
     queryFn: async () => {
@@ -53,7 +58,8 @@ export function useSuspenseCurrencyHistoryList(options?: { enabled?: boolean; su
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -62,7 +68,9 @@ export function useSuspenseCurrencyHistoryList(options?: { enabled?: boolean; su
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CurrencyHistoryReadResponseSchema>
  */
-export function useCurrencyHistoryRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useCurrencyHistoryRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CurrencyHistoryReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['currencyHistoryRead', id],
     queryFn: async ({ signal }) => {
@@ -82,7 +90,8 @@ export function useCurrencyHistoryRead(id: string, options?: { enabled?: boolean
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -90,7 +99,9 @@ export function useCurrencyHistoryRead(id: string, options?: { enabled?: boolean
  * Suspense version for /currency-history/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CurrencyHistoryReadResponseSchema>
  */
-export function useSuspenseCurrencyHistoryRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseCurrencyHistoryRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CurrencyHistoryReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['currencyHistoryRead', id],
     queryFn: async () => {
@@ -98,7 +109,8 @@ export function useSuspenseCurrencyHistoryRead(id: string, options?: { enabled?:
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 

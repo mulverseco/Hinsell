@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -98,7 +98,8 @@ export const accountsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: AccountsListResponseSchema
           }
         })
         
@@ -157,7 +158,8 @@ export const accountsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AccountsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -231,7 +233,8 @@ export const accountsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: AccountsReadResponseSchema
           }
         })
         
@@ -299,7 +302,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AccountsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -381,7 +385,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AccountsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -454,7 +459,8 @@ export const accountsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AccountsDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -504,10 +510,9 @@ export const accountsDelete = actionClientWithMeta
     }
   })
 
-
 /**
  * Update account balance.
- * @generated from POST /accounts/{id}/update_balance/
+ * @generated from POST /accounts/{id}/update-balance/
  * Features: Input validation, revalidation, error handling
  */
 export const accountsUpdateBalance = actionClientWithMeta
@@ -537,7 +542,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: AccountsUpdateBalanceResponseSchema
         }
       })
         // Handle streaming responses
@@ -560,7 +566,7 @@ body: validatedBody,
       const duration = Date.now() - startTime
       await logActionExecution('accountsUpdateBalance', true, duration, {
         method: 'POST',
-        path: '/accounts/{id}/update_balance/'
+        path: '/accounts/{id}/update-balance/'
       })
       
       return response.data
@@ -570,7 +576,7 @@ body: validatedBody,
       // Enhanced error logging
       await logActionExecution('accountsUpdateBalance', false, duration, {
         method: 'POST',
-        path: '/accounts/{id}/update_balance/',
+        path: '/accounts/{id}/update-balance/',
         error: error instanceof Error ? error.message : 'Unknown error'
       })
       
@@ -578,7 +584,7 @@ body: validatedBody,
       throw new ActionExecutionError(
         error instanceof Error ? error.message : 'Unknown error occurred',
         {
-          endpoint: '/accounts/{id}/update_balance/',
+          endpoint: '/accounts/{id}/update-balance/',
           method: 'POST',
           timestamp: Date.now()
         },

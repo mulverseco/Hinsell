@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 import { z } from 'zod'
 import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
@@ -107,7 +107,8 @@ export const campaignsList = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: CampaignsListResponseSchema
           }
         })
         
@@ -166,7 +167,8 @@ export const campaignsCreate = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CampaignsCreateResponseSchema
         }
       })
         // Handle streaming responses
@@ -240,7 +242,8 @@ export const campaignsRead = cache(
           config: {
             timeout: 30000,
             retries: 3,
-            validateResponse: true
+            validateResponse: false,
+            responseSchema: CampaignsReadResponseSchema
           }
         })
         
@@ -308,7 +311,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CampaignsUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -390,7 +394,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CampaignsPartialUpdateResponseSchema
         }
       })
         // Handle streaming responses
@@ -463,7 +468,8 @@ export const campaignsDelete = actionClientWithMeta
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CampaignsDeleteResponseSchema
         }
       })
         // Handle streaming responses
@@ -545,7 +551,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CampaignsTrackClickResponseSchema
         }
       })
         // Handle streaming responses
@@ -627,7 +634,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CampaignsTrackConversionResponseSchema
         }
       })
         // Handle streaming responses
@@ -709,7 +717,8 @@ body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
-          validateResponse: true
+          validateResponse: false,
+          responseSchema: CampaignsTrackImpressionResponseSchema
         }
       })
         // Handle streaming responses

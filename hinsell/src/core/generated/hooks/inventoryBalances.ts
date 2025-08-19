@@ -43,7 +43,9 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof InventoryBalancesListResponseSchema>
  */
-export function useInventoryBalancesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useInventoryBalancesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof InventoryBalancesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['inventoryBalancesList', search, ordering],
     queryFn: async ({ signal }) => {
@@ -63,7 +65,8 @@ export function useInventoryBalancesList(search?: string, ordering?: string, opt
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -71,7 +74,9 @@ export function useInventoryBalancesList(search?: string, ordering?: string, opt
  * Suspense version for /inventory-balances/
  * @returns useSuspenseQuery result with data of type z.infer<typeof InventoryBalancesListResponseSchema>
  */
-export function useSuspenseInventoryBalancesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseInventoryBalancesList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof InventoryBalancesListResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['inventoryBalancesList', search, ordering],
     queryFn: async () => {
@@ -79,7 +84,8 @@ export function useSuspenseInventoryBalancesList(search?: string, ordering?: str
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -88,7 +94,9 @@ export function useSuspenseInventoryBalancesList(search?: string, ordering?: str
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof InventoryBalancesReadResponseSchema>
  */
-export function useInventoryBalancesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useInventoryBalancesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof InventoryBalancesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useQuery({
     queryKey: ['inventoryBalancesRead', id],
     queryFn: async ({ signal }) => {
@@ -108,7 +116,8 @@ export function useInventoryBalancesRead(id: string, options?: { enabled?: boole
       if (error instanceof Error && error.message.includes('4')) return false
       return failureCount < 3
     },
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
@@ -116,7 +125,9 @@ export function useInventoryBalancesRead(id: string, options?: { enabled?: boole
  * Suspense version for /inventory-balances/{id}/
  * @returns useSuspenseQuery result with data of type z.infer<typeof InventoryBalancesReadResponseSchema>
  */
-export function useSuspenseInventoryBalancesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number }) {
+export function useSuspenseInventoryBalancesRead(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof InventoryBalancesReadResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
   return useSuspenseQuery({
     queryKey: ['inventoryBalancesRead', id],
     queryFn: async () => {
@@ -124,7 +135,8 @@ export function useSuspenseInventoryBalancesRead(id: string, options?: { enabled
       return result
     },
     staleTime: 180000,
-    ...options
+    initialData: initialData as any,
+    ...restOptions
   })
 }
 
