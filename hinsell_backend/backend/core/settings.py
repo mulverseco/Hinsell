@@ -365,10 +365,9 @@ CACHES = {
     }
 }
 
-
 ALGOLIA = {
-  'APPLICATION_ID': '5E6XO5ZT4W',
-  'API_KEY': '72fed8dc555b031211fd68f2ceef6d48' # Your Write API Key
+  'APPLICATION_ID': env('APPLICATION_ID', default='5E6XO5ZT4W'),
+  'API_KEY': env('API_KEY', default='0feaf0462c02fc00fd672102a17e5d15')
 }
 
 # ======================
