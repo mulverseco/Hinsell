@@ -3,53 +3,47 @@ from algoliasearch_django import AlgoliaIndex
 from algoliasearch_django.decorators import register
 from apps.inventory.models import ItemGroup,Item,ItemUnit,ItemBarcode
 
-def get_record_without_uuids(obj, exclude_fields=None):
-    """
-    Return a dict of object's fields for Algolia indexing, excluding UUIDs or specified fields.
-    """
-    if exclude_fields is None:
-        exclude_fields = []
-
-    record = {}
-    for field in obj._meta.fields:
-        name = field.name
-        value = getattr(obj, name)
-
-        if name in exclude_fields:
-            continue
-        if isinstance(value, (uuid.UUID, )):
-            continue
-        record[name] = value
+def serialize_record(record):
+    """Recursively convert UUIDs to strings and related objects to IDs."""
+    if isinstance(record, dict):
+        return {k: serialize_record(v) for k, v in record.items()}
+    elif isinstance(record, list):
+        return [serialize_record(v) for v in record]
+    elif isinstance(record, uuid.UUID):
+        return str(record)
+    # Convert Django model instances to their primary key
+    elif hasattr(record, "pk"):
+        return serialize_record(record.pk)
     return record
-
 
 @register(ItemGroup)
 class ItemGroupIndex(AlgoliaIndex):
-    fields = ('code', 'name', 'slug', 'visibility')
+    fields = ('id', 'code', 'name', 'slug', 'visibility')
 
-    def get_record(self, obj):
-        return get_record_without_uuids(obj)
-
+    def get_raw_record(self, obj):
+        record = super().get_raw_record(obj)
+        return serialize_record(record)
 
 @register(Item)
 class ItemIndex(AlgoliaIndex):
-    fields = ('code', 'name', 'slug', 'size', 'color', 'sales_price')
+    fields = ('id', 'code', 'name', 'slug', 'size', 'color', 'sales_price')
 
-    def get_record(self, obj):
-        return get_record_without_uuids(obj)
-
+    def get_raw_record(self, obj):
+        record = super().get_raw_record(obj)
+        return serialize_record(record)
 
 @register(ItemUnit)
 class ItemUnitIndex(AlgoliaIndex):
-    fields = ('name', 'code', 'unit_cost')
+    fields = ('id', 'name', 'code', 'unit_cost')
 
-    def get_record(self, obj):
-        return get_record_without_uuids(obj)
-
+    def get_raw_record(self, obj):
+        record = super().get_raw_record(obj)
+        return serialize_record(record)
 
 @register(ItemBarcode)
 class ItemBarcodeIndex(AlgoliaIndex):
-    fields = ('item', 'barcode', 'unit', 'is_primary')
+    fields = ('id', 'item', 'barcode', 'unit', 'is_primary')
 
-    def get_record(self, obj):
-        return get_record_without_uuids(obj)
+    def get_raw_record(self, obj):
+        record = super().get_raw_record(obj)
+        return serialize_record(record)

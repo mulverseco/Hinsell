@@ -3,52 +3,51 @@ from algoliasearch_django import AlgoliaIndex
 from algoliasearch_django.decorators import register
 from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
 
-def get_record_without_uuids(obj, exclude_fields=None):
-    """
-    Return a dict of object's fields for Algolia indexing, excluding UUIDs or specified fields.
-    """
-    if exclude_fields is None:
-        exclude_fields = []
-
-    record = {}
-    for field in obj._meta.fields:
-        name = field.name
-        value = getattr(obj, name)
-
-        if name in exclude_fields:
-            continue
-        if isinstance(value, (uuid.UUID, )):
-            continue
-        record[name] = value
+def serialize_record(record):
+    """Recursively convert UUIDs to strings and related objects to IDs."""
+    if isinstance(record, dict):
+        return {k: serialize_record(v) for k, v in record.items()}
+    elif isinstance(record, list):
+        return [serialize_record(v) for v in record]
+    elif isinstance(record, uuid.UUID):
+        return str(record)
+    # Convert Django model instances to their primary key
+    elif hasattr(record, "pk"):
+        return serialize_record(record.pk)
     return record
 
 @register(Offer)
 class OfferIndex(AlgoliaIndex):
-    fields = ('code', 'name', 'slug', 'offer_type', 'target_type', 'discount_percentage', 'discount_amount', 'start_date', 'end_date', 'is_active')
+    fields = ('id', 'code', 'name', 'slug', 'offer_type', 'target_type',
+              'discount_percentage', 'discount_amount', 'start_date', 'end_date', 'is_active')
 
-    def get_record(self, obj):
-        return get_record_without_uuids(obj)
-
+    def get_raw_record(self, obj):
+        record = super().get_raw_record(obj)
+        return serialize_record(record)
 
 @register(Coupon)
 class CouponIndex(AlgoliaIndex):
-    fields = ('code', 'name', 'coupon_type', 'value', 'min_order_amount', 'max_uses', 'current_uses', 'start_date', 'end_date', 'is_active')
+    fields = ('id', 'code', 'name', 'coupon_type', 'value', 'min_order_amount',
+              'max_uses', 'current_uses', 'start_date', 'end_date', 'is_active')
 
-    def get_record(self, obj):
-        return get_record_without_uuids(obj)
-
+    def get_raw_record(self, obj):
+        record = super().get_raw_record(obj)
+        return serialize_record(record)
 
 @register(UserCoupon)
 class UserCouponIndex(AlgoliaIndex):
-    fields = ('is_used', 'redemption_date')
+    fields = ('id', 'user_id', 'coupon_id', 'branch_id', 'is_used', 'redemption_date')
 
-    def get_record(self, obj):
-        return get_record_without_uuids(obj)
-
+    def get_raw_record(self, obj):
+        record = super().get_raw_record(obj)
+        return serialize_record(record)
 
 @register(Campaign)
 class CampaignIndex(AlgoliaIndex):
-    fields = ('code', 'name', 'slug', 'campaign_type', 'start_date', 'end_date', 'is_active', 'impressions', 'clicks', 'conversions', 'conversion_rate')
+    fields = ('id', 'code', 'name', 'slug', 'campaign_type', 'start_date', 'end_date',
+              'is_active', 'impressions', 'clicks', 'conversions', 'conversion_rate',
+              'offer_id', 'coupon_id')
 
-    def get_record(self, obj):
-        return get_record_without_uuids(obj)
+    def get_raw_record(self, obj):
+        record = super().get_raw_record(obj)
+        return serialize_record(record)
