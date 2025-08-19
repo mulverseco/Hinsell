@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_yasg',
     'rest_framework',
+    'algoliasearch_django',
     'rest_framework_api_key',
     'djoser',
     'social_django',
@@ -362,6 +363,12 @@ CACHES = {
             },
         },
     }
+}
+
+
+ALGOLIA = {
+  'APPLICATION_ID': '5E6XO5ZT4W',
+  'API_KEY': '72fed8dc555b031211fd68f2ceef6d48' # Your Write API Key
 }
 
 # ======================
