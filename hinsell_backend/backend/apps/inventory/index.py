@@ -3,6 +3,15 @@ from algoliasearch_django import AlgoliaIndex
 from algoliasearch_django.decorators import register
 from apps.inventory.models import ItemGroup, Item, ItemUnit, ItemBarcode
 
+# Monkey patch methods for should_index
+def item_group_is_indexable(self):
+    return self.visibility != 'hidden'
+ItemGroup.is_indexable = item_group_is_indexable
+
+def item_is_indexable(self):
+    return self.visibility != 'hidden'
+Item.is_indexable = item_is_indexable
+
 def serialize_record(record):
     """Recursively convert UUIDs to strings and related objects to IDs."""
     if isinstance(record, dict):
@@ -20,6 +29,8 @@ def serialize_record(record):
 class ItemGroupIndex(AlgoliaIndex):
     fields = ('id', 'code', 'name', 'slug', 'visibility', 'group_type', 'description',
               'is_featured')
+
+    should_index = 'is_indexable'
 
     settings = {
         'searchableAttributes': ['name', 'code', 'description'],
@@ -49,14 +60,13 @@ class ItemGroupIndex(AlgoliaIndex):
         record['parent_id'] = self.parent_id(obj)
         return serialize_record(record)
 
-    def should_index(self, obj):
-        return obj.visibility != 'hidden'
-
 @register(Item)
 class ItemIndex(AlgoliaIndex):
     fields = ('id', 'code', 'name', 'slug', 'size', 'color', 'sales_price', 'item_type',
               'visibility', 'is_featured', 'brand', 'manufacturer', 'description',
               'short_description', 'average_rating')
+
+    should_index = 'is_indexable'
 
     settings = {
         'searchableAttributes': ['name', 'code', 'description', 'short_description', 'brand', 'manufacturer', 'tags'],
@@ -99,9 +109,6 @@ class ItemIndex(AlgoliaIndex):
         record['hierarchical_categories'] = self.hierarchical_categories(obj)
         record['image_url'] = self.image_url(obj)
         return serialize_record(record)
-
-    def should_index(self, obj):
-        return obj.visibility != 'hidden'
 
 @register(ItemUnit)
 class ItemUnitIndex(AlgoliaIndex):

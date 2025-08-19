@@ -3,6 +3,19 @@ from algoliasearch_django import AlgoliaIndex
 from algoliasearch_django.decorators import register
 from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
 
+# Monkey patch methods for should_index
+def offer_is_indexable(self):
+    return self.is_active
+Offer.is_indexable = offer_is_indexable
+
+def coupon_is_indexable(self):
+    return self.is_active
+Coupon.is_indexable = coupon_is_indexable
+
+def campaign_is_indexable(self):
+    return self.is_active
+Campaign.is_indexable = campaign_is_indexable
+
 def serialize_record(record):
     """Recursively convert UUIDs to strings and related objects to IDs."""
     if isinstance(record, dict):
@@ -22,6 +35,8 @@ class OfferIndex(AlgoliaIndex):
               'discount_percentage', 'discount_amount', 'start_date', 'end_date', 'is_active',
               'description', 'terms_conditions', 'max_uses', 'current_uses')
 
+    should_index = 'is_indexable'
+
     settings = {
         'searchableAttributes': ['name', 'code', 'description', 'terms_conditions'],
         'attributesForFaceting': ['offer_type', 'target_type', 'is_active', 'filterOnly(discount_percentage)'],
@@ -32,14 +47,13 @@ class OfferIndex(AlgoliaIndex):
         record = super().get_raw_record(obj)
         return serialize_record(record)
 
-    def should_index(self, obj):
-        return obj.is_active
-
 @register(Coupon)
 class CouponIndex(AlgoliaIndex):
     fields = ('id', 'code', 'name', 'coupon_type', 'value', 'min_order_amount',
               'max_uses', 'current_uses', 'start_date', 'end_date', 'is_active',
               'description', 'terms_conditions')
+
+    should_index = 'is_indexable'
 
     settings = {
         'searchableAttributes': ['name', 'code', 'description', 'terms_conditions'],
@@ -50,9 +64,6 @@ class CouponIndex(AlgoliaIndex):
     def get_raw_record(self, obj):
         record = super().get_raw_record(obj)
         return serialize_record(record)
-
-    def should_index(self, obj):
-        return obj.is_active
 
 @register(UserCoupon)
 class UserCouponIndex(AlgoliaIndex):
@@ -78,6 +89,8 @@ class CampaignIndex(AlgoliaIndex):
               'is_active', 'impressions', 'clicks', 'conversions', 'conversion_rate',
               'offer_id', 'coupon_id', 'content', 'call_to_action')
 
+    should_index = 'is_indexable'
+
     settings = {
         'searchableAttributes': ['name', 'code', 'content', 'call_to_action'],
         'attributesForFaceting': ['campaign_type', 'is_active', 'filterOnly(conversion_rate)'],
@@ -87,6 +100,3 @@ class CampaignIndex(AlgoliaIndex):
     def get_raw_record(self, obj):
         record = super().get_raw_record(obj)
         return serialize_record(record)
-
-    def should_index(self, obj):
-        return obj.is_active
