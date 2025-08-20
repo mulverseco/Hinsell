@@ -18,13 +18,11 @@ const ProductAddedAlert = dynamic(() =>
 )
 
 interface NavigationBarProps {
-  initialItemGroups: ItemGroup[] | null
+  ItemGroups: ItemGroup[] | null
 }
 
-export function NavigationBar({ initialItemGroups  }: NavigationBarProps) {
-  const { data: itemGroups } = useItemGroupsList(undefined, undefined)
-
-  const groups = (Array.isArray(itemGroups) ? itemGroups : initialItemGroups ?? []) as ItemGroup[]
+export function NavigationBar({ ItemGroups }: NavigationBarProps) {
+  const groups = (Array.isArray(ItemGroups) ? ItemGroups : []) as ItemGroup[]
 
   const itemsMarkup = groups.length
     ? groups.map((itemGroup) => (
@@ -32,7 +30,7 @@ export function NavigationBar({ initialItemGroups  }: NavigationBarProps) {
           data-content={itemGroup.name}
           className={cn(
             "menu__item not-supports-[container-type]:md:h-full relative z-50 supports-[container-type]:@3xl:h-full",
-            { menu__dropdown: groups.length > 0 }
+            { menu__dropdown: itemGroup?.parent.length > 0 }
           )}
           key={itemGroup.id ?? itemGroup.name}
         >

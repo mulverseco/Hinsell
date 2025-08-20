@@ -11,7 +11,7 @@ interface NavigationBarProps {
 }
 
 export function NavigationBarWrapper({initialItemGroups}:NavigationBarProps) {
-  const { data: itemGroups } = useItemGroupsList(undefined, undefined)
-  const finalItemGroups = itemGroups?.data ?? initialItemGroups ?? null
-  return <NavigationBar initialItemGroups={finalItemGroups} />
+  const { data: itemGroups } = useItemGroupsList(undefined, undefined, { initialData: initialItemGroups ?? undefined})
+  
+  return <NavigationBar ItemGroups={itemGroups} />
 }

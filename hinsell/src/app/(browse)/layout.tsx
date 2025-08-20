@@ -8,7 +8,6 @@ import { FlagValues } from "components/flag-values"
 import { ThirdParties } from "components/third-parties"
 import { Metadata } from "next"
 import { sharedMetadata } from "../shared-metadata"
-import { GithubBadge } from "components/github-badge"
 import { CartView } from "components/cart/cart-view"
 import { mobileInlineScript } from "components/navigation-bar/mobile-inline-script"
 import { Footer } from "components/footer"
@@ -16,7 +15,6 @@ import { Modals } from "components/modals/modals"
 import DraftToolbar from "components/draft-toolbar"
 import { Providers } from "./providers"
 import { itemGroupsList } from "@/core/generated/actions/itemGroups"
-import { NavigationBar } from "@/components/navigation-bar/navigation-bar"
 import { NavigationBarWrapper } from "@/components/navigation-bar/navigation-bar-wrapper"
 
 export const revalidate = 86400
@@ -32,8 +30,8 @@ export const metadata: Metadata = {
     yandex: "yandex",
     yahoo: "yahoo",
   },
-  generator: "Next.js",
-  applicationName: "Next.js",
+  generator: "mohamed",
+  applicationName: "Hinsell",
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -55,7 +53,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <FlagValues />
           </Suspense>
           <ThirdParties />
-          <GithubBadge />
         </NuqsAdapter>
         </Providers>
       </body>
