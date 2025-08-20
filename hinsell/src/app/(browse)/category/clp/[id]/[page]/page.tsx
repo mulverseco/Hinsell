@@ -6,14 +6,14 @@ export const revalidate = 86400
 export const dynamic = "force-static"
 
 interface CategoryPageProps {
-  params: Promise<{ slug: string; page: string }>
+  params: Promise<{ id: string; page: string }>
 }
 
 export async function generateMetadata(props: CategoryPageProps): Promise<Metadata> {
   const params = await props.params
   return {
     metadataBase: new URL(env.LIVE_URL!),
-    title: `${params.slug} | Enterprise Commerce`,
+    title: `${params.id} | Enterprise Commerce`,
     description: "In excepteur elit mollit in.",
   }
 }

@@ -225,10 +225,8 @@ export const itemGroupsRead = cache(
       const startTime = Date.now()
       
       try {
-    // Validate and sanitize parameters
     const validatedParams = await validateAndSanitizeInput(ItemGroupsReadParamsSchema, parsedInput)
 
-        // Execute API call with enhanced error handling
         const response = await apiClient.itemGroups.itemGroupsRead({params: validatedParams,
           config: {
             timeout: 30000,
@@ -238,7 +236,6 @@ export const itemGroupsRead = cache(
           }
         })
         
-        // Log successful execution
         const duration = Date.now() - startTime
         await logActionExecution('itemGroupsRead', true, duration, {
           method: 'GET',

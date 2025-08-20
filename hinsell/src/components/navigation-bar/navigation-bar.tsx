@@ -34,7 +34,9 @@ export function NavigationBar({ ItemGroups }: NavigationBarProps) {
           )}
           key={itemGroup.id ?? itemGroup.name}
         >
-          <span className="menu__link">{itemGroup.name}</span>
+          <Link  href={`/category/plp/${itemGroup.id}`}>
+            {itemGroup.name}
+          </Link>
         </li>
       ))
     : null

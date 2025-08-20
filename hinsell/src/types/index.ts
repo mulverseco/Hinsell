@@ -1,8 +1,8 @@
-import { PlatformProduct } from "lib/shopify/types"
+import { Item } from "@/core/generated/schemas"
 
 export type SearchParamsType = Record<string, string | string[] | undefined>
 
-export type CommerceProduct = PlatformProduct & {
+export type CommerceProduct = Item & {
   avgRating?: number
   totalReviews?: number
   reviewsSummary?: string

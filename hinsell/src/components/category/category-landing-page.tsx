@@ -3,14 +3,14 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
-import type { PlatformCollection } from "lib/shopify/types"
 import type { CommerceProduct } from "types"
 import { ProductCard } from "components/product-card"
 import { Button } from "components/ui/button"
+import { Item, ItemGroup } from "@/core/generated/schemas"
 
 interface CategoryLandingPageProps {
-  collection: PlatformCollection
-  products: CommerceProduct[]
+  collection: ItemGroup
+  products: Item[]
   basePath?: string
 }
 
@@ -24,12 +24,12 @@ export function CategoryLandingPage({ collection, products, basePath }: Category
   return (
     <div className="mx-auto w-full md:max-w-container-md">
       {}
-      {collection.image && (
+      {collection.media && (
         <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg md:aspect-[21/9]">
           <Image
-            src={collection.image.url}
+            src={collection.media[0].file || ""}
             quality={90}
-            alt={collection.image.altText || collection.title}
+            alt={collection.media[0].alt_text || collection.name}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
             className="object-cover"
@@ -37,24 +37,24 @@ export function CategoryLandingPage({ collection, products, basePath }: Category
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           <div className="absolute bottom-0 left-0 p-6 text-white md:p-8">
-            <h1 className="text-3xl font-bold tracking-tight md:text-5xl lg:text-6xl">{collection.title}</h1>
+            <h1 className="text-3xl font-bold tracking-tight md:text-5xl lg:text-6xl">{collection.name}</h1>
           </div>
         </div>
       )}
 
       {}
-      {!collection.image && (
+      {!collection.media && (
         <div className="py-8">
-          <h1 className="text-3xl font-bold tracking-tight md:text-5xl lg:text-6xl">{collection.title}</h1>
+          <h1 className="text-3xl font-bold tracking-tight md:text-5xl lg:text-6xl">{collection.name}</h1>
         </div>
       )}
 
       {}
-      {collection.descriptionHtml && (
+      {collection.description && (
         <div className="py-8">
           <div
             className="prose prose-lg max-w-none text-gray-700"
-            dangerouslySetInnerHTML={{ __html: collection.descriptionHtml }}
+            dangerouslySetInnerHTML={{ __html: collection.description }}
           />
         </div>
       )}
@@ -84,17 +84,17 @@ export function CategoryLandingPage({ collection, products, basePath }: Category
           {showAllProducts && (
             <div className="mt-8 flex justify-center">
               <Link
-                href={`/${basePath ? `${basePath}/` : ""}category/plp/${collection.handle}`}
+                href={`/${basePath ? `${basePath}/` : ""}category/plp/${collection.id}`}
                 className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
-                Browse All {collection.title} Products
+                Browse All {collection.name} Products
               </Link>
             </div>
           )}
         </div>
       )}
 
-      {}
+      
       {products.length === 0 && (
         <div className="py-16 text-center">
           <h3 className="text-lg font-medium text-gray-900">No products found</h3>

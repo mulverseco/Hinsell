@@ -1,31 +1,33 @@
 import { notFound } from "next/navigation"
 import { SearchParamsType } from "types"
-import { getCollection } from "lib/algolia/rate-limited"
-import { getProductsByCollectionTag } from "lib/algolia"
 import { CategoryLandingPage } from "./category-landing-page"
 import { SearchView } from "components/search-view"
 import { getPageDisplayTypeByHandle } from "utils/get-page-display-type"
+import { itemGroupsRead } from "@/core/generated/actions/itemGroups"
+import { itemsList } from "@/core/generated/actions/items"
 
 interface CategoryCLPViewProps {
-  params: { slug: string; page?: string }
+  params: { id: string; page?: string }
   searchParams?: SearchParamsType
   basePath?: string
 }
 
 export async function CategoryCLPView({ params, basePath, searchParams = {} }: CategoryCLPViewProps) {
-  const collection = await getCollection(params.slug)
+  const collection = await itemGroupsRead({ path: { id: params.id } })
 
-  if (!collection) return notFound()
+  if (!collection?.data) return notFound()
 
-  const pageDisplayType = getPageDisplayTypeByHandle(params.slug)
+  // const pageDisplayType = getPageDisplayTypeByHandle(params.id)
 
-  const shouldShowCLP = pageDisplayType === "CLP"
+  // const shouldShowCLP = pageDisplayType === "CLP"
 
-  if (!shouldShowCLP) {
-    return <SearchView searchParams={searchParams} params={params} collection={collection} basePath={basePath} />
-  }
+  // if (!shouldShowCLP) {
+  //   return <SearchView searchParams={searchParams} params={params} collection={collection} basePath={basePath} />
+  // }
 
-  const products = await getProductsByCollectionTag(collection.handle, 20)
+  const products = await itemsList({ query: { search: collection.data.id } })
 
-  return <CategoryLandingPage collection={collection} products={products} basePath={basePath} />
+  return (
+    <CategoryLandingPage collection={collection.data} products={products.data ?? []} basePath={basePath} />
+  )
 }

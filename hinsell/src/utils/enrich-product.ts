@@ -66,10 +66,12 @@ export class ProductEnrichmentBuilder {
 
 async function generateProductAltTags(product: PlatformProduct): Promise<(PlatformImage | undefined)[]> {
   try {
-    const altTagAwareImages = await Promise.all(product.images?.slice(0, 1).map(mapper).filter(Boolean))
-    return [...altTagAwareImages, ...product.images?.slice(1)?.filter(Boolean)] || []
+    const firstImages = Array.isArray(product.images) ? product.images.slice(0, 1) : []
+    const altTagAwareImages = await Promise.all(firstImages.map(mapper))
+    const remainingImages = Array.isArray(product.images) ? product.images.slice(1).filter(Boolean) : []
+    return [...altTagAwareImages, ...remainingImages]
   } catch (e) {
-    return product.images
+    return Array.isArray(product.images) ? product.images : []
   }
 }
 

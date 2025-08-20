@@ -1,16 +1,16 @@
 import { notFound } from "next/navigation"
 import { SearchParamsType } from "types"
-import { getCollection } from "lib/algolia/rate-limited"
 import { SearchView } from "components/search-view"
+import { itemGroupsRead } from "@/core/generated/actions/itemGroups";
 
 interface CategoryPLPViewProps {
-  params: { slug: string; page?: string }
+  params: { id: string; page?: string }
   searchParams?: SearchParamsType
   basePath?: string
 }
 
 export async function CategoryPLPView({ params, searchParams = {}, basePath }: CategoryPLPViewProps) {
-  const collection = await getCollection(params.slug)
+  const collection = await itemGroupsRead({ path: { id: params.id } })
 
   if (!collection) return notFound()
 

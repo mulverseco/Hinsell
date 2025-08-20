@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import { createSearchParamsCache, parseAsArrayOf, parseAsInteger, parseAsString } from "nuqs/server"
 
-import { getCategories, getFilteredProducts } from "lib/algolia/rate-limited"
+// import { getCategories, getFilteredProducts } from "lib/algolia/rate-limited"
 
 import { buildSearchFilter } from "utils/build-search-filter"
 
@@ -20,7 +20,7 @@ import { slugToName } from "utils/slug-name"
 
 interface SearchViewProps {
   searchParams: SearchParamsType
-  params?: { slug: string; page?: string }
+  params?: { id: string; page?: string }
   collection?: any
   disabledFacets?: string[]
   basePath?: string
@@ -75,29 +75,29 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
   })
 
   const hasVendorFilter = rest.vendors && rest.vendors.length > 0
-  const { facetDistribution, hits, totalPages, totalHits, independentFacetDistribution } = await getFilteredProducts(
-    q,
-    sortBy,
-    page,
-    filter,
-    collection?.handle,
-    hasVendorFilter
-  )
+  // const { facetDistribution, hits, totalPages, totalHits, independentFacetDistribution } = await getFilteredProducts(
+  //   q,
+  //   sortBy,
+  //   page,
+  //   filter,
+  //   collection?.handle,
+  //   hasVendorFilter
+  // )
 
   const { getPageDisplayTypeByHandle } = await import("utils/get-page-display-type")
 
-  const { hits: allCategories } = await getCategories({
-    hitsPerPage: 1000,
-    attributesToRetrieve: ["handle"],
-  })
+  // const { hits: allCategories } = await getCategories({
+  //   hitsPerPage: 1000,
+  //   attributesToRetrieve: ["handle"],
+  // })
 
-  const categoryDisplayTypes = allCategories.reduce(
-    (acc, category) => {
-      acc[category.handle] = getPageDisplayTypeByHandle(category.handle)
-      return acc
-    },
-    {} as Record<string, "CLP" | "PLP">
-  )
+  // const categoryDisplayTypes = allCategories.reduce(
+  //   (acc, category) => {
+  //     acc[category.handle] = getPageDisplayTypeByHandle(category.handle)
+  //     return acc
+  //   },
+  //   {} as Record<string, "CLP" | "PLP">
+  // )
 
   return (
     <div className="mx-auto w-full md:max-w-container-md">
@@ -109,32 +109,32 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
       <div className="sticky top-[77px] z-40 flex items-center justify-between bg-white/80 p-4 backdrop-blur-lg lg:hidden">
         <div className="flex gap-1 text-2xl font-semibold tracking-tight lg:text-3xl">
           <h1 className="flex-1">{makePageTitle(collection, q)}</h1>
-          <span className="mr-auto text-xl lg:text-2xl">({totalHits})</span>
+          {/* <span className="mr-auto text-xl lg:text-2xl">({totalHits})</span> */}
         </div>
         <div className="flex items-center gap-1 lg:hidden">
-          <FacetsMobile
+          {/* <FacetsMobile
             disabledFacets={disabledFacets}
             independentFacetDistribution={independentFacetDistribution as Record<string, Record<string, number>>}
             facetDistribution={facetDistribution as Record<string, Record<string, number>>}
             categoryDisplayTypes={categoryDisplayTypes}
-          />
+          /> */}
         </div>
       </div>
       <div className={cn("flex gap-12 p-4 md:gap-12", basePath === "ai" ? "ai-2xl:px-0" : "xl:px-0")}>
         <div className="sticky top-[100px] hidden max-h-[90dvh] w-full max-w-64 px-2 lg:block lg:px-0">
           <div className="flex gap-1 font-semibold tracking-tight">
             <h1 className="w-min pb-4 text-3xl lg:text-4xl">{makePageTitle(collection, q)}</h1>
-            <span className="text-2xl">({totalHits})</span>
+            {/* <span className="text-2xl">({totalHits})</span> */}
           </div>
 
           <Suspense>
-            <FacetsDesktop
+            {/* <FacetsDesktop
               independentFacetDistribution={independentFacetDistribution as Record<string, Record<string, number>>}
               disabledFacets={disabledFacets}
               className="hidden max-h-[70dvh] shrink-0 basis-[192px] overflow-y-auto lg:block"
               facetDistribution={facetDistribution as Record<string, Record<string, number>>}
               categoryDisplayTypes={categoryDisplayTypes}
-            />
+            /> */}
           </Suspense>
         </div>
         <div className="w-full">
@@ -143,8 +143,8 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
               <Sorter className="w-max rounded-md text-sm transition-colors duration-200 hover:bg-gray-100 lg:flex" />
             </Suspense>
           </div>
-          <HitsSection hits={hits} basePath={basePath} />
-          <PaginationSection queryParams={searchParams} totalPages={totalPages} />
+          {/* <HitsSection hits={hits} basePath={basePath} /> */}
+          {/* <PaginationSection queryParams={searchParams} totalPages={totalPages} /> */}
         </div>
       </div>
     </div>

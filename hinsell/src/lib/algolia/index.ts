@@ -102,18 +102,23 @@ export const getSimilarProducts = unstable_cache(
       ],
     })
 
+    const primaryHitsRaw = results?.[0]?.hits ?? []
+    const primaryHits: CommerceProduct[] = Array.isArray(primaryHitsRaw)
+      ? (primaryHitsRaw as unknown as CommerceProduct[])
+      : []
+
     let collectionSearchResults: { hits: CommerceProduct[] } = { hits: [] }
-    if (results[0].hits.length < limit) {
+    if (primaryHits.length < limit) {
       collectionSearchResults = await algolia.search<CommerceProduct>({
         indexName: env.ALGOLIA_PRODUCTS_INDEX,
         searchParams: {
-          hitsPerPage: limit - results[0].hits.length,
+          hitsPerPage: limit - primaryHits.length,
           filters: algolia.filterBuilder().where("collections.handle", collection).build(),
         },
       })
     }
 
-    return [...(results[0].hits as unknown as CommerceProduct[]), ...collectionSearchResults.hits]
+    return [...primaryHits, ...collectionSearchResults.hits]
   },
   ["similar-products"],
   { revalidate: 86400, tags: ["products", "recommendations"] }
