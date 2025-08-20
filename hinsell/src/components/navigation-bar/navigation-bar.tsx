@@ -27,10 +27,10 @@ export function NavigationBar({ ItemGroups }: NavigationBarProps) {
   const itemsMarkup = groups.length
     ? groups.map((itemGroup) => (
         <li
-          data-content={itemGroup.name}
+          data-content={itemGroup.parent}
           className={cn(
             "menu__item not-supports-[container-type]:md:h-full relative z-50 supports-[container-type]:@3xl:h-full",
-            { menu__dropdown: itemGroup?.parent.length > 0 }
+            { menu__dropdown: !itemGroup?.parent  }
           )}
           key={itemGroup.id ?? itemGroup.name}
         >
@@ -38,7 +38,7 @@ export function NavigationBar({ ItemGroups }: NavigationBarProps) {
         </li>
       ))
     : null
-
+    
   return (
     <header className="mega-navbar sticky top-0 z-50 mx-auto my-0 flex w-full flex-wrap content-center items-center justify-between border-b border-black/10 bg-white p-4 py-6">
       <div className="not-supports-[container-type]:md:mx-auto not-supports-[container-type]:md:w-full not-supports-[container-type]:md:max-w-container-md not-supports-[container-type]:md:px-0 flex justify-start px-4 supports-[container-type]:@3xl:mx-auto supports-[container-type]:@3xl:w-full supports-[container-type]:@3xl:max-w-container-md supports-[container-type]:@3xl:px-0">
