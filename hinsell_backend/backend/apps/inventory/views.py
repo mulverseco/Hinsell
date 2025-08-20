@@ -55,7 +55,7 @@ class ItemViewSet(BaseViewSet):
     
     filterset_fields = [
         'branch', 'item_group', 'code', 'item_type', 'is_featured', 'visibility',
-        'is_prescription_required', 'is_controlled_substance', 'track_expiry', 'track_batches'
+        'track_expiry', 'track_batches'
     ]
     search_fields = [
         'code', 'name', 'slug', 'manufacturer', 'brand', 'scientific_name',
