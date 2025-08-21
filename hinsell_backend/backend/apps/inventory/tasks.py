@@ -35,28 +35,28 @@ def check_inventory_balance(balance_id: int):
                     extra={'balance_id': balance_id, 'action': 'check_expiry'}, exc_info=True)
 
 
-@shared_task
-def update_algolia_index(app_label, model_name, instance_pk):
-    from django.apps import apps
-    from algoliasearch_django import registry
+# @shared_task
+# def update_algolia_index(app_label, model_name, instance_pk):
+#     from django.apps import apps
+#     from algoliasearch_django import registry
 
-    model = apps.get_model(app_label, model_name)
-    try:
-        instance = model.objects.get(pk=instance_pk)
-    except model.DoesNotExist:
-        return
+#     model = apps.get_model(app_label, model_name)
+#     try:
+#         instance = model.objects.get(pk=instance_pk)
+#     except model.DoesNotExist:
+#         return
 
-    index = registry.get(model)
-    if index:
-        index.update_object(instance)
+#     index = registry.get(model)
+#     if index:
+#         index.update_object(instance)
 
 
-@shared_task
-def delete_algolia_index(app_label, model_name, instance_pk):
-    from django.apps import apps
-    from algoliasearch_django import registry
+# @shared_task
+# def delete_algolia_index(app_label, model_name, instance_pk):
+#     from django.apps import apps
+#     from algoliasearch_django import registry
 
-    model = apps.get_model(app_label, model_name)
-    index = registry.get(model)
-    if index:
-        index.delete_object(str(instance_pk))
+#     model = apps.get_model(app_label, model_name)
+#     index = registry.get(model)
+#     if index:
+#         index.delete_object(str(instance_pk))

@@ -2,7 +2,7 @@ import logging
 from django.db.models.signals import post_save,post_delete
 from django.dispatch import receiver
 from apps.inventory.models import Item, InventoryBalance,ItemGroup, ItemUnit, ItemBarcode
-from apps.inventory.tasks import check_item_stock, check_inventory_balance, update_algolia_index, delete_algolia_index
+# from apps.inventory.tasks import check_item_stock, check_inventory_balance, update_algolia_index, delete_algolia_index
 
 logger = logging.getLogger(__name__)
 
