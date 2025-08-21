@@ -1,10 +1,7 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
-
-import { isDemoMode } from "utils/demo-utils"
 import { slugToName } from "utils/slug-name"
-import { CurrencyType, mapCurrencyToSign } from "utils/map-currency-to-sign"
-import { removeOptionsFromUrl } from "utils/product-options-utils"
+import { type CurrencyType, mapCurrencyToSign } from "utils/map-currency-to-sign"
 import {
   getCombinationByMultiOption,
   getCombinationByVisualOption,
@@ -33,126 +30,116 @@ import { nameToSlug } from "utils/slug-name"
 import { AddToCartButton } from "components/product/add-to-cart-button"
 import { ReviewsSection } from "components/product/reviews-section"
 
-import type { CommerceProduct } from "types"
-
 import { generateJsonLd } from "./metadata"
-import { getProduct, getProducts } from "lib/algolia"
+import { itemsRead } from "@/core/generated/actions/items"
+import { Item } from "@/core/generated/schemas"
 
 export const revalidate = 86400
 export const dynamic = "force-static"
 export const dynamicParams = true
 
 interface ProductProps {
-  params: Promise<{ slug: string }>
-}
-
-export async function generateStaticParams() {
-  if (isDemoMode()) return []
-
-  const { hits } = await getProducts({
-    hitsPerPage: 50,
-    attributesToRetrieve: ["handle"],
-  })
-
-  return hits.map(({ handle }) => ({ slug: handle }))
+  params: Promise<{ id: string }>
 }
 
 export default async function Product(props: ProductProps) {
   const params = await props.params
 
-  const { slug } = params
+  const { id } = params
 
-  const multiOptions = getMultiOptionFromSlug(slug)
-  const baseHandle =
-    Object.keys(multiOptions).length > 0 ? removeMultiOptionFromSlug(slug) : removeVisualOptionFromSlug(slug)
+  const multiOptions = getMultiOptionFromSlug(id)
+  const baseHandle = Object.keys(multiOptions).length > 0 ? removeMultiOptionFromSlug(id) : removeVisualOptionFromSlug(id)
 
-  const product = await getProduct(baseHandle || removeOptionsFromUrl(slug))
+  const product = await itemsRead({ path: { id: id } })
 
-  if (!product) {
+  if (!product?.data) {
     return notFound()
   }
+
+  const item: Item = product.data
 
   let combination
   let hasInvalidOptions = false
 
-  if (Object.keys(multiOptions).length > 0) {
-    hasInvalidOptions = !hasValidMultiOption(product.variants || [], multiOptions)
-    combination = getCombinationByMultiOption(product.variants, multiOptions)
-  } else {
-    const visualValue = getVisualOptionFromSlug(slug)
-    hasInvalidOptions = !hasValidVisualOption(product?.variants || [], visualValue)
-    combination = getCombinationByVisualOption(product.variants, visualValue)
-  }
+  // if (Object.keys(multiOptions).length > 0) {
+  //   hasInvalidOptions = !hasValidMultiOption(item.units?.[0]?.name || "", multiOptions)
+  //   combination = getCombinationByMultiOption(item.units, multiOptions)
+  // } else {
+  //   const visualValue = getVisualOptionFromSlug(id)
+  //   hasInvalidOptions = !hasValidVisualOption(item.units || [], visualValue)
+  //   combination = getCombinationByVisualOption(item.units, visualValue)
+  // }
 
   if (hasInvalidOptions) {
     return notFound()
   }
 
-  const hasOnlyOneVariant = product.variants.length <= 1
-  const combinationPrice = combination?.price?.amount || null
+  const combinationPrice = combination?.unit_price || item.sales_price || null
 
   let visualValue: string | null = null
   if (Object.keys(multiOptions).length > 0) {
     if (multiOptions.color) {
-      visualValue = getOriginalOptionValue(product.variants, "color", multiOptions.color)
+      // visualValue = getOriginalOptionValue(item?.units, "color", multiOptions.color)
     }
     if (!visualValue && Object.keys(multiOptions).length > 0) {
       const firstOption = Object.entries(multiOptions)[0]
-      visualValue = getOriginalOptionValue(product.variants, firstOption[0], firstOption[1])
+      // visualValue = getOriginalOptionValue(item?.units, firstOption[0], firstOption[1])
     }
   } else {
-    visualValue = getVisualOptionFromSlug(slug)
+    visualValue = getVisualOptionFromSlug(id)
   }
 
-  const { images: imagesToShow, activeIndex } = getImagesForCarousel(product.images, visualValue)
+  const { images: imagesToShow, activeIndex } = getImagesForCarousel(item?.media || [], visualValue)
 
   return (
     <div className="relative mx-auto max-w-container-md px-4 xl:px-0">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(generateJsonLd(product, slug)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(generateJsonLd(item, id)) }}
       ></script>
       <div className="mb:pb-8 relative flex w-full items-center justify-center gap-10 py-4 md:pt-12">
         <div className="mx-auto w-full max-w-container-sm">
-          <Breadcrumbs className="mb-8" items={makeBreadcrumbs(product)} />
+          <Breadcrumbs className="mb-8" items={makeBreadcrumbs(item)} />
         </div>
       </div>
       <main className="mx-auto max-w-container-sm">
         <div className="grid grid-cols-1 gap-4 md:mx-auto md:max-w-screen-xl md:grid-cols-12 md:gap-8">
           <ProductTitle
             className="md:hidden"
-            title={product.title}
+            title={item.name || ""}
             price={combinationPrice}
             currency={combination?.price ? mapCurrencyToSign(combination.price?.currencyCode as CurrencyType) : "$"}
           />
-          <ProductImages key={slug} images={imagesToShow} initialActiveIndex={activeIndex} />
+          <ProductImages key={id} images={imagesToShow} initialActiveIndex={activeIndex} />
           <RightSection className="md:col-span-6 md:col-start-8 md:mt-0">
             <ProductTitle
               className="hidden md:col-span-4 md:col-start-9 md:block"
-              title={product.title}
+              title={item.name || ""}
               price={combinationPrice}
               currency={combination?.price ? mapCurrencyToSign(combination.price?.currencyCode as CurrencyType) : "$"}
             />
-            {!hasOnlyOneVariant && (
+            {item.units && item.units.length > 1 && (
               <VariantDropdowns
-                variants={product.variants}
-                handle={product.handle}
+                variants={item.units}
+                handle={item.slug || id}
                 combination={combination}
-                currentSlug={slug}
+                currentSlug={id}
               />
             )}
-            <p>{product.description}</p>
-            <AddToCartButton className="mt-4" product={product} combination={combination} />
-            <FavoriteMarker handle={slug} />
+            <p>{item.description || item.short_description}</p>
+            <AddToCartButton className="mt-4" product={item} combination={combination} />
+            <FavoriteMarker handle={id} />
             <FaqSectionClient defaultOpenSections={[nameToSlug(getDefaultFaqAccordionItemValue()[0])]}>
-              <FaqAccordionItem title={getDefaultFaqAccordionItemValue()[0]}>
-                <ShopifyRichText
-                  data={product.productDetailsMetafield?.value || getDefaultFaqAccordionItemRichText()}
+              {/* <FaqAccordionItem title={getDefaultFaqAccordionItemValue()[0]}> */}
+                {/* <ShopifyRichText
+                  data={item.internal_notes || getDefaultFaqAccordionItemRichText()}
                   className="prose prose-sm max-w-none"
-                />
-              </FaqAccordionItem>
+                /> */}
+              {/* </FaqAccordionItem> */}
               <FaqAccordionItem title="Size and Fit">
                 <p>
+                  {item.size && `Size: ${item.size}. `}
+                  {item.weight && `Weight: ${item.weight}. `}
                   Est veniam qui aute nisi occaecat ad non velit anim commodo sit proident. Labore sint officia nostrud
                   eu est fugiat nulla velit sint commodo. Excepteur sit ut anim pariatur minim adipisicing dolore sit
                   dolore cupidatat. Amet reprehenderit ipsum aute minim incididunt adipisicing est.
@@ -173,6 +160,8 @@ export default async function Product(props: ProductProps) {
               </FaqAccordionItem>
               <FaqAccordionItem title="Supplier Information">
                 <p>
+                  {item.manufacturer && `Manufacturer: ${item.manufacturer}. `}
+                  {item.brand && `Brand: ${item.brand}. `}
                   Aliqua ut ex irure eu officia dolore velit et occaecat pariatur excepteur nostrud ad. Ea reprehenderit
                   sint culpa excepteur adipisicing ipsum esse excepteur officia culpa adipisicing nostrud. Nulla Lorem
                   voluptate tempor officia id mollit do est amet dolor nulla. Sint sunt consequat non in reprehenderit
@@ -185,29 +174,29 @@ export default async function Product(props: ProductProps) {
         </div>
         <Suspense>
           <ReviewsSection
-            avgRating={product.avgRating}
-            productHandle={product.handle}
-            productId={product.id}
-            summary={product.reviewsSummary}
+            avgRating={item.average_rating || ""}
+            productHandle={item.slug || id}
+            productId={item.id || id}
+            summary={item.review_count ? `${item.review_count} reviews` : undefined}
           />
         </Suspense>
         <Suspense fallback={<SimilarProductsSectionSkeleton />}>
-          <SimilarProductsSection objectID={product.objectID} slug={slug} />
+          <SimilarProductsSection objectID={item.id || id} slug={id} />
         </Suspense>
       </main>
     </div>
   )
 }
 
-function makeBreadcrumbs(product: CommerceProduct) {
-  const lastCollection = product.collections?.findLast(Boolean)
+function makeBreadcrumbs(item: Item) {
+  const itemGroup = item.item_group
 
   return {
     Home: "/",
-    [lastCollection?.handle ? slugToName(lastCollection?.handle) : "Products"]: lastCollection?.handle
-      ? `/category/${lastCollection.handle}`
+    [itemGroup?.name ? slugToName(itemGroup.name) : "Products"]: itemGroup?.slug
+      ? `/category/${itemGroup.id}`
       : "/search",
-    [product.title]: "",
+    [item.name || ""]: "",
   }
 }
 

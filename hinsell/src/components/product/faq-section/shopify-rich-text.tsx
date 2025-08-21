@@ -1,6 +1,6 @@
 import { createElement } from "react"
 import React from "react"
-import { RichText } from "@shopify/hydrogen-react"
+
 import { cn } from "utils/cn"
 
 interface ShopifyRichTextProps {

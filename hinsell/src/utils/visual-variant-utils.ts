@@ -81,7 +81,7 @@ export function createMultiOptionSlug(baseSlug: string, options: Record<string, 
 
 export function getVisualOptionValueFromCombination(
   combination: any,
-  optionName = DEFAULT_VISUAL_OPTION
+  optionName = DEFAULT_VISUAL_OPTION,
 ): string | undefined {
   if (optionName.toLowerCase() === "color" && combination?.color) {
     return combination.color
@@ -125,7 +125,7 @@ export function getAllOptionValuesFromCombination(combination: any): Record<stri
 export function getOriginalOptionValue(
   variants: any[],
   slugifiedOptionName: string,
-  slugifiedOptionValue: string
+  slugifiedOptionValue: string,
 ): string | null {
   for (const variant of variants) {
     if (!variant.selectedOptions) continue
@@ -143,28 +143,28 @@ export function getOriginalOptionValue(
   return null
 }
 
-export function filterImagesByVisualOption<T extends { url: string }>(
+export function filterImagesByVisualOption<T extends { file?: string }>(
   images: T[],
   value: string | null,
-  optionName = DEFAULT_VISUAL_OPTION
+  optionName = DEFAULT_VISUAL_OPTION,
 ): T[] {
   if (!value) return images
   const needle = `-${optionName}-`.toLowerCase() + value.toLowerCase()
-  const matches = images.filter((img) => img.url.toLowerCase().includes(needle))
+  const matches = images.filter((img) => img.file?.toLowerCase().includes(needle))
   return matches.length > 0 ? matches : images
 }
 
-export function getImagesForCarousel<T extends { url: string }>(
+export function getImagesForCarousel<T extends { file?: string }>(
   images: T[],
   value: string | null,
-  optionName = DEFAULT_VISUAL_OPTION
+  optionName = DEFAULT_VISUAL_OPTION,
 ): { images: T[]; activeIndex: number } {
   if (!value || images.length <= 1) {
     return { images, activeIndex: 0 }
   }
 
   const needle = `-${optionName}-`.toLowerCase() + value.toLowerCase()
-  const matchingImages = images.filter((img) => img.url.toLowerCase().includes(needle))
+  const matchingImages = images.filter((img) => img.file?.toLowerCase().includes(needle))
 
   if (matchingImages.length > 0) {
     const activeIndex = images.findIndex((img) => matchingImages.includes(img))
@@ -177,7 +177,7 @@ export function getImagesForCarousel<T extends { url: string }>(
 export function getCombinationByVisualOption(
   variants: any[],
   visualValue: string | null,
-  optionName = DEFAULT_VISUAL_OPTION
+  optionName = DEFAULT_VISUAL_OPTION,
 ): any {
   if (!visualValue || variants.length <= 1) {
     return variants.find(Boolean)
@@ -187,8 +187,8 @@ export function getCombinationByVisualOption(
     variant.selectedOptions.some(
       (option: any) =>
         option.name.toLowerCase() === optionName.toLowerCase() &&
-        option.value.toLowerCase() === visualValue.toLowerCase()
-    )
+        option.value.toLowerCase() === visualValue.toLowerCase(),
+    ),
   )
 }
 
@@ -214,7 +214,7 @@ export function getCombinationByMultiOption(variants: any[], slugOptions: Record
 export function hasValidVisualOption(
   variants: any[],
   visualValue: string | null,
-  optionName = DEFAULT_VISUAL_OPTION
+  optionName = DEFAULT_VISUAL_OPTION,
 ): boolean {
   if (!visualValue) return true
 
@@ -222,8 +222,8 @@ export function hasValidVisualOption(
     variant.selectedOptions.some(
       (option: any) =>
         option.name.toLowerCase() === optionName.toLowerCase() &&
-        option.value.toLowerCase() === visualValue.toLowerCase()
-    )
+        option.value.toLowerCase() === visualValue.toLowerCase(),
+    ),
   )
 }
 

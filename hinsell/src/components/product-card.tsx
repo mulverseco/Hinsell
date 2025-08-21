@@ -1,105 +1,52 @@
 import Image from "next/image"
 import Link from "next/link"
-import { cn } from "utils/cn"
-import { type CurrencyType, mapCurrencyToSign } from "utils/map-currency-to-sign"
-import { StarIcon } from "components/icons/star-icon"
+import { StarIcon } from "./icons/star-icon"
+import { cn } from "@/utils/cn"
+import { Item } from "@/core/generated/schemas"
 
 interface ProductCardProps {
-  // Common/Algolia shape
-  handle?: string
-  title?: string
-  featuredImage?: { url?: string; altText?: string }
-  images?: unknown
-  minPrice?: number
-  avgRating?: number
-  totalReviews?: number
-  vendor?: string
-  variants?: Array<{ price?: { amount?: number; currencyCode?: string } }>
-
-  // Backend Item shape
-  slug?: string
-  name?: string
-  media?: Array<{ file?: string; alt_text?: string }>
-  sales_price?: string
-  minimum_price?: string
-  maximum_price?: string
-  average_rating?: string
-  review_count?: number
-  brand?: string
-  manufacturer?: string
-  units?: unknown[]
-
-  // Local options
+  item: Item
   priority?: boolean
   prefetch?: boolean
   className?: string
   href?: string
   highlighted?: boolean
-  variant?: "default" | "hero"
+  variants?: "default" | "hero"
 }
 
 export const ProductCard = ({
-  // common
-  variants,
-  handle,
-  title,
-  featuredImage,
-  minPrice,
-  avgRating,
-  totalReviews,
+  item,
   className,
-  priority,
-  vendor,
-  // backend item
-  slug,
-  name,
-  media,
-  sales_price,
-  minimum_price,
-  maximum_price,
-  average_rating,
-  review_count,
-  brand,
-  manufacturer,
-  units,
-  // options
+  priority = false,
   prefetch = false,
   href = "",
   highlighted = false,
-  variant = "default",
+  variants = "default",
 }: ProductCardProps) => {
-  const computedHandle = handle || slug || ""
-  const displayTitle = title || name || ""
-  const displayVendor = vendor || brand || manufacturer
+  const computedHandle = item.id || item.slug || ""
+  const displayTitle = item.name || ""
+  const displayVendor = item.brand || item.branch?.branch_name || ""
 
-  const imageUrl =
-    featuredImage?.url || (Array.isArray(media) && media[0]?.file) || "/default-product-image.svg"
-  const imageAlt = featuredImage?.altText || (Array.isArray(media) && media[0]?.alt_text) || displayTitle
+  const imageUrl = (Array.isArray(item?.media) && item?.media[0]?.file) || "/placeholder.svg?height=300&width=300"
+  const imageAlt = (Array.isArray(item?.media) && item?.media[0]?.alt_text) || displayTitle
 
-  const variantPrice = variants?.find(Boolean)?.price
-  const currencySymbol = variantPrice
-    ? mapCurrencyToSign((variantPrice.currencyCode as CurrencyType) || "USD")
-    : "$"
+  const currencySymbol = "$" // Default currency symbol since Item schema doesn't have currency info
 
-  const parsedMinPrice =
-    typeof minPrice === "number"
-      ? minPrice
-      : parseFloat(sales_price || minimum_price || maximum_price || "")
+  const parsedMinPrice = Number.parseFloat(item.sales_price || item.minimum_price || item.maximum_price || "0")
 
-  const ratingValue =
-    typeof avgRating === "number" ? avgRating : parseFloat(average_rating || "")
-  const reviewsCount = typeof totalReviews === "number" ? totalReviews : review_count
+  const ratingValue = Number.parseFloat(item.average_rating || "0")
+  const reviewsCount = item.review_count || 0
 
-  const noOfVariants = (Array.isArray(variants) ? variants.length : 0) || (Array.isArray(units) ? units.length : 0)
+  const noOfVariants = Array.isArray(item.units) ? item.units.length : 0
   const path = href || `/product/${computedHandle}`
   const linkAria = `Visit product: ${displayTitle}`
 
-  if (variant === "hero") {
+  if (variants === "hero") {
     return (
       <Link
         className={cn(
           "group flex flex-col overflow-hidden rounded-lg border border-background/20 bg-background/95 p-3 shadow-xl backdrop-blur transition-all duration-300 hover:scale-105 hover:shadow-2xl",
-          className
+          className,
         )}
         aria-label={linkAria}
         href={path}
@@ -108,7 +55,7 @@ export const ProductCard = ({
         <div className="relative mb-3 aspect-square overflow-hidden rounded-md">
           <Image
             priority={priority}
-            src={imageUrl}
+            src={imageUrl || "/placeholder.svg"}
             alt={imageAlt || ""}
             fill
             className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
@@ -116,10 +63,8 @@ export const ProductCard = ({
           />
         </div>
         <h3 className="mb-1 line-clamp-2 text-sm font-semibold text-foreground">{displayTitle}</h3>
-        {!!variantPrice && !Number.isNaN(parsedMinPrice) && (
-          <p className="text-sm font-medium text-primary">
-            {mapCurrencyToSign((variantPrice.currencyCode as CurrencyType) || "USD") + parsedMinPrice.toFixed(2)}
-          </p>
+        {!Number.isNaN(parsedMinPrice) && parsedMinPrice > 0 && (
+          <p className="text-sm font-medium text-primary">{currencySymbol + parsedMinPrice.toFixed(2)}</p>
         )}
         <span className="mt-2 text-xs font-medium text-muted-foreground">Shop Now →</span>
       </Link>
@@ -136,7 +81,7 @@ export const ProductCard = ({
       <div className="relative aspect-square overflow-hidden">
         <Image
           priority={priority}
-          src={imageUrl}
+          src={imageUrl || "/placeholder.svg"}
           alt={imageAlt || ""}
           fill
           className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
@@ -146,7 +91,7 @@ export const ProductCard = ({
         <h3
           className={cn(
             "line-clamp-2 text-lg font-semibold transition-colors data-[featured]:text-2xl",
-            highlighted && "md:text-2xl"
+            highlighted && "md:text-2xl",
           )}
         >
           {displayTitle}
@@ -174,7 +119,7 @@ export const ProductCard = ({
           </div>
         </div>
 
-        {!!variantPrice && !Number.isNaN(parsedMinPrice) && (
+        {!Number.isNaN(parsedMinPrice) && parsedMinPrice > 0 && (
           <div className="mt-auto flex flex-col pt-10">
             {noOfVariants > 0 && (
               <p className={cn("text-sm text-gray-500", highlighted && "md:text-base")}>
@@ -182,7 +127,7 @@ export const ProductCard = ({
               </p>
             )}
             <div className={cn("flex w-full items-baseline justify-between text-sm", highlighted && "md:text-base")}>
-              <span className="text-primary/50">From</span>
+              {noOfVariants > 1 && <span className="text-primary/50">From</span>}
               <span className={cn("text-base font-semibold md:text-lg", highlighted && "md:text-2xl")}>
                 {currencySymbol + parsedMinPrice.toFixed(2)}
               </span>

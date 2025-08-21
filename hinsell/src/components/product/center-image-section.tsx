@@ -1,7 +1,5 @@
 import type { Dispatch, SetStateAction } from "react"
 import Image from "next/image"
-import type { CommerceProduct } from "types"
-import { cn } from "utils/cn"
 import {
   Carousel,
   type CarouselApi,
@@ -10,28 +8,32 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "components/ui/carousel"
+import { Item } from "@/core/generated/schemas"
+import { cn } from "@/utils/cn"
 
 type CenterSectionProps = {
-  images: CommerceProduct["images"]
+  images: Item["media"]
   setApi: Dispatch<SetStateAction<CarouselApi>>
   className?: string
 }
 
 export const CenterSection = ({ className, images, setApi }: CenterSectionProps) => {
-  const hasOnlyOneImage = images.length <= 1
+  const validImages = images?.filter((media) => media?.file) || []
+  const hasOnlyOneImage = validImages.length <= 1
+
   return (
     <div className={cn("flex flex-col rounded-t-lg", className)}>
       <div className="md:sticky md:top-[100px]">
         <Carousel className="[&>div]:rounded-lg" setApi={setApi}>
           <CarouselContent className={cn("rounded-lg", hasOnlyOneImage ? "ml-0" : "")}>
-            {images.map((image, index) => (
+            {validImages.map((media, index) => (
               <CarouselItem
                 className={cn("relative aspect-square rounded-lg", hasOnlyOneImage && "pl-0")}
-                key={image.url}
+                key={media.id || `media-${index}`}
               >
                 <Image
-                  alt={image.altText || `Product image ${index + 1}`}
-                  src={image.url || "/default-product-image.svg"}
+                  alt={media.alt_text || `Product image ${index + 1}`}
+                  src={media.file || "/placeholder.svg?height=400&width=400&query=product"}
                   fill
                   priority={index === 0}
                   sizes="(max-width: 450px) 300px, 480px"

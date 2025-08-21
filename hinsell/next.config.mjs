@@ -20,7 +20,7 @@ const config = withPlugins([[ withBundleAnalyzer({ enabled: process.env.ANALYZE 
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "plus.unsplash.com",
+        hostname: "hinsell.mulverse.com",
         port: "",
       },
       {

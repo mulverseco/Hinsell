@@ -38,10 +38,10 @@ export const getProducts = unstable_cache(
   ) => {
   
 
-    return await algolia.search<PlatformCollection>({
-      indexName: env.ALGOLIA_PRODUCTS_INDEX,
-      searchParams: options,
-    })
+    // return await algolia.search<PlatformCollection>({
+    //   indexName: env.ALGOLIA_PRODUCTS_INDEX,
+    //   searchParams: options,
+    // })
   },
   ["search-products"],
   { revalidate: 86400, tags: ["products"] }
@@ -85,44 +85,44 @@ export const getAllProducts = async (options?: Omit<BrowseProps["browseParams"],
   })
 }
 
-export const getSimilarProducts = unstable_cache(
-  async (collection: string | undefined, objectID: string) => {
-    const limit = 8
-    if (!collection) return []
+// export const getSimilarProducts = unstable_cache(
+//   async (collection: string | undefined, objectID: string) => {
+//     const limit = 8
+//     if (!collection) return []
 
-    const { results } = await algolia.getRecommendations({
-      requests: [
-        {
-          indexName: env.ALGOLIA_PRODUCTS_INDEX,
-          objectID,
-          model: "looking-similar",
-          maxRecommendations: limit,
-          threshold: 60,
-        },
-      ],
-    })
+//     const { results } = await algolia.getRecommendations({
+//       requests: [
+//         {
+//           indexName: env.ALGOLIA_PRODUCTS_INDEX,
+//           objectID,
+//           model: "looking-similar",
+//           maxRecommendations: limit,
+//           threshold: 60,
+//         },
+//       ],
+//     })
 
-    const primaryHitsRaw = results?.[0]?.hits ?? []
-    const primaryHits: CommerceProduct[] = Array.isArray(primaryHitsRaw)
-      ? (primaryHitsRaw as unknown as CommerceProduct[])
-      : []
+//     const primaryHitsRaw = results?.[0]?.hits ?? []
+//     const primaryHits: CommerceProduct[] = Array.isArray(primaryHitsRaw)
+//       ? (primaryHitsRaw as unknown as CommerceProduct[])
+//       : []
 
-    let collectionSearchResults: { hits: CommerceProduct[] } = { hits: [] }
-    if (primaryHits.length < limit) {
-      collectionSearchResults = await algolia.search<CommerceProduct>({
-        indexName: env.ALGOLIA_PRODUCTS_INDEX,
-        searchParams: {
-          hitsPerPage: limit - primaryHits.length,
-          filters: algolia.filterBuilder().where("collections.handle", collection).build(),
-        },
-      })
-    }
+//     let collectionSearchResults: { hits: CommerceProduct[] } = { hits: [] }
+//     if (primaryHits.length < limit) {
+//       collectionSearchResults = await algolia.search<CommerceProduct>({
+//         indexName: env.ALGOLIA_PRODUCTS_INDEX,
+//         searchParams: {
+//           hitsPerPage: limit - primaryHits.length,
+//           filters: algolia.filterBuilder().where("collections.handle", collection).build(),
+//         },
+//       })
+//     }
 
-    return [...primaryHits, ...collectionSearchResults.hits]
-  },
-  ["similar-products"],
-  { revalidate: 86400, tags: ["products", "recommendations"] }
-)
+//     return [...primaryHits, ...collectionSearchResults.hits]
+//   },
+//   ["similar-products"],
+//   { revalidate: 86400, tags: ["products", "recommendations"] }
+// )
 
 export const getNewestProducts = unstable_cache(
   async () => {
@@ -142,17 +142,17 @@ export const getNewestProducts = unstable_cache(
 export const getCollection = unstable_cache(
   async (slug: string) => {
   
-    const results = await algolia.search<PlatformCollection>({
-      indexName: env.ALGOLIA_CATEGORIES_INDEX,
-      searchParams: {
-        filters: algolia.filterBuilder().where("handle", slug).build(),
-        hitsPerPage: 1,
-        attributesToRetrieve: ["handle", "title", "seo", "descriptionHtml", "image"],
-      },
-    })
+    // const results = await algolia.search<PlatformCollection>({
+    //   indexName: env.ALGOLIA_CATEGORIES_INDEX,
+    //   searchParams: {
+    //     filters: algolia.filterBuilder().where("handle", slug).build(),
+    //     hitsPerPage: 1,
+    //     attributesToRetrieve: ["handle", "title", "seo", "descriptionHtml", "image"],
+    //   },
+    // })
 
-    const collection = results.hits.find(Boolean) || null
-    return collection
+    // const collection = results.hits.find(Boolean) || null
+    // return collection
   },
   ["category-by-handle"],
   { revalidate: 86400, tags: ["categories"] }
@@ -232,10 +232,10 @@ export const updateProducts = async (products: Partial<CommerceProduct>[]) => {
 
 export const updateReviews = async (reviews: Review[]) => {
 
-  return algolia.update({
-    indexName: env.ALGOLIA_REVIEWS_INDEX,
-    objects: reviews,
-  })
+  // return algolia.update({
+  //   indexName: env.ALGOLIA_REVIEWS_INDEX,
+  //   objects: reviews,
+  // })
 }
 
 export const getCategories = unstable_cache(
@@ -245,27 +245,15 @@ export const getCategories = unstable_cache(
     }
   ) => {
 
-    return await algolia.search<PlatformCollection>({
-      indexName: env.ALGOLIA_CATEGORIES_INDEX,
-      searchParams: options,
-    })
+    // return await algolia.search<PlatformCollection>({
+    //   indexName: env.ALGOLIA_CATEGORIES_INDEX,
+    //   searchParams: options,
+    // })
   },
   ["search-categories"],
   { revalidate: 86400, tags: ["categories"] }
 )
 
-export const updateCategories = unstable_cache(
-  async (categories: PlatformCollection[]) => {
- 
-
-    return algolia.update({
-      indexName: env.ALGOLIA_CATEGORIES_INDEX,
-      objects: categories.filter(Boolean) as unknown as Record<string, unknown>[],
-    })
-  },
-  ["update-categories"],
-  { revalidate: 86400, tags: ["categories"] }
-)
 
 export const deleteCategories = async (ids: string[]) => {
 

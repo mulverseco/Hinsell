@@ -13,7 +13,7 @@ import { getProductReviews } from "lib/algolia"
 type ReviewsSectionProps = {
   productId: string
   productHandle: string
-  avgRating: number | undefined
+  avgRating: string | undefined
   summary?: string
   className?: string
 }
@@ -57,7 +57,7 @@ export const ReviewsSection = async ({
               {!!avgRating && (
                 <div className="ml-1 inline-flex items-center">
                   <StarIcon className="ml-0.5 size-4 fill-gray-400 text-gray-500" />
-                  <span className="ml-0.5 text-sm font-normal"> {avgRating.toFixed(2)}</span>
+                  <span className="ml-0.5 text-sm font-normal">{avgRating}</span>
                 </div>
               )}
             </div>
