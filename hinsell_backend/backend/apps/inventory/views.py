@@ -59,7 +59,7 @@ class ItemViewSet(BaseViewSet):
     ]
     search_fields = [
         'code', 'name', 'slug', 'manufacturer', 'brand',
-        'active_ingredient', 'description', 'short_description', 'tags'
+        'description', 'short_description', 'tags'
     ]
     ordering_fields = ['code', 'name', 'sales_price', 'average_rating', 'created_at', 'updated_at']
     ordering = ['-created_at']

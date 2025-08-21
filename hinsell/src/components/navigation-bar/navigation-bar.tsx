@@ -1,109 +1,98 @@
-import React, { Suspense } from "react"
-import { ChevronIcon } from "components/icons/chevron-icon"
+import { Suspense, useState } from "react"
+import { Menu, X } from "lucide-react"
 import dynamic from "next/dynamic"
-
-import { cn } from "utils/cn"
-import { Autocomplete } from "./autocomplete"
-import { Cart } from "./cart"
-import { Favorites } from "./favorites"
-import { Skeleton } from "components/ui/skeleton"
-import { CloseIcon } from "components/icons/close-icon"
-import { SearchButton } from "./search-button"
 import Link from "next/link"
-import { ItemGroup } from "@/core/generated/schemas"
-import { useItemGroupsList } from "@/core/generated/hooks/itemGroups"
+import { Autocomplete } from "./autocomplete"
+import { Favorites } from "./favorites"
+import { Cart } from "./cart"
+import { Button } from "../ui/button"
 
-const ProductAddedAlert = dynamic(() =>
-  import("components/product/product-added-alert").then((mod) => mod.ProductAddedAlert)
+const ProductAddedAlert = dynamic(
+  () => import("components/product/product-added-alert").then((mod) => mod.ProductAddedAlert),
+  { ssr: false },
 )
+
+interface ItemGroup {
+  id: string
+  name: string
+  parent: string | null
+}
 
 interface NavigationBarProps {
   ItemGroups: ItemGroup[] | null
 }
 
+const Skeleton = ({ className }: { className?: string }) => (
+  <div className={`animate-pulse bg-muted rounded ${className}`} />
+)
+
 export function NavigationBar({ ItemGroups }: NavigationBarProps) {
   const groups = (Array.isArray(ItemGroups) ? ItemGroups : []) as ItemGroup[]
 
-  const itemsMarkup = groups.length
-    ? groups.map((itemGroup) => (
-        <li
-          data-content={itemGroup.parent}
-          className={cn(
-            "menu__item not-supports-[container-type]:md:h-full relative z-50 supports-[container-type]:@3xl:h-full",
-            { menu__dropdown: !itemGroup?.parent  }
-          )}
-          key={itemGroup.id ?? itemGroup.name}
-        >
-          <Link  href={`/category/plp/${itemGroup.id}`}>
-            {itemGroup.name}
-          </Link>
-        </li>
-      ))
-    : null
-    
   return (
-    <header className="mega-navbar sticky top-0 z-50 mx-auto my-0 flex w-full flex-wrap content-center items-center justify-between border-b border-black/10 bg-white p-4 py-6">
-      <div className="not-supports-[container-type]:md:mx-auto not-supports-[container-type]:md:w-full not-supports-[container-type]:md:max-w-container-md not-supports-[container-type]:md:px-0 flex justify-start px-4 supports-[container-type]:@3xl:mx-auto supports-[container-type]:@3xl:w-full supports-[container-type]:@3xl:max-w-container-md supports-[container-type]:@3xl:px-0">
-        <Link
-          prefetch={false}
-          href="/"
-          className="brand not-supports-[container-type]:md:flex mr-20 hidden items-center text-xl font-bold supports-[container-type]:@3xl:flex"
-        >
-          Hinsell
-        </Link>
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden hover:bg-accent transition-colors"
+              aria-label="Toggle menu"
+            >
+             <Menu />
+            </Button>
 
-        <section className="navbar__left not-supports-[container-type]:md:hidden flex w-full justify-between supports-[container-type]:@3xl:hidden">
-          <button className="burger" id="burger" aria-label="open menu" aria-controls="menu">
-            <span className="burger-line"></span>
-            <span className="burger-line"></span>
-            <span className="burger-line"></span>
-          </button>
-          <Link prefetch={false} href="/" className="brand flex items-center text-xl font-bold">
-            Hinsell
-          </Link>
-          <div className="menu-actions absolute right-4 flex items-center justify-center gap-2">
-            <Favorites className="not-supports-[container-type]:md:hidden flex supports-[container-type]:@3xl:hidden" />
-            <Suspense fallback={<Skeleton className="size-8" />}>
-              <Cart className="not-supports-[container-type]:md:hidden flex supports-[container-type]:@3xl:hidden" />
-            </Suspense>
-            <SearchButton />
-          </div>
-          <ProductAddedAlert className="not-supports-[container-type]:md:hidden supports-[container-type]:@3xl:hidden" />
-        </section>
-        <section className="navbar__center not-supports-[container-type]:md:justify-center w-full supports-[container-type]:@3xl:justify-center">
-          <span className="overlay"></span>
-          <div className="menu w-full" id="menu">
-            <div className="menu__header">
-              <span className="menu__arrow">
-                <i className="rotate-90">
-                  <ChevronIcon />
-                </i>
+            <Link href="/" className="flex items-center space-x-2 group">
+              <span className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                Hinsell
               </span>
-              <span className="menu__title"></span>
-            </div>
-            <div className="menu__inner flex w-full justify-between">
-              <ul className="not-supports-[container-type]:md:mt-0 not-supports-[container-type]:md:w-auto not-supports-[container-type]:md:flex-row not-supports-[container-type]:md:items-center not-supports-[container-type]:md:justify-start not-supports-[container-type]:xl:px-0 mt-10 flex w-full flex-col gap-4 px-4 supports-[container-type]:@3xl:mt-0 supports-[container-type]:@3xl:w-auto supports-[container-type]:@3xl:flex-row supports-[container-type]:@3xl:items-center supports-[container-type]:@3xl:justify-start supports-[container-type]:@7xl:px-0">
-                {itemsMarkup}
-              </ul>
-              <div className="relative ml-auto flex items-center">
-                <button
-                  className="menu-close-button not-supports-[container-type]:md:hidden absolute right-3 top-0 bg-transparent supports-[container-type]:@3xl:hidden"
-                  aria-label="close menu"
-                  aria-controls="menu"
-                >
-                  <CloseIcon className="size-5" />
-                </button>
-                <Autocomplete className="mr-6" />
-                <div className="flex gap-2">
-                  <Favorites className="not-supports-[container-type]:md:flex hidden supports-[container-type]:@3xl:flex" />
-                  <Cart className="not-supports-[container-type]:md:flex hidden supports-[container-type]:@3xl:flex" />
-                  <ProductAddedAlert className="not-supports-[container-type]:md:block hidden supports-[container-type]:@3xl:block" />
-                </div>
-              </div>
-            </div>
+            </Link>
           </div>
-        </section>
+
+          <nav className="hidden md:flex items-center space-x-8">
+            {groups.map((itemGroup) => (
+              <Link
+                key={itemGroup.id ?? itemGroup.name}
+                href={`/category/plp/${itemGroup.id}`}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 relative group"
+              >
+                {itemGroup.name}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-200 group-hover:w-full" />
+              </Link>
+            ))}
+          </nav>
+
+          <Autocomplete/>
+
+          <div className="flex items-center gap-1">
+
+
+            <Favorites className="hover:bg-accent transition-colors" />
+
+            <Suspense fallback={<Skeleton className="h-9 w-9" />}>
+              <Cart className="hover:bg-accent transition-colors" />
+            </Suspense>
+          </div>
+        </div>
+
+          <div className="md:hidden border-t border-border animate-in slide-in-from-top-2 duration-200">
+            <nav className="py-4 space-y-1">
+              {groups.map((itemGroup) => (
+                <Link
+                  key={itemGroup.id ?? itemGroup.name}
+                  href={`/category/plp/${itemGroup.id}`}
+                  className="block px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg mx-2 transition-all duration-200"
+                >
+                  {itemGroup.name}
+                </Link>
+              ))}
+            </nav>
+          </div>
       </div>
+      <Suspense fallback={null}>
+        <ProductAddedAlert />
+      </Suspense>
     </header>
   )
 }
