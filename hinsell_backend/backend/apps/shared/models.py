@@ -5,6 +5,9 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 import magic
 from apps.core_apps.general import AuditableModel
+import os
+import uuid
+import datetime
 
 class StableFileExtensionValidator(FileExtensionValidator):
     """Custom FileExtensionValidator to ensure consistent serialization in migrations."""
@@ -24,6 +27,7 @@ def validate_file_size(value):
         'image': 10 * 1024 * 1024,  # 10MB
         'video': 100 * 1024 * 1024,  # 100MB
         'document': 10 * 1024 * 1024,  # 10MB
+        'other': 10 * 1024 * 1024,  # 10MB
     }
     extension = value.name.lower().rsplit('.', 1)[-1]
     extension = f".{extension}"
@@ -36,8 +40,14 @@ def validate_file_size(value):
     if value.size > max_size:
         raise ValidationError(_('File size cannot exceed %(max_size)s MB.'), params={'max_size': max_size // (1024 * 1024)})
 
+def media_upload_to(instance, filename):
+    """Generate unique upload path to prevent filename collisions and improve distribution."""
+    ext = os.path.splitext(filename)[1]
+    new_filename = f"{uuid.uuid4().hex}{ext}"
+    return os.path.join('media', datetime.datetime.now().strftime('%Y/%m/%d'), new_filename)
+
 class Media(AuditableModel):
-    """Centralized media management with stable extension validation."""
+    """Centralized media management with stable extension validation and improved storage."""
 
     ALLOWED_EXTENSIONS = sorted(
         sum(getattr(settings, 'ALLOWED_MEDIA_EXTENSIONS', {
@@ -54,7 +64,7 @@ class Media(AuditableModel):
     }
 
     file = models.FileField(
-        upload_to='media/%Y/%m/%d/',
+        upload_to=media_upload_to,
         verbose_name=_("File"),
         help_text=_("Media file (image, video, document)"),
         validators=[
@@ -110,32 +120,14 @@ class Media(AuditableModel):
             models.Index(fields=['is_deleted']),
         ]
 
-    def _detect_media_type(self) -> str:
-        """Detect media type based on file extension and MIME type."""
+    def _get_mime_type(self) -> str:
+        """Get MIME type of the file."""
         if not self.file:
-            return 'other'
-
-        extension = self.file.name.lower().rsplit('.', 1)[-1]
-        extension = f".{extension}"
-
-        ext_map = settings.ALLOWED_MEDIA_EXTENSIONS
-        for media_type, extensions in ext_map.items():
-            if extension in extensions:
-                mime = magic.Magic(mime=True)
-                mime_type = mime.from_buffer(self.file.read(1024))
-                self.file.seek(0)
-                if mime_type in self.ALLOWED_MIME_TYPES.get(media_type, []):
-                    return media_type
-        return 'other'
-
-    def validate_mime_type(self):
-        """Validate file MIME type."""
+            return ''
         mime = magic.Magic(mime=True)
         mime_type = mime.from_buffer(self.file.read(1024))
         self.file.seek(0)
-        allowed_mimes = sum(self.ALLOWED_MIME_TYPES.values(), [])
-        if mime_type not in allowed_mimes:
-            raise ValidationError(_('Unsupported file type: %(mime)s'), params={'mime': mime_type})
+        return mime_type
 
     def save(self, *args, **kwargs):
         """Set media_type, file_size, and image_dimensions before saving."""
@@ -149,15 +141,26 @@ class Media(AuditableModel):
                         self.image_dimensions = f"{img.width}x{img.height}"
                 except Exception:
                     self.image_dimensions = None
-        self.media_type = self._detect_media_type()
         super().save(*args, **kwargs)
 
     def clean(self):
-        """Validate file presence and MIME type."""
+        """Validate file presence, MIME type, and set media_type."""
         super().clean()
         if not self.file:
             raise ValidationError({'file': _('Media file is required.')})
-        self.validate_mime_type()
+        
+        mime_type = self._get_mime_type()
+        extension = self.file.name.lower().rsplit('.', 1)[-1]
+        extension = f".{extension}"
+        ext_map = settings.ALLOWED_MEDIA_EXTENSIONS
+        matched = False
+        for m_type, extensions in ext_map.items():
+            if extension in extensions and mime_type in self.ALLOWED_MIME_TYPES.get(m_type, []):
+                self.media_type = m_type
+                matched = True
+                break
+        if not matched:
+            raise ValidationError(_('Unsupported file type or mismatch between extension and content: %(mime)s'), params={'mime': mime_type})
 
     def __str__(self):
         return f"{self.media_type} - {self.file.name}"
