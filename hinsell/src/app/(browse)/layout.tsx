@@ -47,7 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Footer />
           <Modals />
           <CartView />
-          <Toaster position="bottom-left" />
+          <Toaster position="bottom-left"/>
           <DraftToolbar />
           <Suspense>
             <FlagValues />

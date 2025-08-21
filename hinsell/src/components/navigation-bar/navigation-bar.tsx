@@ -49,7 +49,7 @@ export function NavigationBar({ ItemGroups }: NavigationBarProps) {
           href="/"
           className="brand not-supports-[container-type]:md:flex mr-20 hidden items-center text-xl font-bold supports-[container-type]:@3xl:flex"
         >
-          Hinseel
+          Hinsell
         </Link>
 
         <section className="navbar__left not-supports-[container-type]:md:hidden flex w-full justify-between supports-[container-type]:@3xl:hidden">
@@ -59,7 +59,7 @@ export function NavigationBar({ ItemGroups }: NavigationBarProps) {
             <span className="burger-line"></span>
           </button>
           <Link prefetch={false} href="/" className="brand flex items-center text-xl font-bold">
-            Hinseel
+            Hinsell
           </Link>
           <div className="menu-actions absolute right-4 flex items-center justify-center gap-2">
             <Favorites className="not-supports-[container-type]:md:hidden flex supports-[container-type]:@3xl:hidden" />

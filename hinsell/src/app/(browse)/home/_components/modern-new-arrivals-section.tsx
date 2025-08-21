@@ -3,6 +3,7 @@
 import { ProductCard } from "components/product-card"
 import { Item } from "@/core/generated/schemas"
 import { useRef } from "react"
+import { ArrowUpRight } from "lucide-react"
 
 export const ModernNewArrivalsSection = ({ products }: { products: Item[] }) => {
   const productRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -53,11 +54,12 @@ export const ModernNewArrivalsSection = ({ products }: { products: Item[] }) => 
         <div className="mt-12 text-center">
           <a
             href="/search?sort=created_at"
-            className="inline-flex items-center gap-2 text-sm font-medium text-foreground underline-offset-4 transition-all hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-medium text-foreground underline-offset-4 transition-all group hover:underline"
           >
             View all new arrivals
             <svg
-              className="size-4 transition-transform group-hover:translate-x-1"
+              // className="size-4 ml-1 "
+              className="size-4 opacity-0 group-hover:opacity-100 duration-200 transition-transform group-hover:translate-x-1"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

@@ -286,7 +286,7 @@ export function HomepageCarousel({ slides = [], className }: HomepageCarouselPro
                         {slide.product && (
                           <div className="absolute bottom-4 right-4 hidden w-[200px] md:block lg:bottom-8 lg:right-8 lg:w-[240px]">
                             <CompactProductCard
-                              {...slide.product}
+                              product={slide.product}
                               selectedVariant={slide.product.selectedVariant}
                               variantOptions={slide.variantOptions}
                               priority={index === 0}

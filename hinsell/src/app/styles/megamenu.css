@@ -380,6 +380,8 @@
   transition: 0.25s;
 }
 
+
+
 @media (max-width: 767px) {
   .menu .menu__inner .menu__item .menu__link > i {
     margin-left: 10px;

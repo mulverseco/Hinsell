@@ -4,9 +4,7 @@ import { Button } from "components/ui/button-old"
 import { CloseIcon } from "components/icons/close-icon"
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "components/ui/sheet"
 import { LoadingDots } from "components/loading-dots"
-
 import { cn } from "utils/cn"
-
 
 import { CartItem } from "./cart-item"
 

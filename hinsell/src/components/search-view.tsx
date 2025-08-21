@@ -68,13 +68,13 @@ function makeBreadcrumbs(collection?: any) {
 export async function SearchView({ searchParams, disabledFacets, collection, basePath }: SearchViewProps) {
   const { q, sortBy, page, ...rest } = searchParamsCache.parse(searchParams)
 
-  const filter = buildSearchFilter({
-    collection,
-    params: rest,
-    separator: HIERARCHICAL_SEPARATOR,
-  })
+  // const filter = buildSearchFilter({
+  //   collection,
+  //   params: rest,
+  //   separator: HIERARCHICAL_SEPARATOR,
+  // })
 
-  const hasVendorFilter = rest.vendors && rest.vendors.length > 0
+  // const hasVendorFilter = rest.vendors && rest.vendors.length > 0
   // const { facetDistribution, hits, totalPages, totalHits, independentFacetDistribution } = await getFilteredProducts(
   //   q,
   //   sortBy,
@@ -84,7 +84,7 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
   //   hasVendorFilter
   // )
 
-  const { getPageDisplayTypeByHandle } = await import("utils/get-page-display-type")
+  // const { getPageDisplayTypeByHandle } = await import("utils/get-page-display-type")
 
   // const { hits: allCategories } = await getCategories({
   //   hitsPerPage: 1000,

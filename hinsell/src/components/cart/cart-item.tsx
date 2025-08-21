@@ -4,8 +4,10 @@ import { cn } from "utils/cn"
 import { filterImagesByVisualOption, getVisualOptionValueFromCombination } from "utils/visual-variant-utils"
 import { ChangeQuantityButton } from "./change-quantity-button"
 import { DeleteButton } from "./delete-button"
+import { Item } from "@/core/generated/schemas"
 
 interface CartItemProps {
+  product: Item
   onProductClick: () => void
   className?: string
 }
@@ -45,8 +47,8 @@ export function CartItem(props: CartItemProps) {
               quantity={props.quantity - 1}
               productId={props.merchandise.product.id}
             >
-              {"-"}
-              </ChangeQuantityButton>
+            {"-"}
+            </ChangeQuantityButton>
             <div className="flex cursor-not-allowed items-center gap-2 text-black">{props.quantity}</div>
             <ChangeQuantityButton
               id={props.id}
@@ -54,9 +56,8 @@ export function CartItem(props: CartItemProps) {
               quantity={props.quantity + 1}
               productId={props.merchandise.product.id}
             >
-
-              {"+"}
-              </ChangeQuantityButton>
+            {"+"}
+            </ChangeQuantityButton>
 
           </div>
         </div>

@@ -50,9 +50,9 @@ export function HitsSection({ hits, basePath }: HitsSectionProps) {
             style={{ "--stagger": idx } as React.CSSProperties}
           >
             <ProductCard
+              item={singleResult}
               priority={priority}
-              {...singleResult}
-              href={basePath ? `/${basePath}/product/${singleResult.handle}` : undefined}
+              href={basePath ? `/${basePath}/product/${singleResult.id}` : undefined}
             />
           </div>
         )

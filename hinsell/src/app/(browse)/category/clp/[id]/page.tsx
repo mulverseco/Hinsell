@@ -14,7 +14,7 @@ interface CategoryPageProps {
 export async function generateMetadata(props: CategoryPageProps): Promise<Metadata> {
   const params = await props.params
   return {
-    metadataBase: new URL(process.env.LIVE_URL!),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
     title: `${params.id} | Enterprise Commerce`,
     description: "In excepteur elit mollit in.",
   }

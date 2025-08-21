@@ -34,8 +34,8 @@ export function generateJsonLd(item: Item, slug: string) {
       price: item.sales_price || item.wholesale_price || "0",
       priceCurrency: "USD",
       itemCondition: "https://schema.org/NewCondition",
-      availability:
-        item.maximum_stock && item.maximum_stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      // availability:
+      //   item.maximum_stock && item.maximum_stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       url: `${baseUrl}/product/${slug}`,
     },
     ...(item.average_rating &&

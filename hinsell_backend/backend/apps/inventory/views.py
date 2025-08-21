@@ -18,14 +18,14 @@ class StoreGroupViewSet(BaseViewSet):
     ordering_fields = ['code', 'name', 'created_at', 'updated_at']
     ordering = ['code']
     
-    # permission_classes_by_action = {
-    #     'list': [IsAuthenticated],
-    #     'retrieve': [IsAuthenticated],
-    #     'create': [IsAuthenticated, HasRolePermission],
-    #     'update': [IsAuthenticated, HasRolePermission],
-    #     'partial_update': [IsAuthenticated, HasRolePermission],
-    #     'destroy': [IsAuthenticated, HasRolePermission],
-    # }
+    permission_classes_by_action = {
+        'list': [],
+        'retrieve': [],
+        'create': [IsAuthenticated, HasRolePermission],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
+    } 
 
 class ItemGroupViewSet(BaseViewSet):
     """ViewSet for ItemGroup model."""
@@ -38,14 +38,14 @@ class ItemGroupViewSet(BaseViewSet):
     ordering_fields = ['code', 'name', 'created_at', 'updated_at', 'is_featured']
     ordering = ['code']
     
-    # permission_classes_by_action = {
-    #     'list': [IsAuthenticated],
-    #     'retrieve': [IsAuthenticated],
-    #     'create': [IsAuthenticated, HasRolePermission],
-    #     'update': [IsAuthenticated, HasRolePermission],
-    #     'partial_update': [IsAuthenticated, HasRolePermission],
-    #     'destroy': [IsAuthenticated, HasRolePermission],
-    # }
+    permission_classes_by_action = {
+        'list': [],
+        'retrieve': [],
+        'create': [IsAuthenticated, HasRolePermission],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
+    } 
 
 class ItemViewSet(BaseViewSet):
     """ViewSet for Item model."""
@@ -58,20 +58,20 @@ class ItemViewSet(BaseViewSet):
         'track_expiry', 'track_batches'
     ]
     search_fields = [
-        'code', 'name', 'slug', 'manufacturer', 'brand', 'scientific_name',
+        'code', 'name', 'slug', 'manufacturer', 'brand',
         'active_ingredient', 'description', 'short_description', 'tags'
     ]
     ordering_fields = ['code', 'name', 'sales_price', 'average_rating', 'created_at', 'updated_at']
     ordering = ['-created_at']
     
-    # permission_classes_by_action = {
-    #     'list': [IsAuthenticated],
-    #     'retrieve': [IsAuthenticated],
-    #     'create': [IsAuthenticated, HasRolePermission],
-    #     'update': [IsAuthenticated, HasRolePermission],
-    #     'partial_update': [IsAuthenticated, HasRolePermission],
-    #     'destroy': [IsAuthenticated, HasRolePermission],
-    # }
+    permission_classes_by_action = {
+        'list': [],
+        'retrieve': [],
+        'create': [IsAuthenticated, HasRolePermission],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
+    } 
 
 class ItemUnitViewSet(BaseViewSet):
     """ViewSet for ItemUnit model."""
@@ -84,14 +84,14 @@ class ItemUnitViewSet(BaseViewSet):
     ordering_fields = ['code', 'name', 'created_at', 'updated_at']
     ordering = ['code']
     
-    # permission_classes_by_action = {
-    #     'list': [IsAuthenticated],
-    #     'retrieve': [IsAuthenticated],
-    #     'create': [IsAuthenticated, HasRolePermission],
-    #     'update': [IsAuthenticated, HasRolePermission],
-    #     'partial_update': [IsAuthenticated, HasRolePermission],
-    #     'destroy': [IsAuthenticated, HasRolePermission],
-    # }
+    permission_classes_by_action = {
+        'list': [],
+        'retrieve': [],
+        'create': [IsAuthenticated, HasRolePermission],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
+    } 
 
 class ItemBarcodeViewSet(BaseViewSet):
     """ViewSet for ItemBarcode model."""
@@ -104,14 +104,14 @@ class ItemBarcodeViewSet(BaseViewSet):
     ordering_fields = ['barcode', 'created_at', 'updated_at']
     ordering = ['barcode']
     
-    # permission_classes_by_action = {
-    #     'list': [IsAuthenticated],
-    #     'retrieve': [IsAuthenticated],
-    #     'create': [IsAuthenticated, HasRolePermission],
-    #     'update': [IsAuthenticated, HasRolePermission],
-    #     'partial_update': [IsAuthenticated, HasRolePermission],
-    #     'destroy': [IsAuthenticated, HasRolePermission],
-    # }
+    permission_classes_by_action = {
+        'list': [],
+        'retrieve': [],
+        'create': [IsAuthenticated, HasRolePermission],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
+    } 
 
 class InventoryBalanceViewSet(BaseViewSet):
     """ViewSet for InventoryBalance model."""
@@ -127,11 +127,11 @@ class InventoryBalanceViewSet(BaseViewSet):
     ordering_fields = ['available_quantity', 'last_movement_date', 'created_at', 'updated_at']
     ordering = ['-last_movement_date']
     
-    # permission_classes_by_action = {
-    #     'list': [],
-    #     'retrieve': [],
-    #     'create': [IsAuthenticated, HasRolePermission],
-    #     'update': [IsAuthenticated, HasRolePermission],
-    #     'partial_update': [IsAuthenticated, HasRolePermission],
-    #     'destroy': [IsAuthenticated, HasRolePermission],
-    # } 
+    permission_classes_by_action = {
+        'list': [],
+        'retrieve': [],
+        'create': [IsAuthenticated, HasRolePermission],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
+    } 

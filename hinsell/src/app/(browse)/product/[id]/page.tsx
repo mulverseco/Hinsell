@@ -59,7 +59,7 @@ export default async function Product(props: ProductProps) {
   const item: Item = product.data
 
   let combination
-  let hasInvalidOptions = false
+  const hasInvalidOptions = false
 
   // if (Object.keys(multiOptions).length > 0) {
   //   hasInvalidOptions = !hasValidMultiOption(item.units?.[0]?.name || "", multiOptions)
@@ -130,12 +130,12 @@ export default async function Product(props: ProductProps) {
             <AddToCartButton className="mt-4" product={item} combination={combination} />
             <FavoriteMarker handle={id} />
             <FaqSectionClient defaultOpenSections={[nameToSlug(getDefaultFaqAccordionItemValue()[0])]}>
-              {/* <FaqAccordionItem title={getDefaultFaqAccordionItemValue()[0]}> */}
-                {/* <ShopifyRichText
+              {/* <FaqAccordionItem title={getDefaultFaqAccordionItemValue()[0]} >
+                <ShopifyRichText
                   data={item.internal_notes || getDefaultFaqAccordionItemRichText()}
                   className="prose prose-sm max-w-none"
-                /> */}
-              {/* </FaqAccordionItem> */}
+                />
+              </FaqAccordionItem> */}
               <FaqAccordionItem title="Size and Fit">
                 <p>
                   {item.size && `Size: ${item.size}. `}

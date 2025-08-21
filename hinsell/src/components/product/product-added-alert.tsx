@@ -23,8 +23,8 @@ export function ProductAddedAlert({ className }: { className?: string }) {
 
   const visualOptionValue = getVisualOptionValueFromCombination(combination)
 
-  const variantImages = filterImagesByVisualOption(product.images, visualOptionValue || null)
-  const variantImage = variantImages[0] || product.featuredImage
+  const variantImages = filterImagesByVisualOption(product?.media || [], visualOptionValue || null)
+  const variantImage = variantImages[0] || product?.media[0]?.file || ""
 
   return (
     <Alert
@@ -40,13 +40,13 @@ export function ProductAddedAlert({ className }: { className?: string }) {
             <Image
               width={48}
               height={48}
-              alt={variantImage?.altText || product.title}
+              alt={variantImage?.alt_text || product.name || "Product Image"}
               className="z-0 select-none rounded object-cover transition-transform group-hover:scale-105"
-              src={variantImage?.url || "/default-product-image.svg"}
+              src={variantImage?.file || "/default-product-image.svg"}
               sizes="(max-width: 450px) 150px, 300px"
             />
             <div className="flex flex-col">
-              <span className="font-bold">{product.title}</span>
+              <span className="font-bold">{product.name}</span>
               <span className="text-xs text-gray-400">{combination?.title}</span>
             </div>
           </div>

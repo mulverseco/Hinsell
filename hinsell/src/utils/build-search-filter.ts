@@ -1,6 +1,6 @@
+import { ItemGroup } from "@/core/generated/schemas"
 import { searchParamsCache } from "components/search-view"
 import { ComparisonOperators, FilterBuilder, LogicalOperators } from "lib/algolia/filter-builder"
-import type { PlatformCollection } from "lib/shopify/types"
 
 type SearchParams = Omit<Awaited<ReturnType<typeof searchParamsCache.parse>>, "page" | "sortBy" | "q">
 
@@ -9,14 +9,14 @@ export function buildSearchFilter({
   params,
   separator,
 }: {
-  collection?: PlatformCollection | undefined
+  collection?: ItemGroup | undefined
   params: SearchParams
   separator: string
 }): string {
   const filter = new FilterBuilder()
 
   if (collection) {
-    filter.where("collections.handle", collection.handle)
+    filter.where("collections.handle", collection.slug)
   }
 
   addCategoryFilters(filter, params.categories, separator)

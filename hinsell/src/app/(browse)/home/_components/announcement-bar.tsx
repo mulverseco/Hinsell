@@ -5,7 +5,7 @@ export function AnnouncementBar({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex h-[40px] w-full items-center justify-center text-nowrap bg-black text-center text-base/[18px] text-white",
+        "flex h-[40px] w-full items-center justify-center text-nowrap bg-gradient-to-t from-white to-[#fce26a] text-center text-base/[25px] text-black",
         className
       )}
     >

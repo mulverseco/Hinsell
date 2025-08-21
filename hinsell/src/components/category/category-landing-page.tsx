@@ -3,7 +3,6 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
-import type { CommerceProduct } from "types"
 import { ProductCard } from "components/product-card"
 import { Button } from "components/ui/button"
 import { Item, ItemGroup } from "@/core/generated/schemas"
@@ -67,7 +66,7 @@ export function CategoryLandingPage({ collection, products, basePath }: Category
           {}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {displayedProducts.map((product) => (
-              <ProductCard key={product.id} {...product} className="h-full" prefetch={false} />
+              <ProductCard item={product} key={product.id} className="h-full" prefetch={false} />
             ))}
           </div>
 
@@ -97,7 +96,7 @@ export function CategoryLandingPage({ collection, products, basePath }: Category
       
       {products.length === 0 && (
         <div className="py-16 text-center">
-          <h3 className="text-lg font-medium text-gray-900">No products found</h3>
+          <h3 className="text-lg font-medium">No products found</h3>
           <p className="mt-2 text-gray-500">
             We&apos;re working on adding products to this collection. Check back soon!
           </p>

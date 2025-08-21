@@ -1,6 +1,5 @@
 "use client"
 
-import { PlatformVariant } from "lib/shopify/types"
 import { cn } from "utils/cn"
 import { Combination } from "utils/product-options-utils"
 import { createMultiOptionSlug, getMultiOptionFromSlug } from "utils/visual-variant-utils"
@@ -11,7 +10,7 @@ import { ChevronDown } from "lucide-react"
 import { useRef } from "react"
 
 interface VariantDropdownsProps {
-  variants: PlatformVariant[]
+  variants: any[]
   className?: string
   combination: Combination | undefined
   handle: string

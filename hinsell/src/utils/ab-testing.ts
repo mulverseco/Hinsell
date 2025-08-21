@@ -1,7 +1,7 @@
 export function getBucket(buckets: readonly string[]) {
   let n = cryptoRandom() * 100
 
-  let percentage = 100 / buckets.length
+  const percentage = 100 / buckets.length
 
   return (
     buckets.find(() => {

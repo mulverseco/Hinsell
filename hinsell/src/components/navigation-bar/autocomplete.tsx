@@ -69,12 +69,12 @@ export function Autocomplete({ className }: AutocompleteProps) {
         {hasResults &&
           results.map((singleProduct) => (
             <Link
-              href={`${isAi ? "/ai/product" : "/product"}/${singleProduct.handle}`}
+              href={`${isAi ? "/ai/product" : "/product"}/${singleProduct.slug}`}
               className="flex h-[70px] cursor-pointer items-center gap-4 border-b border-neutral-200 p-4 last:rounded-b-md last:border-0 hover:bg-neutral-50"
               key={singleProduct.id}
               onClick={() => setIsOpen(false)}
             >
-              <p className="line-clamp-2 text-xs">{getHighlightedText(singleProduct.title, query)}</p>
+              <p className="line-clamp-2 text-xs">{getHighlightedText(singleProduct.name, query)}</p>
             </Link>
           ))}
         {status === "error" && (

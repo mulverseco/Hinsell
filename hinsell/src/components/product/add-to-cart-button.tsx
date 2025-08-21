@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 
 
@@ -14,9 +14,8 @@ import type { Combination } from "utils/product-options-utils"
 import { useAddProductStore } from "stores/add-product-store"
 import { useCartStore } from "stores/cart-store"
 
-import type { CommerceProduct } from "types"
-
 import { COOKIE_CART_ID } from "constants/index"
+import { Item } from "@/core/generated/schemas"
 
 export function AddToCartButton({
   className,
@@ -24,24 +23,21 @@ export function AddToCartButton({
   combination,
 }: {
   className?: string
-  product: CommerceProduct
+  product: Item
   combination: Combination | any | undefined
 }) {
   const [isPending, setIsPending] = useState(false)
-  const [hasAnyAvailable, setHasAnyAvailable] = useState(true)
   const setProduct = useAddProductStore((s) => s.setProduct)
   const clean = useAddProductStore((s) => s.clean)
   const cart = useCartStore((s) => s.cart)
   const refresh = useCartStore((s) => s.refresh)
   const setCheckoutReady = useCartStore((s) => s.setCheckoutReady)
 
-  const disabled = !hasAnyAvailable || !combination?.availableForSale || isPending
+ 
 
   const handleClick = async () => {
-    if (!combination?.id) return
-
+    if (!product?.id) return
     setIsPending(true)
-
     setTimeout(() => {
       setProduct({ product, combination })
       setIsPending(false)
@@ -58,25 +54,11 @@ export function AddToCartButton({
     refresh()
   }
 
-  useEffect(() => {
-    const checkStock = async () => {
-      const cartId = getCookie(COOKIE_CART_ID)
-      // const itemAvailability = await getItemAvailability({
-      //   cartId,
-      //   productId: product.id,
-      //   variantId: combination?.id,
-      // })
-
-      // itemAvailability && setHasAnyAvailable(itemAvailability.inCartQuantity < (combination?.quantityAvailable || 0))
-    }
-
-    checkStock()
-  }, [combination?.id, isPending, combination?.quantityAvailable, cart?.items, product.id])
 
   return (
     <Button
       onClick={handleClick}
-      disabled={isPending || disabled}
+      disabled={isPending }
       variant="default"
       className={cn(
         "mx-auto w-full rounded-md p-10 py-4 transition-all hover:bg-black/85 md:w-full md:rounded-md md:py-4",

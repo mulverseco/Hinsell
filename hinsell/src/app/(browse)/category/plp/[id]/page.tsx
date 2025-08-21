@@ -1,8 +1,6 @@
 import type { Metadata } from "next"
-import { env } from "env.mjs"
 import { SearchParamsType } from "types"
 import { CategoryPLPView } from "components/category/category-plp-view"
-// import { getCategories } from "lib/algolia"
 
 export const runtime = "nodejs"
 export const revalidate = 86400
@@ -17,21 +15,12 @@ interface ProductListingPageProps {
 export async function generateMetadata(props: ProductListingPageProps): Promise<Metadata> {
   const params = await props.params
   return {
-    metadataBase: new URL(env.LIVE_URL!),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
     title: `${params.id} | Enterprise Commerce`,
     description: "In excepteur elit mollit in.",
   }
 }
 
-export async function generateStaticParams() {
-
-  // const { hits } = await getCategories({
-  //   hitsPerPage: 50,
-  //   attributesToRetrieve: ["handle"],
-  // })
-
-  // return hits.map(({ handle }) => ({ slug: handle }))
-}
 
 export default async function ProductListingPage(props: ProductListingPageProps) {
   const params = await props.params

@@ -17,7 +17,7 @@ export const EnterpriseCategoryCard = ({ category, priority = false, className }
 
   return (
     <Link
-      href={`/category/${category.slug || category.id}`}
+      href={`/category/${category.id || category.slug}`}
       className={cn(
         "group relative block h-full overflow-hidden rounded-2xl bg-background transition-all duration-500",
         "hover:scale-[1.02] hover:shadow-2xl",

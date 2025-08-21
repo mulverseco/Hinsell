@@ -5,7 +5,7 @@ import { cn } from "utils/cn"
 import type { CommerceProduct } from "types"
 
 type SideImagesProps = {
-  images: CommerceProduct["images"]
+  images: CommerceProduct["media"]
   api: CarouselApi
   setThumbsApi: Dispatch<SetStateAction<CarouselApi>>
   current: number
@@ -29,15 +29,15 @@ export const SideImages = ({ className, images, api, setThumbsApi, current }: Si
         opts={{ skipSnaps: true, watchDrag: false }}
       >
         <CarouselContent className="mt-0 w-full flex-row justify-center gap-4 md:flex-col">
-          {images.map((image, index) => (
+          {images?.map((image, index) => (
             <div
               className={cn("", index === current && "border-2 border-black")}
-              key={"thumbnail_" + image.url}
+              key={"thumbnail_" + image.file}
               onMouseEnter={() => onThumbClick(index)}
             >
               <Image
-                alt={image.altText || `Product image ${index + 1}`}
-                src={image.url || `/default-product-image.svg`}
+                alt={image.alt_text || `Product image ${index + 1}`}
+                src={image.file || `/default-product-image.svg`}
                 width={100}
                 height={100}
                 sizes="100px"

@@ -8,7 +8,7 @@ import { cn } from "utils/cn"
 import type { CommerceProduct } from "types"
 
 interface ProductImagesProps {
-  images: CommerceProduct["images"]
+  images: CommerceProduct["media"]
   initialActiveIndex?: number
 }
 
@@ -43,7 +43,7 @@ export const ProductImages = ({ images, initialActiveIndex = 0 }: ProductImagesP
       <CenterSection
         setApi={setApi}
         images={images}
-        className={cn("md:col-span-6", images.length > 1 ? "md:col-start-2" : "md:col-start-1")}
+        className={cn("md:col-span-6", images?.length > 1 ? "md:col-start-2" : "md:col-start-1")}
       />
       {images.length > 1 && (
         <SideImages
