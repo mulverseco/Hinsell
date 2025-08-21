@@ -8,6 +8,9 @@ from apps.core_apps.general import AuditableModel
 import os
 import uuid
 import datetime
+from io import BytesIO
+from django.core.files.base import ContentFile
+from PIL import Image, ExifTags
 
 class StableFileExtensionValidator(FileExtensionValidator):
     """Custom FileExtensionValidator to ensure consistent serialization in migrations."""
@@ -24,10 +27,10 @@ class StableFileExtensionValidator(FileExtensionValidator):
 def validate_file_size(value):
     """Validate file size (e.g., max 10MB for images/documents, 100MB for videos)."""
     max_sizes = {
-        'image': 10 * 1024 * 1024,  # 10MB
-        'video': 100 * 1024 * 1024,  # 100MB
-        'document': 10 * 1024 * 1024,  # 10MB
-        'other': 10 * 1024 * 1024,  # 10MB
+        'image': getattr(settings, 'MEDIA_MAX_IMAGE_SIZE', 10 * 1024 * 1024),  # Default 10MB
+        'video': getattr(settings, 'MEDIA_MAX_VIDEO_SIZE', 100 * 1024 * 1024),  # Default 100MB
+        'document': getattr(settings, 'MEDIA_MAX_DOCUMENT_SIZE', 10 * 1024 * 1024),  # Default 10MB
+        'other': getattr(settings, 'MEDIA_MAX_OTHER_SIZE', 10 * 1024 * 1024),  # Default 10MB
     }
     extension = value.name.lower().rsplit('.', 1)[-1]
     extension = f".{extension}"
@@ -47,7 +50,7 @@ def media_upload_to(instance, filename):
     return os.path.join('media', datetime.datetime.now().strftime('%Y/%m/%d'), new_filename)
 
 class Media(AuditableModel):
-    """Centralized media management with stable extension validation and improved storage."""
+    """Centralized media management with stable extension validation, improved storage, and image optimization."""
 
     ALLOWED_EXTENSIONS = sorted(
         sum(getattr(settings, 'ALLOWED_MEDIA_EXTENSIONS', {
@@ -64,6 +67,8 @@ class Media(AuditableModel):
     }
 
     file = models.FileField(
+        # Note: For large-scale production, configure DEFAULT_FILE_STORAGE to use cloud storage like AWS S3 via django-storages.
+        # For advanced image optimization, consider integrating with services like Cloudinary or Imgix for on-the-fly processing.
         upload_to=media_upload_to,
         verbose_name=_("File"),
         help_text=_("Media file (image, video, document)"),
@@ -129,18 +134,92 @@ class Media(AuditableModel):
         self.file.seek(0)
         return mime_type
 
+    def _handle_exif_orientation(self, img: Image) -> Image:
+        """Handle EXIF orientation to rotate the image correctly."""
+        try:
+            for orientation in ExifTags.TAGS.keys():
+                if ExifTags.TAGS[orientation] == 'Orientation':
+                    exif = dict(img._getexif().items())
+                    if orientation in exif:
+                        if exif[orientation] == 3:
+                            img = img.rotate(180, expand=True)
+                        elif exif[orientation] == 6:
+                            img = img.rotate(270, expand=True)
+                        elif exif[orientation] == 8:
+                            img = img.rotate(90, expand=True)
+                    break
+        except (AttributeError, KeyError, IndexError):
+            pass
+        return img
+
+    def _is_animated(self, img: Image) -> bool:
+        """Check if the image is animated (e.g., GIF with multiple frames)."""
+        if img.format != 'GIF':
+            return False
+        try:
+            img.seek(1)
+            img.seek(0)
+            return True
+        except EOFError:
+            return False
+
+    def _resize_image(self, img: Image) -> Image:
+        """Resize the image if it exceeds maximum dimensions while maintaining aspect ratio."""
+        max_dim = getattr(settings, 'MEDIA_IMAGE_MAX_DIM', 1920)  # Default max width/height
+        if img.width > max_dim or img.height > max_dim:
+            aspect_ratio = img.width / img.height
+            if img.width > img.height:
+                new_width = max_dim
+                new_height = int(max_dim / aspect_ratio)
+            else:
+                new_height = max_dim
+                new_width = int(max_dim * aspect_ratio)
+            img = img.resize((new_width, new_height), Image.LANCZOS)  # High-quality resampling
+        return img
+
     def save(self, *args, **kwargs):
-        """Set media_type, file_size, and image_dimensions before saving."""
-        self.full_clean()
-        if self.file:
-            self.file_size = self.file.size
-            if self.media_type == 'image':
-                try:
-                    from PIL import Image
-                    with Image.open(self.file) as img:
-                        self.image_dimensions = f"{img.width}x{img.height}"
-                except Exception:
-                    self.image_dimensions = None
+        """Set media_type, file_size, image_dimensions, optimize images (compress/convert to WebP), before saving."""
+        self.full_clean()  # Validates and sets media_type based on original file
+        if self.file and self.media_type == 'image':
+            try:
+                img = Image.open(self.file)
+                img = self._handle_exif_orientation(img)
+                img = self._resize_image(img)
+                self.image_dimensions = f"{img.width}x{img.height}"
+
+                # Prepare for WebP conversion
+                output = BytesIO()
+                is_animated = self._is_animated(img)
+                original_format = img.format.lower()
+                lossless = original_format in ['png', 'webp'] or img.mode in ['P', 'RGBA']  # Lossless for graphics/transparency
+
+                save_kwargs = {
+                    'format': 'WEBP',
+                    'lossless': lossless,
+                    'quality': getattr(settings, 'MEDIA_IMAGE_QUALITY', 85) if not lossless else 100,
+                    'method': 6,  # Highest compression level
+                    'save_all': is_animated,
+                }
+                if is_animated:
+                    frames = [frame.copy() for frame in Image.sequence.getiterator(img)]
+                    frames[0].save(output, **save_kwargs, append_images=frames[1:])
+                else:
+                    img.save(output, **save_kwargs)
+                output.seek(0)
+
+                # Update file with optimized content and change extension to .webp
+                new_name = os.path.splitext(self.file.name)[0] + '.webp'
+                self.file.save(new_name, ContentFile(output.read()), save=False)
+                self.file_size = self.file.size
+            except Exception as e:
+                # Log error and proceed without optimization if fails
+                # In production, use logging: logger.error(f"Image optimization failed: {e}")
+                self.file_size = self.file.size
+                self.image_dimensions = None
+        else:
+            if self.file:
+                self.file_size = self.file.size
+
         super().save(*args, **kwargs)
 
     def clean(self):
