@@ -3,12 +3,16 @@ import { useQuery, useQueryClient, useSuspenseQuery, useMutation } from '@tansta
 import { useOptimistic, useTransition } from 'react'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { toast } from 'sonner'
-import { itemsList, itemsRead, itemsCreate, itemsUpdate, itemsPartialUpdate, itemsDelete } from '@/core/generated/actions/items'
+import { itemsList, itemsRead, itemsItemRecommendations, itemsSimilarItems, itemsCreate, itemsUpdate, itemsPartialUpdate, itemsDelete } from '@/core/generated/actions/items'
 import {
   ItemsListResponseSchema,
   ItemsListParamsSchema,
   ItemsReadResponseSchema,
   ItemsReadParamsSchema,
+  ItemsItemRecommendationsResponseSchema,
+  ItemsItemRecommendationsParamsSchema,
+  ItemsSimilarItemsResponseSchema,
+  ItemsSimilarItemsParamsSchema,
   ItemsCreateResponseSchema,
   ItemsCreateRequestSchema,
   ItemsUpdateResponseSchema,
@@ -132,6 +136,108 @@ export function useSuspenseItemsRead(id: string, options?: { enabled?: boolean; 
     queryKey: ['itemsRead', id],
     queryFn: async () => {
       const result = await itemsRead({ params: { path: { id } } })
+      return result
+    },
+    staleTime: 180000,
+    initialData: initialData as any,
+    ...restOptions
+  })
+}
+
+/**
+ * Optimized query hook for GET /items/{id}/recommendations/
+ * Features: Smart caching, error handling, type safety
+ * @returns useQuery result with data of type z.infer<typeof ItemsItemRecommendationsResponseSchema>
+ */
+export function useItemsItemRecommendations(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ItemsItemRecommendationsResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
+  return useQuery({
+    queryKey: ['itemsItemRecommendations', id],
+    queryFn: async ({ signal }) => {
+      try {
+        const result = await itemsItemRecommendations({ params: { path: { id } } })
+        return result
+      } catch (error) {
+        handleActionError(error)
+      }
+    },
+    staleTime: 180000,
+    gcTime: 360000,
+    enabled: !!id && (options?.enabled ?? true),
+    refetchOnWindowFocus: false,
+    refetchInterval: options?.refetchInterval,
+    retry: (failureCount, error) => {
+      if (error instanceof Error && error.message.includes('4')) return false
+      return failureCount < 3
+    },
+    initialData: initialData as any,
+    ...restOptions
+  })
+}
+
+/**
+ * Suspense version for /items/{id}/recommendations/
+ * @returns useSuspenseQuery result with data of type z.infer<typeof ItemsItemRecommendationsResponseSchema>
+ */
+export function useSuspenseItemsItemRecommendations(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ItemsItemRecommendationsResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
+  return useSuspenseQuery({
+    queryKey: ['itemsItemRecommendations', id],
+    queryFn: async () => {
+      const result = await itemsItemRecommendations({ params: { path: { id } } })
+      return result
+    },
+    staleTime: 180000,
+    initialData: initialData as any,
+    ...restOptions
+  })
+}
+
+/**
+ * Optimized query hook for GET /items/{id}/similar/
+ * Features: Smart caching, error handling, type safety
+ * @returns useQuery result with data of type z.infer<typeof ItemsSimilarItemsResponseSchema>
+ */
+export function useItemsSimilarItems(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ItemsSimilarItemsResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
+  return useQuery({
+    queryKey: ['itemsSimilarItems', id],
+    queryFn: async ({ signal }) => {
+      try {
+        const result = await itemsSimilarItems({ params: { path: { id } } })
+        return result
+      } catch (error) {
+        handleActionError(error)
+      }
+    },
+    staleTime: 180000,
+    gcTime: 360000,
+    enabled: !!id && (options?.enabled ?? true),
+    refetchOnWindowFocus: false,
+    refetchInterval: options?.refetchInterval,
+    retry: (failureCount, error) => {
+      if (error instanceof Error && error.message.includes('4')) return false
+      return failureCount < 3
+    },
+    initialData: initialData as any,
+    ...restOptions
+  })
+}
+
+/**
+ * Suspense version for /items/{id}/similar/
+ * @returns useSuspenseQuery result with data of type z.infer<typeof ItemsSimilarItemsResponseSchema>
+ */
+export function useSuspenseItemsSimilarItems(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ItemsSimilarItemsResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
+  return useSuspenseQuery({
+    queryKey: ['itemsSimilarItems', id],
+    queryFn: async () => {
+      const result = await itemsSimilarItems({ params: { path: { id } } })
       return result
     },
     staleTime: 180000,

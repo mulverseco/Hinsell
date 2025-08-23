@@ -73,7 +73,7 @@ export function CarouselSection({ items, title, className }: CarouselSectionProp
               }}
             >
               {visibleItems.has(idx) ? (
-                <ProductCard prefetch={false} priority={idx === 0} {...product} />
+                <ProductCard prefetch={false} priority={idx === 0} item={product} />
               ) : (
                 <div className="aspect-square animate-pulse rounded bg-gray-100" />
               )}

@@ -1228,13 +1228,14 @@ export const AccountsDeleteParamsSchema = z.object({
 })
 
 export type AccountsDeleteParams = z.infer<typeof AccountsDeleteParamsSchema>
+
 /**
- * Request schema for POST /accounts/{id}/update-balance/
+ * Request schema for POST /accounts/{id}/update_balance/
  */
 export const AccountsUpdateBalanceRequestSchema = AccountSchema
 export type AccountsUpdateBalanceRequest = z.infer<typeof AccountsUpdateBalanceRequestSchema>
 /**
- * Success response schema for POST /accounts/{id}/update-balance/
+ * Success response schema for POST /accounts/{id}/update_balance/
  * Status: 201
  * 
  */
@@ -1242,7 +1243,7 @@ export const AccountsUpdateBalanceResponseSchema = AccountSchema
 
 export type AccountsUpdateBalanceResponse = z.infer<typeof AccountsUpdateBalanceResponseSchema>
 /**
- * Parameters schema for POST /accounts/{id}/update-balance/
+ * Parameters schema for POST /accounts/{id}/update_balance/
  * Path params: id
  * Query params: none
  * Header params: none
@@ -1254,7 +1255,11 @@ export const AccountsUpdateBalanceParamsSchema = z.object({
 })
 
 export type AccountsUpdateBalanceParams = z.infer<typeof AccountsUpdateBalanceParamsSchema>
-
+/**
+ * Success response schema for GET /api/webhooks/deliveries/
+ * Status: 200
+ * 
+ */
 export const ApiWebhooksDeliveriesListResponseSchema = z.array(WebhookDeliverySchema)
 
 export type ApiWebhooksDeliveriesListResponse = z.infer<typeof ApiWebhooksDeliveriesListResponseSchema>
@@ -4001,6 +4006,48 @@ export const ItemsDeleteParamsSchema = z.object({
 })
 
 export type ItemsDeleteParams = z.infer<typeof ItemsDeleteParamsSchema>
+/**
+ * Success response schema for GET /items/{id}/recommendations/
+ * Status: 200
+ * 
+ */
+export const ItemsItemRecommendationsResponseSchema = ItemSchema
+
+export type ItemsItemRecommendationsResponse = z.infer<typeof ItemsItemRecommendationsResponseSchema>
+/**
+ * Parameters schema for GET /items/{id}/recommendations/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const ItemsItemRecommendationsParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type ItemsItemRecommendationsParams = z.infer<typeof ItemsItemRecommendationsParamsSchema>
+/**
+ * Success response schema for GET /items/{id}/similar/
+ * Status: 200
+ * 
+ */
+export const ItemsSimilarItemsResponseSchema = ItemSchema
+
+export type ItemsSimilarItemsResponse = z.infer<typeof ItemsSimilarItemsResponseSchema>
+/**
+ * Parameters schema for GET /items/{id}/similar/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const ItemsSimilarItemsParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type ItemsSimilarItemsParams = z.infer<typeof ItemsSimilarItemsParamsSchema>
 /**
  * Success response schema for GET /keyboard-shortcuts/
  * Status: 200

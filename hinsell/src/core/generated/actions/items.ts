@@ -20,7 +20,11 @@ import {
   ItemsPartialUpdateParamsSchema,
   ItemsPartialUpdateResponseSchema,
   ItemsDeleteParamsSchema,
-  ItemsDeleteResponseSchema
+  ItemsDeleteResponseSchema,
+  ItemsItemRecommendationsParamsSchema,
+  ItemsItemRecommendationsResponseSchema,
+  ItemsSimilarItemsParamsSchema,
+  ItemsSimilarItemsResponseSchema
 } from '@/core/generated/schemas'
 
 
@@ -509,3 +513,125 @@ export const itemsDelete = actionClientWithMeta
       )
     }
   })
+
+/**
+ * Get comprehensive item recommendations including similar, trending, and alternatives.
+ * @generated from GET /items/{id}/recommendations/
+ * Features: React cache, input validation, error handling
+ */
+export const itemsItemRecommendations = cache(
+  actionClientWithMeta
+    .metadata({
+      name: "items-item-recommendations",
+      requiresAuth: false
+    })
+    .schema(ItemsItemRecommendationsParamsSchema)
+    .action(async ({ parsedInput, ctx }) => {
+      const startTime = Date.now()
+      
+      try {
+    // Validate and sanitize parameters
+    const validatedParams = await validateAndSanitizeInput(ItemsItemRecommendationsParamsSchema, parsedInput)
+
+        // Execute API call with enhanced error handling
+        const response = await apiClient.items.itemsItemRecommendations({params: validatedParams,
+          config: {
+            timeout: 30000,
+            retries: 3,
+            validateResponse: false,
+            responseSchema: ItemsItemRecommendationsResponseSchema
+          }
+        })
+        
+        // Log successful execution
+        const duration = Date.now() - startTime
+        await logActionExecution('itemsItemRecommendations', true, duration, {
+          method: 'GET',
+          path: '/items/{id}/recommendations/'
+        })
+        
+        return response.data
+      } catch (error) {
+        const duration = Date.now() - startTime
+        
+        // Enhanced error logging
+        await logActionExecution('itemsItemRecommendations', false, duration, {
+          method: 'GET',
+          path: '/items/{id}/recommendations/',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        })
+        
+        // Throw enhanced error with context
+        throw new ActionExecutionError(
+          error instanceof Error ? error.message : 'Unknown error occurred',
+          {
+            endpoint: '/items/{id}/recommendations/',
+            method: 'GET',
+            timestamp: Date.now()
+          },
+          error
+        )
+      }
+    })
+)
+
+/**
+ * Get similar items for a specific item.
+ * @generated from GET /items/{id}/similar/
+ * Features: React cache, input validation, error handling
+ */
+export const itemsSimilarItems = cache(
+  actionClientWithMeta
+    .metadata({
+      name: "items-similar-items",
+      requiresAuth: false
+    })
+    .schema(ItemsSimilarItemsParamsSchema)
+    .action(async ({ parsedInput, ctx }) => {
+      const startTime = Date.now()
+      
+      try {
+    // Validate and sanitize parameters
+    const validatedParams = await validateAndSanitizeInput(ItemsSimilarItemsParamsSchema, parsedInput)
+
+        // Execute API call with enhanced error handling
+        const response = await apiClient.items.itemsSimilarItems({params: validatedParams,
+          config: {
+            timeout: 30000,
+            retries: 3,
+            validateResponse: false,
+            responseSchema: ItemsSimilarItemsResponseSchema
+          }
+        })
+        
+        // Log successful execution
+        const duration = Date.now() - startTime
+        await logActionExecution('itemsSimilarItems', true, duration, {
+          method: 'GET',
+          path: '/items/{id}/similar/'
+        })
+        
+        return response.data
+      } catch (error) {
+        const duration = Date.now() - startTime
+        
+        // Enhanced error logging
+        await logActionExecution('itemsSimilarItems', false, duration, {
+          method: 'GET',
+          path: '/items/{id}/similar/',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        })
+        
+        // Throw enhanced error with context
+        throw new ActionExecutionError(
+          error instanceof Error ? error.message : 'Unknown error occurred',
+          {
+            endpoint: '/items/{id}/similar/',
+            method: 'GET',
+            timestamp: Date.now()
+          },
+          error
+        )
+      }
+    })
+)

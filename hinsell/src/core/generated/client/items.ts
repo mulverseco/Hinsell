@@ -18,7 +18,11 @@ import {
   ItemsPartialUpdateResponseSchema,
   ItemsPartialUpdateParamsSchema,
   ItemsDeleteResponseSchema,
-  ItemsDeleteParamsSchema
+  ItemsDeleteParamsSchema,
+  ItemsItemRecommendationsResponseSchema,
+  ItemsItemRecommendationsParamsSchema,
+  ItemsSimilarItemsResponseSchema,
+  ItemsSimilarItemsParamsSchema
 } from '@/core/generated/schemas'
 
 export class ItemsApiClient extends BaseApiClient {
@@ -215,4 +219,63 @@ responseSchema: ItemsDeleteResponseSchema
       }
     )
   }
+
+  /**
+   * Get comprehensive item recommendations including similar, trending, and alternatives.
+   * Get comprehensive item recommendations including similar, trending, and alternatives.
+   * @param options - Request options
+   * @returns Promise<ClientResponse<z.infer<typeof ItemsItemRecommendationsResponseSchema>>>
+   * @example
+   * const result = await client.itemsItemRecommendations({
+   *   config: { timeout: 5000 }
+   * })
+   */
+  itemsItemRecommendations = cache(async (options: {
+    params: z.infer<typeof ItemsItemRecommendationsParamsSchema>
+    config?: RequestConfiguration
+  }) => {
+// Validate and extract parameters
+const validatedParams = await ItemsItemRecommendationsParamsSchema.parseAsync(options.params)
+
+    return this.request<z.infer<typeof ItemsItemRecommendationsResponseSchema>>(
+      'GET',
+      '/items/{id}/recommendations/',
+      {
+        pathParams: validatedParams.path,
+config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
+responseSchema: ItemsItemRecommendationsResponseSchema
+      }
+    )
+  })
+
+  /**
+   * Get similar items for a specific item.
+   * Query Parameters:
+- limit: Number of similar items to return (default: 10, max: 20)
+- exclude_out_of_stock: Exclude items with zero stock (default: true)
+- type: Type of similarity search ('default', 'trending', 'budget', 'premium')
+   * @param options - Request options
+   * @returns Promise<ClientResponse<z.infer<typeof ItemsSimilarItemsResponseSchema>>>
+   * @example
+   * const result = await client.itemsSimilarItems({
+   *   config: { timeout: 5000 }
+   * })
+   */
+  itemsSimilarItems = cache(async (options: {
+    params: z.infer<typeof ItemsSimilarItemsParamsSchema>
+    config?: RequestConfiguration
+  }) => {
+// Validate and extract parameters
+const validatedParams = await ItemsSimilarItemsParamsSchema.parseAsync(options.params)
+
+    return this.request<z.infer<typeof ItemsSimilarItemsResponseSchema>>(
+      'GET',
+      '/items/{id}/similar/',
+      {
+        pathParams: validatedParams.path,
+config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
+responseSchema: ItemsSimilarItemsResponseSchema
+      }
+    )
+  })
 }
