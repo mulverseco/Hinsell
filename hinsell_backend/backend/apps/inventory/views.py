@@ -1,10 +1,16 @@
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from apps.core_apps.general import BaseViewSet
 from apps.core_apps.permissions import HasRolePermission
+from apps.inventory.services.similarity_service import ItemSimilarityService
 from apps.inventory.models import StoreGroup, ItemGroup, Item, ItemUnit, ItemBarcode, InventoryBalance
 from apps.inventory.serializers import (
     StoreGroupSerializer, ItemGroupSerializer, ItemSerializer,
-    ItemUnitSerializer, ItemBarcodeSerializer, InventoryBalanceSerializer
+    ItemUnitSerializer, ItemBarcodeSerializer, InventoryBalanceSerializer,
+    SimilarItemResponseSerializer
 )
 
 class StoreGroupViewSet(BaseViewSet):
@@ -72,6 +78,124 @@ class ItemViewSet(BaseViewSet):
         'partial_update': [IsAuthenticated, HasRolePermission],
         'destroy': [IsAuthenticated, HasRolePermission],
     } 
+    @action(detail=True, methods=['get'], url_path='similar')
+    def similar_items(self, request, pk=None):
+        """
+        Get similar items for a specific item.
+        
+        Query Parameters:
+        - limit: Number of similar items to return (default: 10, max: 20)
+        - exclude_out_of_stock: Exclude items with zero stock (default: true)
+        - type: Type of similarity search ('default', 'trending', 'budget', 'premium')
+        """
+        try:
+            item = self.get_object()
+            limit = min(int(request.query_params.get('limit', 10)), 20)
+            exclude_out_of_stock = request.query_params.get('exclude_out_of_stock', 'true').lower() == 'true'
+            similarity_type = request.query_params.get('type', 'default')
+            
+            # Initialize similarity service
+            similarity_service = ItemSimilarityService(branch_id=item.branch_id)
+            
+            # Get similar items based on type
+            if similarity_type == 'trending':
+                similar_items = similarity_service.find_trending_similar_items(
+                    item=item,
+                    limit=limit
+                )
+            elif similarity_type == 'budget':
+                similar_items = similarity_service.find_price_alternative_items(
+                    item=item,
+                    price_range='budget',
+                    limit=limit
+                )
+            elif similarity_type == 'premium':
+                similar_items = similarity_service.find_price_alternative_items(
+                    item=item,
+                    price_range='premium',
+                    limit=limit
+                )
+            else:  # default
+                similar_items = similarity_service.find_similar_items(
+                    item=item,
+                    limit=limit,
+                    exclude_out_of_stock=exclude_out_of_stock
+                )
+            
+            # Serialize the results
+            serializer = SimilarItemResponseSerializer(similar_items, many=True)
+            
+            return Response({
+                'count': len(similar_items),
+                'reference_item': {
+                    'id': item.id,
+                    'code': item.code,
+                    'name': item.name
+                },
+                'similar_items': serializer.data,
+                'similarity_type': similarity_type
+            })
+            
+        except ValueError as e:
+            return Response(
+                {'error': 'Invalid limit parameter. Must be a number.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            self.logger.error(
+                f"Error getting similar items for item {pk}: {str(e)}",
+                extra={'item_id': pk},
+                exc_info=True
+            )
+            return Response(
+                {'error': 'An error occurred while finding similar items.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['get'], url_path='recommendations')
+    def item_recommendations(self, request, pk=None):
+        """
+        Get comprehensive item recommendations including similar, trending, and alternatives.
+        """
+        try:
+            item = self.get_object()
+            similarity_service = ItemSimilarityService(branch_id=item.branch_id)
+            
+            # Get different types of recommendations
+            similar_items = similarity_service.find_similar_items(item, limit=5)
+            trending_items = similarity_service.find_trending_similar_items(item, limit=3)
+            budget_alternatives = similarity_service.find_price_alternative_items(
+                item, price_range='budget', limit=3
+            )
+            premium_alternatives = similarity_service.find_price_alternative_items(
+                item, price_range='premium', limit=3
+            )
+            
+            return Response({
+                'reference_item': {
+                    'id': item.id,
+                    'code': item.code,
+                    'name': item.name,
+                    'price': item.sales_price
+                },
+                'recommendations': {
+                    'similar': SimilarItemResponseSerializer(similar_items, many=True).data,
+                    'trending': SimilarItemResponseSerializer(trending_items, many=True).data,
+                    'budget_alternatives': SimilarItemResponseSerializer(budget_alternatives, many=True).data,
+                    'premium_alternatives': SimilarItemResponseSerializer(premium_alternatives, many=True).data
+                }
+            })
+            
+        except Exception as e:
+            self.logger.error(
+                f"Error getting recommendations for item {pk}: {str(e)}",
+                extra={'item_id': pk},
+                exc_info=True
+            )
+            return Response(
+                {'error': 'An error occurred while getting recommendations.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class ItemUnitViewSet(BaseViewSet):
     """ViewSet for ItemUnit model."""

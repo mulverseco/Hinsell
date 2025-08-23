@@ -16,12 +16,13 @@ import { HIERARCHICAL_SEPARATOR } from "constants/index"
 import { cn } from "utils/cn"
 import { Sorter } from "./filters/sorter"
 import { Breadcrumbs } from "./breadcrumbs"
-import { slugToName } from "utils/slug-name"
+import { ItemGroup } from "@/core/generated/schemas"
+// import { slugToName } from "utils/slug-name"
 
 interface SearchViewProps {
   searchParams: SearchParamsType
   params?: { id: string; page?: string }
-  collection?: any
+  collection?: ItemGroup
   disabledFacets?: string[]
   basePath?: string
 }
@@ -50,15 +51,14 @@ function makePageTitle(collection: any | undefined, query: string) {
   return "Search"
 }
 
-function makeBreadcrumbs(collection?: any) {
+function makeBreadcrumbs(collection?: string) {
   if (collection) {
     return {
       Home: "/",
-      [slugToName(collection.handle)]: "",
+      [collection]: "",
     }
   }
 
-  // Fallback when no specific collection context is provided
   return {
     Home: "/",
     Search: "/search",
@@ -103,13 +103,13 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
     <div className="mx-auto w-full md:max-w-container-md">
             <div className="mb:pb-2 p-4 md:px-0 relative flex w-full items-center justify-center gap-10 md:pt-8">
         <div className="mx-auto w-full">
-          <Breadcrumbs items={makeBreadcrumbs(collection)} />
+          <Breadcrumbs items={makeBreadcrumbs(collection?.name || "")} />
         </div>
       </div>
       <div className="sticky top-[77px] z-40 flex items-center justify-between bg-white/80 p-4 backdrop-blur-lg lg:hidden">
         <div className="flex gap-1 text-2xl font-semibold tracking-tight lg:text-3xl">
-          <h1 className="flex-1">{makePageTitle(collection, q)}</h1>
-          {/* <span className="mr-auto text-xl lg:text-2xl">({totalHits})</span> */}
+          <h1 className="flex-1">{collection?.name}</h1>
+          <span className="mr-auto text-xl lg:text-2xl">({collection?.parent?.length})</span>
         </div>
         <div className="flex items-center gap-1 lg:hidden">
           {/* <FacetsMobile
@@ -123,8 +123,8 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
       <div className={cn("flex gap-12 p-4 md:gap-12", basePath === "ai" ? "ai-2xl:px-0" : "xl:px-0")}>
         <div className="sticky top-[100px] hidden max-h-[90dvh] w-full max-w-64 px-2 lg:block lg:px-0">
           <div className="flex gap-1 font-semibold tracking-tight">
-            <h1 className="w-min pb-4 text-3xl lg:text-4xl">{makePageTitle(collection, q)}</h1>
-            {/* <span className="text-2xl">({totalHits})</span> */}
+            <h1 className="w-min pb-4 text-3xl lg:text-4xl">{collection?.name}</h1>
+            <span className="text-2xl">({collection?.parent?.length})</span>
           </div>
 
           <Suspense>

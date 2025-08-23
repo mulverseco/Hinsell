@@ -14,5 +14,5 @@ export async function CategoryPLPView({ params, searchParams = {}, basePath }: C
 
   if (!collection) return notFound()
 
-  return <SearchView searchParams={searchParams} params={params} collection={collection} basePath={basePath} />
+  return <SearchView searchParams={searchParams} params={params} collection={collection.data} basePath={basePath} />
 }

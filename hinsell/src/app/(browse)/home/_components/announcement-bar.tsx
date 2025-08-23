@@ -5,37 +5,15 @@ import { cn } from "@/utils/cn"
 import Link from "next/link"
 
 export function AnnouncementBar({ className }: { className?: string }) {
-  const {
-    data: offers,
-    isLoading,
-    error,
-  } = useOffersList(undefined, "-created_at", {
+  const { data: offers } = useOffersList(undefined, "-created_at", {
     enabled: true,
     refetchInterval: 300000,
   })
 
-  const activeOffer = offers?.results?.[0]
-  console.log("activeOffer : ", activeOffer)
-  console.log("offers : ", offers)
+  const activeOffer = offers?.data?.[2]
+  console.log("activeOffer : ",activeOffer)
+  console.log("offers : ",offers)
 
-  // Fallback content
-  const defaultContent = {
-    text: "Sale 50% OFF",
-    ctaText: "Shop Now",
-    ctaHref: "/search",
-  }
-
-  const content = activeOffer
-    ? {
-        text: activeOffer.title || activeOffer.description || "Special Offer Available",
-        ctaText: activeOffer.cta_text || "Shop Now",
-        ctaHref: activeOffer.cta_url || "/search",
-      }
-    : defaultContent
-
-  if (error) {
-    console.warn("Failed to load offers for announcement bar:", error)
-  }
 
   return (
     <div
@@ -44,18 +22,10 @@ export function AnnouncementBar({ className }: { className?: string }) {
         className,
       )}
     >
-      {isLoading ? (
-        <>
-          <span className="animate-pulse">Loading offers...</span>
-        </>
-      ) : (
-        <>
-          {content.text}
-          <Link prefetch={false} href={content.ctaHref} className="ml-2 underline hover:no-underline">
-            {content.ctaText}
-          </Link>
-        </>
-      )}
+      {activeOffer?.name || ""}
+      <Link prefetch={false} href={activeOffer?.slug || "#"} className="ml-2 underline hover:no-underline">
+        Shop now
+      </Link>
     </div>
   )
 }

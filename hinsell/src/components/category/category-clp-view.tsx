@@ -25,7 +25,7 @@ export async function CategoryCLPView({ params, basePath, searchParams = {} }: C
   //   return <SearchView searchParams={searchParams} params={params} collection={collection} basePath={basePath} />
   // }
 
-  const products = await itemsList({ query: { search: collection.data?.id } })
+  const products = await itemsList({})
 
   return (
     <CategoryLandingPage collection={collection.data } products={products.data ?? []} basePath={basePath} />

@@ -4,6 +4,7 @@ import { HeroSection } from "app/(browse)/home/_components/hero-section"
 import { EnterpriseCategoriesSection } from "app/(browse)/home/_components/enterprise-categories-section"
 import { ModernNewArrivalsSection } from "app/(browse)/home/_components/modern-new-arrivals-section"
 import { itemsList } from "@/core/generated/actions/items"
+import { Suspense } from "react"
 
 export const revalidate = 86400
 
@@ -16,7 +17,9 @@ export default async function Homepage(_props: { params: Promise<{ bucket: strin
 
   return (
     <div className="flex w-full flex-col">
+      <Suspense fallback={null}>
       <AnnouncementBar />
+      </Suspense>
       <HeroSection />
       <ModernNewArrivalsSection products={results?.data || []} />
       <EnterpriseCategoriesSection />

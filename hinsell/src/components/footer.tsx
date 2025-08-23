@@ -48,8 +48,7 @@ export function Footer() {
             >
               <h3 className="text-2xl font-bold text-neutral-900 mb-4">Hinsell</h3>
               <p className="text-neutral-600 mb-6 leading-relaxed">
-                Architected in Belgium, built to last. We create timeless furniture pieces in solid oak, steel, and
-                linen for spaces that breathe.
+              Hinsell, powered by Mulverse, is more than shopping. It’s a crafted digital experience where quality, style,<br/> & trust come together to enrich your everyday moments.
               </p>
               <div className="flex space-x-4">
                 {socialLinks.map((social) => (

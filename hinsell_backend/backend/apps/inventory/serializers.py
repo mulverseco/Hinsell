@@ -274,3 +274,44 @@ class ItemSerializer(serializers.ModelSerializer):
         representation['is_low_stock'] = instance.is_low_stock()
         representation['display_name'] = instance.get_display_name()
         return representation
+
+
+class SimilarItemSerializer(serializers.ModelSerializer):
+    """Serializer for similar item recommendations."""
+    similarity_score = serializers.FloatField(read_only=True)
+    similarity_reasons = serializers.ListField(
+        child=serializers.CharField(),
+        read_only=True
+    )
+    price_difference = serializers.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        read_only=True
+    )
+    rating_difference = serializers.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        read_only=True
+    )
+    current_stock = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Item
+        fields = [
+            'id', 'code', 'name', 'slug', 'sales_price', 'average_rating',
+            'review_count', 'is_featured', 'brand', 'manufacturer', 'size',
+            'color', 'short_description', 'similarity_score', 'similarity_reasons',
+            'price_difference', 'rating_difference', 'current_stock'
+        ]
+    
+    def get_current_stock(self, obj):
+        """Get current stock for the item."""
+        return obj.get_current_stock()
+
+class SimilarItemResponseSerializer(serializers.Serializer):
+    """Response serializer for similar items endpoint."""
+    item = SimilarItemSerializer()
+    similarity_score = serializers.FloatField()
+    similarity_reasons = serializers.ListField(child=serializers.CharField())
+    price_difference = serializers.DecimalField(max_digits=15, decimal_places=4)
+    rating_difference = serializers.DecimalField(max_digits=3, decimal_places=2)
