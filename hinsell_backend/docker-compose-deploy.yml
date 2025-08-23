@@ -13,6 +13,7 @@ services:
       - mynetwork
     volumes:
       - ./staticfiles:/app/staticfiles:z
+      - media_data:/app/media
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
       interval: 30s
@@ -71,3 +72,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  media_data:
