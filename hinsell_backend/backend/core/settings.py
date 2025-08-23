@@ -18,7 +18,7 @@ env = environ.Env(
 # ======================
 # Base Configuration
 # ======================
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 ENVIRONMENT = env('ENVIRONMENT', default='development')
 DEVELOPMENT_MODE = env.bool('DEVELOPMENT_MODE', default=(ENVIRONMENT == 'development'))
 DEBUG = env.bool('DEBUG', default=DEVELOPMENT_MODE)
