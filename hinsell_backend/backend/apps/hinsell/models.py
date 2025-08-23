@@ -429,12 +429,6 @@ class Coupon(AuditableModel):
             return False
         return True
 
-    def save(self, *args, **kwargs):
-        """Override save to auto-generate code."""
-        if not self.code:
-            self.code = generate_unique_code(self.__class__, 'code', prefix='CPN')
-        super().save(*args, **kwargs)
-
     def apply(self, price: Decimal, user: Optional[User] = None) -> Decimal:
         """Apply the coupon to a given price."""
         logger = Logger(__name__, user=user, branch_id=self.branch.id)
@@ -683,10 +677,7 @@ class Campaign(AuditableModel):
             raise ValidationError({'offer': _('At least one of offer or coupon must be specified.'), 'coupon': _('At least one of offer or coupon must be specified.')})
 
     def save(self, *args, **kwargs):
-        """Override save to auto-generate code and slug."""
-        if not self.code:
-            self.code = generate_unique_code(self.__class__, 'code', prefix='CAM')
-        
+        """Override save to auto-generate code and slug.""" 
         if not self.slug:
             self.slug = generate_unique_slug(self.__class__, 'slug', self.name)
         
