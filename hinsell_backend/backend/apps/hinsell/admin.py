@@ -113,7 +113,7 @@ class CouponAdmin(admin.ModelAdmin):
 
 @admin.register(UserCoupon)
 class UserCouponAdmin(admin.ModelAdmin):
-    list_display = ['code', 'user', 'branch', 'redemption_date', 'usage_status']
+    list_display = ['display_coupon_code', 'user', 'branch', 'redemption_date', 'usage_status']
     list_filter = ['is_used', 'branch', 'redemption_date']
     search_fields = ['coupon__code', 'user__email', 'user__first_name', 'user__last_name']
     readonly_fields = ['redemption_date', 'created_at', 'updated_at']
@@ -127,6 +127,14 @@ class UserCouponAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    def display_coupon_code(self, obj):
+        return format_html(
+            '<strong style="color: #0066cc;">{}</strong>',
+            obj.coupon.code
+        )
+    display_coupon_code.short_description = _('Coupon Code')
+    display_coupon_code.admin_order_field = 'coupon__code'
 
     def usage_status(self, obj):
         if obj.is_used:
