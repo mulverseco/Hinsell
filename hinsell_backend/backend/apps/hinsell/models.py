@@ -55,6 +55,7 @@ class Offer(AuditableModel):
     slug = models.SlugField(
         max_length=120,
         unique=True,
+        blank=True,  # Made slug optional
         verbose_name=_("Slug")
     )
     offer_type = models.CharField(
@@ -208,11 +209,18 @@ class Offer(AuditableModel):
             })
 
     def save(self, *args, **kwargs):
-        """Override save to validate M2M relationships after they're committed."""
+        """Override save to auto-generate code/slug and validate M2M relationships."""
+        if not self.code:
+            self.code = generate_unique_code(self.__class__, 'code', prefix='OFF')
+        
+        if not self.slug:
+            self.slug = generate_unique_slug(self.__class__, 'slug', self.name)
+        
+        # Save first to get an ID for M2M relationships
+        is_new = self.pk is None
         super().save(*args, **kwargs)
         
-        # Validate targets after M2M relationships are saved
-        if self.target_type != self.TargetType.ALL:
+        if not is_new and self.target_type != self.TargetType.ALL:
             has_targets = any([
                 self.target_users.exists(),
                 bool(self.target_countries),  # Check if list is not empty
@@ -222,7 +230,8 @@ class Offer(AuditableModel):
             ])
             
             if not has_targets:
-                raise ValidationError(_('At least one target must be specified for non-ALL target types.'))
+                # Log the issue but don't raise an exception that breaks admin
+                logger.warning(f"Offer {self.code} has no targets specified for target type {self.target_type}")
 
     def is_valid(self, user: Optional[User] = None, country: Optional[str] = None, item: Optional[Item] = None) -> bool:
         """Check if the offer is valid for the given context."""
@@ -410,6 +419,25 @@ class Coupon(AuditableModel):
         if self.coupon_type == self.CouponType.PERCENTAGE and (self.value < 0 or self.value > 100):
             raise ValidationError({'value': _('Percentage value must be between 0 and 100.')})
 
+    def is_valid(self, user: Optional[User] = None, order_amount: Decimal = Decimal('0')) -> bool:
+        """Check if the coupon is valid for the given context."""
+        now = timezone.now()
+        if not self.is_active or now < self.start_date or now > self.end_date:
+            return False
+        if self.max_uses > 0 and self.current_uses >= self.max_uses:
+            return False
+        if self.min_order_amount > 0 and order_amount < self.min_order_amount:
+            return False
+        if self.target_users.exists() and user and not self.target_users.filter(id=user.id).exists():
+            return False
+        return True
+
+    def save(self, *args, **kwargs):
+        """Override save to auto-generate code."""
+        if not self.code:
+            self.code = generate_unique_code(self.__class__, 'code', prefix='CPN')
+        super().save(*args, **kwargs)
+
     def apply(self, price: Decimal, user: Optional[User] = None) -> Decimal:
         """Apply the coupon to a given price."""
         logger = Logger(__name__, user=user, branch_id=self.branch.id)
@@ -545,6 +573,7 @@ class Campaign(AuditableModel):
     slug = models.SlugField(
         max_length=120,
         unique=True,
+        blank=True,  # Made slug optional
         verbose_name=_("Slug")
     )
     campaign_type = models.CharField(
@@ -655,6 +684,16 @@ class Campaign(AuditableModel):
             raise ValidationError({'end_date': _('End date must be after start date.')})
         if not self.offer and not self.coupon:
             raise ValidationError({'offer': _('At least one of offer or coupon must be specified.'), 'coupon': _('At least one of offer or coupon must be specified.')})
+
+    def save(self, *args, **kwargs):
+        """Override save to auto-generate code and slug."""
+        if not self.code:
+            self.code = generate_unique_code(self.__class__, 'code', prefix='CAM')
+        
+        if not self.slug:
+            self.slug = generate_unique_slug(self.__class__, 'slug', self.name)
+        
+        super().save(*args, **kwargs)
 
     def update_conversion_rate(self):
         """Update conversion rate based on impressions and conversions."""
