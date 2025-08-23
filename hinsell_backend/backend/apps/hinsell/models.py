@@ -210,9 +210,6 @@ class Offer(AuditableModel):
 
     def save(self, *args, **kwargs):
         """Override save to auto-generate code/slug and validate M2M relationships."""
-        if not self.code:
-            self.code = generate_unique_code(self.__class__, 'code', prefix='OFF')
-        
         if not self.slug:
             self.slug = generate_unique_slug(self.__class__, 'slug', self.name)
         
