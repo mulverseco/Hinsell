@@ -24,7 +24,7 @@ export function ProductAddedAlert({ className }: { className?: string }) {
   const visualOptionValue = getVisualOptionValueFromCombination(combination)
 
   const variantImages = filterImagesByVisualOption(product?.media || [], visualOptionValue || null)
-  const variantImage = variantImages[0] || product?.media[0]?.file || ""
+  const variantImage = variantImages[0] || product?.media[0] || ""
 
   return (
     <Alert
