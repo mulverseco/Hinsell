@@ -206,14 +206,23 @@ class Offer(AuditableModel):
                 'discount_percentage': _('Discount percentage or amount must be provided for discount offers.'),
                 'discount_amount': _('Discount percentage or amount must be provided for discount offers.')
             })
-        if self.target_type != self.TargetType.ALL and not any([
-            self.target_users.exists(),
-            self.target_countries,
-            self.target_items.exists(),
-            self.target_item_groups.exists(),
-            self.target_store_groups.exists()
-        ]):
-            raise ValidationError({'target_type': _('At least one target must be specified for non-ALL target types.')})
+
+    def save(self, *args, **kwargs):
+        """Override save to validate M2M relationships after they're committed."""
+        super().save(*args, **kwargs)
+        
+        # Validate targets after M2M relationships are saved
+        if self.target_type != self.TargetType.ALL:
+            has_targets = any([
+                self.target_users.exists(),
+                bool(self.target_countries),  # Check if list is not empty
+                self.target_items.exists(),
+                self.target_item_groups.exists(),
+                self.target_store_groups.exists()
+            ])
+            
+            if not has_targets:
+                raise ValidationError(_('At least one target must be specified for non-ALL target types.'))
 
     def is_valid(self, user: Optional[User] = None, country: Optional[str] = None, item: Optional[Item] = None) -> bool:
         """Check if the offer is valid for the given context."""
@@ -400,19 +409,6 @@ class Coupon(AuditableModel):
             raise ValidationError({'end_date': _('End date must be after start date.')})
         if self.coupon_type == self.CouponType.PERCENTAGE and (self.value < 0 or self.value > 100):
             raise ValidationError({'value': _('Percentage value must be between 0 and 100.')})
-
-    def is_valid(self, user: Optional[User] = None, order_amount: Decimal = Decimal('0')) -> bool:
-        """Check if the coupon is valid for the given context."""
-        now = timezone.now()
-        if not self.is_active or now < self.start_date or now > self.end_date:
-            return False
-        if self.max_uses > 0 and self.current_uses >= self.max_uses:
-            return False
-        if self.min_order_amount > 0 and order_amount < self.min_order_amount:
-            return False
-        if self.target_users.exists() and user and not self.target_users.filter(id=user.id).exists():
-            return False
-        return True
 
     def apply(self, price: Decimal, user: Optional[User] = None) -> Decimal:
         """Apply the coupon to a given price."""
