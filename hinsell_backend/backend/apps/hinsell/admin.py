@@ -149,7 +149,7 @@ class UserCouponAdmin(admin.ModelAdmin):
 
 @admin.register(Campaign)
 class CampaignAdmin(admin.ModelAdmin):
-    list_display = ['display_code', 'display_slug', 'name', 'campaign_type', 'is_active', 'start_date', 'end_date', 'performance_summary']
+    list_display = ['code', 'name', 'campaign_type', 'is_active', 'start_date', 'end_date', 'performance_summary']
     list_filter = ['campaign_type', 'is_active', 'branch', 'created_at']
     search_fields = ['code', 'name', 'content', 'slug']
     readonly_fields = ['impressions', 'clicks', 'conversions', 'conversion_rate', 'analytics_data', 'created_at', 'updated_at']
@@ -180,22 +180,6 @@ class CampaignAdmin(admin.ModelAdmin):
         }),
     )
     actions = ['launch_campaigns', 'pause_campaigns']
-
-    def display_code(self, obj):
-        return format_html(
-            '<strong style="color: #0066cc;">{}</strong>',
-            obj.code
-        )
-    display_code.short_description = _('Code')
-    display_code.admin_order_field = 'code'
-
-    def display_slug(self, obj):
-        return format_html(
-            '<code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">{}</code>',
-            obj.slug
-        )
-    display_slug.short_description = _('Slug')
-    display_slug.admin_order_field = 'slug'
 
     def performance_summary(self, obj):
         if obj.impressions > 0:
