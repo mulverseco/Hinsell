@@ -19,9 +19,9 @@ class OfferViewSet(BaseViewSet):
         'update': [IsAdminUser],
         'partial_update': [IsAdminUser],
         'destroy': [IsAdminUser],
-        'list': [IsAuthenticated],
-        'retrieve': [IsAuthenticated],
-        'apply': [IsAuthenticated],
+        'list': [],
+        'retrieve': [],
+        'apply': [],
     }
 
     def get_queryset(self):
@@ -57,9 +57,9 @@ class CouponViewSet(BaseViewSet):
         'update': [IsAdminUser],
         'partial_update': [IsAdminUser],
         'destroy': [IsAdminUser],
-        'list': [IsAuthenticated],
-        'retrieve': [IsAuthenticated],
-        'apply': [IsAuthenticated],
+        'list': [],
+        'retrieve': [],
+        'apply': [],
     }
 
     @action(detail=True, methods=['post'])
@@ -87,8 +87,8 @@ class UserCouponViewSet(BaseViewSet):
     search_fields = ['coupon__code', 'user__email']
     permission_classes_by_action = {
         'create': [IsAdminUser],
-        'list': [IsAuthenticated],
-        'retrieve': [IsAuthenticated],
+        'list': [],
+        'retrieve': [],
     }
 
     def get_queryset(self):
@@ -107,12 +107,12 @@ class CampaignViewSet(BaseViewSet):
         'create': [IsAdminUser],
         'update': [IsAdminUser],
         'partial_update': [IsAdminUser],
-        'destroy': [IsAdminUser],
-        'list': [IsAuthenticated],
-        'retrieve': [IsAuthenticated],
-        'track_impression': [IsAuthenticated],
-        'track_click': [IsAuthenticated],
-        'track_conversion': [IsAuthenticated],
+        'destroy': [],
+        'list': [],
+        'retrieve': [],
+        'track_impression': [],
+        'track_click': [],
+        'track_conversion': [],
     }
 
     @action(detail=True, methods=['post'])
