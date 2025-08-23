@@ -3,6 +3,7 @@ from apps.authentication.models import User, UserProfile, AuditLog
 from django.utils.translation import gettext_lazy as _
 from apps.core_apps.utils import Logger
 from apps.organization.models import Branch
+from apps.inventory.serializers import ItemSerializer
 import re
 
 logger = Logger(__name__)
@@ -81,6 +82,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     avatar_url = serializers.SerializerMethodField()
     branches = serializers.SerializerMethodField()
     is_complete = serializers.SerializerMethodField()
+    wishlist_items = ItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = UserProfile
@@ -88,7 +90,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'avatar', 'avatar_url', 'bio', 'phone_number', 'address', 'nationality',
             'date_of_birth', 'gender', 'notifications', 'profile_visibility',
             'preferred_payment_method', 'marketing_opt_in', 'terms_accepted',
-            'terms_accepted_at', 'terms_version', 'data_consent', 'branches', 'is_complete'
+            'terms_accepted_at', 'terms_version', 'data_consent', 'branches',
+            'is_complete','wishlist_items'
         ]
         read_only_fields = ['terms_accepted_at', 'is_complete']
 
