@@ -70,7 +70,7 @@ export function NavigationBar({ ItemGroups }: NavigationBarProps) {
 
             <Favorites className="hover:bg-accent transition-colors" />
 
-            <Suspense fallback={<Skeleton className="h-9 w-9" />}>
+            <Suspense fallback={<Skeleton className="size-9" />}>
               <Cart className="hover:bg-accent transition-colors" />
             </Suspense>
           </div>
