@@ -121,7 +121,6 @@ class ItemUnitSerializer(serializers.ModelSerializer):
 class ItemBarcodeSerializer(serializers.ModelSerializer):
     """Serializer for ItemBarcode model."""
     variant = serializers.PrimaryKeyRelatedField(
-        queryset=ItemVariant.objects.all(),
         source='variant',
         read_only=True
     )
