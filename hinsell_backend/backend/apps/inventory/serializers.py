@@ -109,7 +109,6 @@ class ItemVariantSerializer(serializers.ModelSerializer):
         write_only=True
     )
     item_id = serializers.PrimaryKeyRelatedField(
-        queryset=Item.objects.all(),
         source='item',
         read_only=True
     )
