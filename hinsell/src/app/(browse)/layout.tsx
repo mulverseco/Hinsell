@@ -1,22 +1,12 @@
-import "../globals.css"
-
+import { sharedMetadata } from "../shared-metadata"
+import { Metadata } from "next"
 import Script from "next/script"
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 import { Suspense } from "react"
 import { Toaster } from "sonner"
-import { FlagValues } from "components/flag-values"
-import { ThirdParties } from "components/third-parties"
-import { Metadata } from "next"
-import { sharedMetadata } from "../shared-metadata"
-import { CartView } from "components/cart/cart-view"
-import { mobileInlineScript } from "components/navigation-bar/mobile-inline-script"
-import { Footer } from "components/footer"
-import { Modals } from "components/modals/modals"
-import DraftToolbar from "components/draft-toolbar"
-import { Providers } from "./providers"
-import { itemGroupsList } from "@/core/generated/actions/itemGroups"
-import { NavigationBarWrapper } from "@/components/navigation-bar/navigation-bar-wrapper"
-
+import { FlagValues } from "@/components/flag-values"
+import { ThirdParties } from "@/components/third-parties"
+import { mobileInlineScript } from "@/components/navbar/mobile-inline-script"
 export const revalidate = 86400
 
 export const metadata: Metadata = {
@@ -35,26 +25,19 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const itemGroups = await itemGroupsList({})
   return (
     <html lang="en">
       <body className="@container">
-        <Providers locale={""}>
         <NuqsAdapter>
           <Script id="mobileMegaMenuLogic" strategy="lazyOnload">{`${mobileInlineScript}`}</Script>
-          <NavigationBarWrapper initialItemGroups={itemGroups.data || null} />
           {children}
-          <Footer />
-          <Modals />
-          <CartView />
+          {/* <Modals /> */}
           <Toaster position="bottom-left"/>
-          <DraftToolbar />
           <Suspense>
             <FlagValues />
           </Suspense>
-          <ThirdParties />
+          <ThirdParties/>
         </NuqsAdapter>
-        </Providers>
       </body>
     </html>
   )

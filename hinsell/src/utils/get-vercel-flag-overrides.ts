@@ -1,5 +1,4 @@
 import { decrypt, type FlagOverridesType } from "@vercel/flags"
-import { env } from "env.mjs"
 import { cookies } from "next/headers"
 
 type Flags = Record<
@@ -12,8 +11,8 @@ export async function getVercelFlagOverrides(): Promise<Flags | null> {
   const overrides = overridesCookieValue ? ((await decrypt<FlagOverridesType>(overridesCookieValue)) as Flags) : null
 
   return {
-    isVercelAnalyticsEnabled: overrides?.isVercelAnalyticsEnabled ?? env.IS_VERCEL_ANALYTICS_ENABLED === "true",
-    isGoogleTagManagerEnabled: overrides?.isGoogleTagManagerEnabled ?? env.IS_GTM_ENABLED === "true",
-    isSpeedInsightsEnabled: overrides?.isSpeedInsightsEnabled ?? env.IS_SPEED_INSIGHTS_ENABLED === "true",
+    isVercelAnalyticsEnabled: overrides?.isVercelAnalyticsEnabled ?? process.env.IS_VERCEL_ANALYTICS_ENABLED === "true",
+    isGoogleTagManagerEnabled: overrides?.isGoogleTagManagerEnabled ?? process.env.IS_GTM_ENABLED === "true",
+    isSpeedInsightsEnabled: overrides?.isSpeedInsightsEnabled ?? process.env.IS_SPEED_INSIGHTS_ENABLED === "true",
   }
 }

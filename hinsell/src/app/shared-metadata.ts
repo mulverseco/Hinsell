@@ -1,7 +1,6 @@
-import { env } from "env.mjs"
 
 export const sharedMetadata = {
-  metadataBase: new URL(env.LIVE_URL || "https://commerce.hinsell.com"),
+  metadataBase: new URL(process.env.LIVE_URL || "https://commerce.hinsell.com"),
   openGraph: {
     title: "HINSELL | Smarter Electronic Commerce",
     description: "HINSELL is an advanced e-commerce platform tailored for modern retailers, powered by AI and built on Next.js.",

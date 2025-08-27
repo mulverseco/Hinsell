@@ -1,0 +1,38 @@
+{
+  "schema": "https://hinsell.mulverse.com/swagger/?format=openapi",
+  "outputDir": "src/core/generated",
+  "framework": {
+    "type": "nextjs",
+    "router": "app",
+    "features": {
+      "serverActions": true,
+      "middleware": false,
+      "streaming": false,
+      "revalidation": true
+    }
+  },
+  "api": {
+    "baseUrl": "https://hinsell.mulverse.com/api",
+    "timeout": 30000,
+    "retries": 3
+  },
+  "cache": {
+    "strategy": "memory",
+    "ttl": 300,
+    "tags": true,
+    "revalidation": "on-demand"
+  },
+  "dev": {
+    "logging": true,
+    "validation": true,
+    "mocking": false,
+    "watch": false
+  },
+  "generation": {
+    "typescript": true,
+    "strict": true,
+    "comments": true,
+    "examples": false,
+    "tests": false
+  }
+}

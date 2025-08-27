@@ -1,0 +1,50 @@
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  reactStrictMode: true,
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+  images: {
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    deviceSizes: [640, 768, 1024, 1280, 1536],
+    minimumCacheTTL: 31_556_926,
+    // formats: ["image/avif", "image/webp"],
+    formats: ["image/webp"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "hinsell.mulverse.com",
+        port: "",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        port: "",
+      },
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+        port: "",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.shopify.com",
+        port: "",
+      },
+    ],
+  },
+  // rewrites() {
+  //   return [
+  //     { source: "/", destination: "/home" },
+  //     {
+  //       source: "/search/:second",
+  //       destination: "/search?second=:second",
+  //     },
+  //   ]
+  // },
+};
+
+export default nextConfig;
