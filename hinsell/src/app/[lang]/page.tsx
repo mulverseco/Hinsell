@@ -1,23 +1,21 @@
-"use client";
-
 import { CTA } from "@/features/landing/cta";
 import { Features } from "@/features/landing/features";
-import { Footer } from "@/features/landing/footer";
-import { Header } from "@/features/landing/header";
 import { Hero } from "@/features/landing/hero";
 import { Pricing } from "@/features/landing/pricing";
 import { Testimonials } from "@/features/landing/testimonials";
 
-export default function Home() {
+export const revalidate = 86400
+export const dynamic = "force-static"
+export const dynamicParams = true
+
+export default async function Home() {
   return (
-    <main>
-      <Header />
+    <>
       <Hero />
       <Features />
       <Pricing />
       <Testimonials />
       <CTA />
-      <Footer />
-    </main>
+    </>
   );
 }

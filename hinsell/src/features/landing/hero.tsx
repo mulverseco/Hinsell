@@ -1,16 +1,10 @@
 "use client";
 
-// External imports
-import Link from "next/link";
 import { ArrowRight, LineChart, TrendingUp, Users } from "lucide-react";
 
-// Internal imports
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { CTAButton } from "@/components/shared/cta-button";
 
-/**
- * HeroTitle component displaying the main heading with styled text
- */
+
 const HeroTitle = () => {
   return (
     <div className="relative">
@@ -49,45 +43,7 @@ const BadgeLabel = ({ text }: { text: string }) => {
   );
 };
 
-/**
- * CTAButton component for consistent call-to-action buttons
- */
-const CTAButton = ({
-  children,
-  variant = "default",
-  href,
-  icon,
-}: {
-  children: React.ReactNode;
-  variant?: "default" | "outline";
-  href?: string;
-  icon?: React.ReactNode;
-}) => {
-  const buttonClass = cn(
-    "h-16 px-8 text-base font-semibold tracking-wide uppercase sm:text-lg",
-    variant === "outline" && "hover:bg-background/5 border-2",
-  );
 
-  const button = (
-    <Button size="lg" variant={variant as any} className={buttonClass}>
-      {icon && (
-        <span
-          className="bg-primary-foreground/10 mr-3 -ml-2 inline-flex h-8 w-8 items-center justify-center rounded-full"
-          aria-hidden="true"
-        >
-          {icon}
-        </span>
-      )}
-      {children}
-    </Button>
-  );
-
-  if (href) {
-    return <Link href={href}>{button}</Link>;
-  }
-
-  return button;
-};
 
 /**
  * Main Hero component combining all elements

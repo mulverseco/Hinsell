@@ -1,19 +1,14 @@
 "use client";
 
-// External imports
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, Zap } from "lucide-react";
-
-// Internal imports
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useActiveSection } from "@/hooks/use-active-section";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
-/**
- * NavLink component for consistent styling of navigation links
- */
 const NavLink = ({
   href,
   isActive,
@@ -93,8 +88,8 @@ export function Header() {
                     Get Started
                   </Button>
                 </Link>
-
                 <ModeToggle />
+                {/* <LanguageSwitcher/> */}
               </div>
 
               {/* Mobile Menu Button */}

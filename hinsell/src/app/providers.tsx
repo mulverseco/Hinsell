@@ -5,10 +5,11 @@ import type { ReactNode } from "react";
 import { useState } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/providers/theme-provider";
-
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { I18nProviderClient } from "@/locales/client";
 
 type ProviderProps = {
-  locale: string;
+  locale?: string;
   children: ReactNode;
 };
 
@@ -34,7 +35,6 @@ export function Providers({ locale, children }: ProviderProps) {
           },
           mutations: {
             retry: (failureCount: number, error: any) => {
-              // Don't retry mutations on client errors
               if (error?.status >= 400 && error?.status < 500) return false
               return failureCount < 2
             },
@@ -44,15 +44,17 @@ export function Providers({ locale, children }: ProviderProps) {
       }),
   )
   return (
-    // <I18nProviderClient locale={locale}>
+    <I18nProviderClient locale={locale || "en"}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         {/* <SessionProvider> */}
          <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
            {children}
+          </TooltipProvider>
             {/* {process.env.NODE_ENV === "development" && <ReactQueryDevtools initialIsOpen={false} />} */}
         </QueryClientProvider>
         {/* </SessionProvider> */}
       </ThemeProvider>
-    // </I18nProviderClient>
+    </I18nProviderClient>
   );
 }

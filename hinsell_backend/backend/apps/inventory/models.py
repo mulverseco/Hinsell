@@ -18,7 +18,6 @@ class StoreGroup(AuditableModel):
         FIFO = 'fifo', _('First In, First Out')
         LIFO = 'lifo', _('Last In, First Out')
         STANDARD = 'standard', _('Standard Cost')
-
     branch = models.ForeignKey(
         Branch,
         on_delete=models.CASCADE,
@@ -70,7 +69,6 @@ class StoreGroup(AuditableModel):
         related_name='cost_store_groups',
         verbose_name=_("Cost of Sales Account")
     )
-
     class Meta:
         verbose_name = _("Store Group")
         verbose_name_plural = _("Store Groups")
@@ -78,12 +76,10 @@ class StoreGroup(AuditableModel):
             models.Index(fields=['branch', 'code']),
             models.Index(fields=['slug']),
         ]
-
     def clean(self):
         super().clean()
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
-
     def __str__(self):
         return f"{self.code} - {self.name} ({self.branch.branch_name})"
 
@@ -93,7 +89,6 @@ class ItemGroup(AuditableModel):
         PRODUCT = 'product', _('Product')
         SERVICE = 'service', _('Service')
         BOTH = 'both', _('Product & Service')
-
     branch = models.ForeignKey(
         Branch,
         on_delete=models.CASCADE,
@@ -169,7 +164,6 @@ class ItemGroup(AuditableModel):
         default='public',
         verbose_name=_("Visibility")
     )
-
     class Meta:
         verbose_name = _("Item Group")
         verbose_name_plural = _("Item Groups")
@@ -177,19 +171,16 @@ class ItemGroup(AuditableModel):
             models.Index(fields=['branch', 'store_group', 'code']),
             models.Index(fields=['slug', 'is_featured', 'visibility']),
         ]
-
     def clean(self):
         super().clean()
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.parent and self.parent.store_group != self.store_group:
             raise ValidationError({'parent': _('Parent group must belong to the same store group.')})
-
     def get_full_code(self) -> str:
         if self.parent:
             return f"{self.parent.get_full_code()}.{self.code}"
         return f"{self.store_group.code}.{self.code}"
-
     def get_level(self) -> int:
         level = 0
         current = self.parent
@@ -197,17 +188,15 @@ class ItemGroup(AuditableModel):
             level += 1
             current = current.parent
         return level
-
     def __str__(self):
         return f"{self.store_group.code} - {self.code} - {self.name}"
 
 class Item(AuditableModel):
-    """Item master data with e-commerce and pharmaceutical features."""
+    """Base item (parent product) with shared e-commerce and inventory features."""
     class ItemType(models.TextChoices):
         PRODUCT = 'product', _('Product')
         SERVICE = 'service', _('Service')
         KIT = 'kit', _('Kit/Bundle')
-
     branch = models.ForeignKey(
         Branch,
         on_delete=models.CASCADE,
@@ -219,12 +208,6 @@ class Item(AuditableModel):
         on_delete=models.CASCADE,
         related_name='items',
         verbose_name=_("Item Group")
-    )
-    code = models.CharField(
-        max_length=20,
-        unique=True,
-        blank=True,
-        verbose_name=_("Code")
     )
     name = models.CharField(
         max_length=200,
@@ -245,28 +228,6 @@ class Item(AuditableModel):
         max_length=20,
         verbose_name=_("Base Unit")
     )
-    shelf_location = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-        verbose_name=_("Shelf Location")
-    )
-    weight = models.DecimalField(
-        max_digits=10,
-        decimal_places=3,
-        null=True,
-        blank=True,
-        validators=[validate_positive_decimal],
-        verbose_name=_("Weight")
-    )
-    volume = models.DecimalField(
-        max_digits=10,
-        decimal_places=3,
-        null=True,
-        blank=True,
-        validators=[validate_positive_decimal],
-        verbose_name=_("Volume")
-    )
     manufacturer = models.CharField(
         max_length=100,
         blank=True,
@@ -278,51 +239,6 @@ class Item(AuditableModel):
         blank=True,
         null=True,
         verbose_name=_("Brand")
-    )
-    size = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name=_("Size")
-    )
-    color = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name=_("Color")
-    )
-    standard_cost = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Standard Cost")
-    )
-    sales_price = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Sales Price")
-    )
-    wholesale_price = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Wholesale Price")
-    )
-    minimum_price = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Minimum Price")
-    )
-    maximum_price = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Maximum Price")
     )
     media = models.ManyToManyField(
         Media,
@@ -370,62 +286,6 @@ class Item(AuditableModel):
         default='public',
         verbose_name=_("Visibility")
     )
-    reorder_level = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Reorder Level")
-    )
-    maximum_stock = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Maximum Stock")
-    )
-    minimum_order_quantity = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('1.0000'),
-        validators=[MinValueValidator(Decimal('0.0001'))],
-        verbose_name=_("Minimum Order Quantity")
-    )
-    markup_percentage = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=Decimal('0.00'),
-        validators=[validate_percentage],
-        verbose_name=_("Markup Percentage")
-    )
-    discount_percentage = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=Decimal('0.00'),
-        validators=[validate_percentage],
-        verbose_name=_("Discount Percentage")
-    )
-    commission_percentage = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=Decimal('0.00'),
-        validators=[validate_percentage],
-        verbose_name=_("Commission Percentage")
-    )
-    vat_percentage = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=Decimal('0.00'),
-        validators=[validate_percentage],
-        verbose_name=_("VAT Percentage")
-    )
-    handling_fee = models.DecimalField(
-        max_digits=15,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name=_("Handling Fee")
-    )
     is_service_item = models.BooleanField(
         default=False,
         verbose_name=_("Service Item")
@@ -463,16 +323,50 @@ class Item(AuditableModel):
         blank=True,
         verbose_name=_("Internal Notes")
     )
+    markup_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[validate_percentage],
+        verbose_name=_("Markup Percentage")
+    )
+    discount_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[validate_percentage],
+        verbose_name=_("Discount Percentage")
+    )
+    commission_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[validate_percentage],
+        verbose_name=_("Commission Percentage")
+    )
+    vat_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[validate_percentage],
+        verbose_name=_("VAT Percentage")
+    )
+    handling_fee = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name=_("Handling Fee")
+    )
 
     class Meta:
         verbose_name = _("Item")
         verbose_name_plural = _("Items")
         indexes = [
-            models.Index(fields=['branch', 'code']),
+            models.Index(fields=['branch']),
             models.Index(fields=['item_group', 'slug']),
             models.Index(fields=['is_featured', 'visibility', 'average_rating']),
             models.Index(fields=['manufacturer', 'brand']),
-            models.Index(fields=['size', 'color']),
         ]
         constraints = [
             models.CheckConstraint(
@@ -492,64 +386,37 @@ class Item(AuditableModel):
                 name='item_valid_vat_percentage'
             ),
             models.CheckConstraint(
-                check=models.Q(minimum_order_quantity__gt=0),
-                name='item_positive_minimum_order_quantity'
-            ),
-            models.CheckConstraint(
                 check=models.Q(average_rating__gte=0) & models.Q(average_rating__lte=5),
                 name='valid_average_rating'
             )
         ]
-
     def clean(self):
         super().clean()
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if not self.base_unit.strip():
             raise ValidationError({'base_unit': _('Base unit cannot be empty.')})
-        if self.minimum_price > 0 and self.maximum_price > 0 and self.minimum_price >= self.maximum_price:
-            raise ValidationError({'maximum_price': _('Maximum price must be greater than minimum price.')})
-        if self.sales_price > 0:
-            if self.minimum_price > 0 and self.sales_price < self.minimum_price:
-                raise ValidationError({'sales_price': _('Sales price cannot be less than minimum price.')})
-            if self.maximum_price > 0 and self.sales_price > self.maximum_price:
-                raise ValidationError({'sales_price': _('Sales price cannot be greater than maximum price.')})
-        if self.reorder_level > 0 and self.maximum_stock > 0 and self.reorder_level >= self.maximum_stock:
-            raise ValidationError({'maximum_stock': _('Maximum stock must be greater than reorder level.')})
 
-    def calculate_selling_price(self, cost: Decimal = None) -> Decimal:
-        cost = cost or self.standard_cost
-        if cost > 0 and self.markup_percentage > 0:
-            markup_amount = cost * (self.markup_percentage / 100)
-            calculated_price = cost + markup_amount
-            if self.minimum_price > 0:
-                calculated_price = max(calculated_price, self.minimum_price)
-            if self.maximum_price > 0:
-                calculated_price = min(calculated_price, self.maximum_price)
-            return calculated_price
-        return self.sales_price
+    def get_variants(self):
+        return self.variants.all()
 
     def get_current_stock(self) -> Decimal:
-        balance = InventoryBalance.objects.filter(
-            item=self
-        ).aggregate(
-            total=models.Sum('available_quantity')
-        )['total']
-        return balance or Decimal('0.0000')
+        total = Decimal('0.0000')
+        for variant in self.variants.all():
+            total += variant.get_current_stock()
+        return total
 
     def is_low_stock(self) -> bool:
         logger = Logger(__name__, branch_id=self.branch.id)
-        if self.reorder_level > 0:
-            current_stock = self.get_current_stock()
-            if current_stock <= self.reorder_level:
-                self.notify_low_stock(current_stock)
-                logger.info(f"Low stock detected for item {self.code}", 
-                           extra={'item_id': self.id, 'current_stock': str(current_stock)})
+        for variant in self.variants.all():
+            if variant.is_low_stock():
+                logger.info(f"Low stock detected for variant of item {self.name}",
+                           extra={'item_id': self.id})
                 return True
         return False
 
-    def notify_low_stock(self, current_stock: Decimal):
-        """Send notification for low stock."""
+    def notify_low_stock(self, variant_stock: Decimal, variant_code: str):
+        """Send notification for low stock on a variant."""
         from apps.core_apps.services.messaging_service import MessagingService
         logger = Logger(__name__, branch_id=self.branch.id)
         try:
@@ -558,19 +425,19 @@ class Item(AuditableModel):
                 recipient=None,
                 notification_type='low_stock',
                 context_data={
-                    'item_code': self.code,
                     'item_name': self.name,
-                    'current_stock': str(current_stock),
-                    'reorder_level': str(self.reorder_level),
+                    'variant_code': variant_code,
+                    'current_stock': str(variant_stock),
+                    'reorder_level': str(self.variants.first().reorder_level if self.variants.exists() else '0'),
                     'email': self.branch.email
                 },
                 channel='email',
                 priority='high'
             )
-            logger.info(f"Low stock notification sent for item {self.code}", 
+            logger.info(f"Low stock notification sent for item {self.name}",
                        extra={'item_id': self.id, 'notification_type': 'low_stock'})
         except Exception as e:
-            logger.error(f"Error sending low stock notification for item {self.code}: {str(e)}", 
+            logger.error(f"Error sending low stock notification for item {self.name}: {str(e)}",
                         extra={'item_id': self.id, 'notification_type': 'low_stock'}, exc_info=True)
 
     def get_display_name(self) -> str:
@@ -586,23 +453,199 @@ class Item(AuditableModel):
         self.average_rating = round(new_average, 2)
         self.review_count = total_ratings
         self.save(update_fields=['average_rating', 'review_count'])
-        logger.info(f"Updated rating for item {self.code}", 
+        logger.info(f"Updated rating for item {self.name}",
                    extra={'item_id': self.id, 'new_rating': str(new_rating), 'average_rating': str(self.average_rating)})
 
     def __str__(self):
-        return f"{self.item_group.store_group.code} - {self.code} - {self.name}"
+        return f"{self.item_group.store_group.code} - {self.name}"
 
-class ItemUnit(AuditableModel):
-    """Multiple units of measure for item variants."""
+class ItemVariant(AuditableModel):
+    """Variant-specific data for items (e.g., size/color combos)."""
     item = models.ForeignKey(
         Item,
         on_delete=models.CASCADE,
-        related_name='units',
-        verbose_name=_("Item")
+        related_name='variants',
+        verbose_name=_("Base Item")
     )
     code = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
+        verbose_name=_("Variant Code/SKU")
+    )
+    size = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name=_("Size")
+    )
+    color = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name=_("Color")
+    )
+    shelf_location = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name=_("Shelf Location")
+    )
+    weight = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        validators=[validate_positive_decimal],
+        verbose_name=_("Weight")
+    )
+    volume = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        validators=[validate_positive_decimal],
+        verbose_name=_("Volume")
+    )
+    standard_cost = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name=_("Standard Cost")
+    )
+    sales_price = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name=_("Sales Price")
+    )
+    wholesale_price = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name=_("Wholesale Price")
+    )
+    minimum_price = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name=_("Minimum Price")
+    )
+    maximum_price = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name=_("Maximum Price")
+    )
+    reorder_level = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name=_("Reorder Level")
+    )
+    maximum_stock = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name=_("Maximum Stock")
+    )
+    minimum_order_quantity = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        default=Decimal('1.0000'),
+        validators=[MinValueValidator(Decimal('0.0001'))],
+        verbose_name=_("Minimum Order Quantity")
+    )
+    extra_attributes = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name=_("Extra Attributes")
+    )
+
+    class Meta:
+        verbose_name = _("Item Variant")
+        verbose_name_plural = _("Item Variants")
+        unique_together = [['item', 'code']]
+        indexes = [
+            models.Index(fields=['item', 'code']),
+            models.Index(fields=['size', 'color']),
+            models.Index(fields=['sales_price']),
+            models.Index(fields=['item', 'size', 'color']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(reorder_level__lte=models.F('maximum_stock')),
+                name='variant_reorder_lte_max_stock'
+            ),
+            models.CheckConstraint(
+                check=models.Q(minimum_order_quantity__gt=0),
+                name='variant_positive_minimum_order_quantity'
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.item.item_type == 'service' and (self.size or self.color):
+            raise ValidationError({'size': _('Services typically do not have physical variants.')})
+        if self.minimum_price > 0 and self.maximum_price > 0 and self.minimum_price >= self.maximum_price:
+            raise ValidationError({'maximum_price': _('Maximum price must be greater than minimum price.')})
+        if self.sales_price > 0:
+            if self.minimum_price > 0 and self.sales_price < self.minimum_price:
+                raise ValidationError({'sales_price': _('Sales price cannot be less than minimum price.')})
+            if self.maximum_price > 0 and self.sales_price > self.maximum_price:
+                raise ValidationError({'sales_price': _('Sales price cannot be greater than maximum price.')})
+        if self.reorder_level > 0 and self.maximum_stock > 0 and self.reorder_level >= self.maximum_stock:
+            raise ValidationError({'maximum_stock': _('Maximum stock must be greater than reorder level.')})
+
+    def calculate_selling_price(self, cost: Decimal = None) -> Decimal:
+        cost = cost or self.standard_cost
+        if cost > 0 and self.item.markup_percentage > 0:
+            markup_amount = cost * (self.item.markup_percentage / 100)
+            calculated_price = cost + markup_amount
+            if self.minimum_price > 0:
+                calculated_price = max(calculated_price, self.minimum_price)
+            if self.maximum_price > 0:
+                calculated_price = min(calculated_price, self.maximum_price)
+            return calculated_price
+        return self.sales_price
+
+    def get_current_stock(self) -> Decimal:
+        balance = InventoryBalance.objects.filter(
+            variant=self
+        ).aggregate(
+            total=models.Sum('available_quantity')
+        )['total']
+        return balance or Decimal('0.0000')
+
+    def is_low_stock(self) -> bool:
+        logger = Logger(__name__, branch_id=self.item.branch.id)
+        if self.reorder_level > 0:
+            current_stock = self.get_current_stock()
+            if current_stock <= self.reorder_level:
+                self.item.notify_low_stock(current_stock, self.code)
+                logger.info(f"Low stock detected for variant {self.code}",
+                           extra={'variant_id': self.id, 'current_stock': str(current_stock)})
+                return True
+        return False
+
+    def __str__(self):
+        return f"{self.item.item_group.store_group.code} - {self.item.name} ({self.size or ''} {self.color or ''})"
+
+class ItemUnit(AuditableModel):
+    """Multiple units of measure for item variants."""
+    variant = models.ForeignKey(
+        ItemVariant,
+        on_delete=models.CASCADE,
+        related_name='units',
+        verbose_name=_("Item Variant")
+    )
+    code = models.CharField(
+        max_length=20,
         blank=True,
         verbose_name=_("Code")
     )
@@ -643,13 +686,12 @@ class ItemUnit(AuditableModel):
         default=True,
         verbose_name=_("Sales Unit")
     )
-
     class Meta:
         verbose_name = _("Item Unit")
         verbose_name_plural = _("Item Units")
-        unique_together = [['item', 'code']]
+        unique_together = [['variant', 'code']]
         indexes = [
-            models.Index(fields=['item', 'code']),
+            models.Index(fields=['variant', 'code']),
             models.Index(fields=['is_default']),
         ]
         constraints = [
@@ -658,28 +700,24 @@ class ItemUnit(AuditableModel):
                 name='positive_conversion_factor'
             )
         ]
-
     def clean(self):
         super().clean()
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
-
     def convert_to_base_units(self, quantity: Decimal) -> Decimal:
         return quantity * self.conversion_factor
-
     def convert_from_base_units(self, base_quantity: Decimal) -> Decimal:
         return base_quantity / self.conversion_factor
-
     def __str__(self):
-        return f"{self.item.code} - {self.code}"
+        return f"{self.variant.code} - {self.code}"
 
 class ItemBarcode(AuditableModel):
     """Barcodes for item variants and their units."""
-    item = models.ForeignKey(
-        Item,
+    variant = models.ForeignKey(
+        ItemVariant,
         on_delete=models.CASCADE,
         related_name='barcodes',
-        verbose_name=_("Item")
+        verbose_name=_("Item Variant")
     )
     barcode = models.CharField(
         max_length=50,
@@ -711,26 +749,22 @@ class ItemBarcode(AuditableModel):
         default=False,
         verbose_name=_("Primary Barcode")
     )
-
     class Meta:
         verbose_name = _("Item Barcode")
         verbose_name_plural = _("Item Barcodes")
-        unique_together = [['item', 'barcode']]
+        unique_together = [['variant', 'barcode']]
         indexes = [
-            models.Index(fields=['item', 'barcode']),
+            models.Index(fields=['variant', 'barcode']),
             models.Index(fields=['is_primary']),
         ]
-
-
     def clean(self):
         super().clean()
         if not self.barcode.strip():
             raise ValidationError({'barcode': _('Barcode cannot be empty.')})
-        if self.unit and self.unit.item != self.item:
-            raise ValidationError({'unit': _('Unit must belong to the same item.')})
-
+        if self.unit and self.unit.variant != self.variant:
+            raise ValidationError({'unit': _('Unit must belong to the same variant.')})
     def __str__(self):
-        return f"{self.item.code} - {self.barcode}"
+        return f"{self.variant.code} - {self.barcode}"
 
 class InventoryBalance(AuditableModel):
     """Current inventory balances by item variant, location, batch, and expiry."""
@@ -740,11 +774,11 @@ class InventoryBalance(AuditableModel):
         related_name='inventory_balances',
         verbose_name=_("Branch")
     )
-    item = models.ForeignKey(
-        Item,
+    variant = models.ForeignKey(
+        ItemVariant,
         on_delete=models.CASCADE,
         related_name='inventory_balances',
-        verbose_name=_("Item")
+        verbose_name=_("Item Variant")
     )
     location = models.CharField(
         max_length=50,
@@ -787,15 +821,15 @@ class InventoryBalance(AuditableModel):
         auto_now=True,
         verbose_name=_("Last Movement Date")
     )
-
     class Meta:
         verbose_name = _("Inventory Balance")
         verbose_name_plural = _("Inventory Balances")
-        unique_together = [['branch', 'item', 'location', 'batch_number', 'expiry_date']]
+        unique_together = [['branch', 'variant', 'location', 'batch_number', 'expiry_date']]
         indexes = [
-            models.Index(fields=['branch', 'item']),
+            models.Index(fields=['branch', 'variant']),
             models.Index(fields=['expiry_date', 'batch_number']),
             models.Index(fields=['available_quantity', 'last_movement_date']),
+            models.Index(fields=['variant', 'expiry_date']),
         ]
         constraints = [
             models.CheckConstraint(
@@ -803,37 +837,33 @@ class InventoryBalance(AuditableModel):
                 name='non_negative_reserved_quantity'
             )
         ]
-
     def clean(self):
         super().clean()
-        if self.item.track_expiry and not self.expiry_date:
+        if self.variant.item.track_expiry and not self.expiry_date:
             raise ValidationError({'expiry_date': _('Expiry date is required for items that track expiry.')})
-        if self.item.track_batches and not self.batch_number:
+        if self.variant.item.track_batches and not self.batch_number:
             raise ValidationError({'batch_number': _('Batch number is required for items that track batches.')})
-
     def is_expired(self) -> bool:
         logger = Logger(__name__, branch_id=self.branch.id)
         if self.expiry_date:
             is_expired = self.expiry_date < timezone.now().date()
             if is_expired:
                 self.notify_expiry()
-                logger.info(f"Expired stock detected for batch {self.batch_number}", 
-                           extra={'item_id': self.item.id, 'batch_number': self.batch_number})
+                logger.info(f"Expired stock detected for batch {self.batch_number}",
+                           extra={'variant_id': self.variant.id, 'batch_number': self.batch_number})
             return is_expired
         return False
-
     def is_near_expiry(self) -> bool:
         logger = Logger(__name__, branch_id=self.branch.id)
         if self.expiry_date:
-            warning_date = timezone.now().date() + timezone.timedelta(days=self.item.expiry_warning_days)
+            warning_date = timezone.now().date() + timezone.timedelta(days=self.variant.item.expiry_warning_days)
             is_near = self.expiry_date <= warning_date
             if is_near and not self.is_expired():
                 self.notify_near_expiry()
-                logger.info(f"Near-expiry stock detected for batch {self.batch_number}", 
-                           extra={'item_id': self.item.id, 'batch_number': self.batch_number})
+                logger.info(f"Near-expiry stock detected for batch {self.batch_number}",
+                           extra={'variant_id': self.variant.id, 'batch_number': self.batch_number})
             return is_near
         return False
-
     def notify_expiry(self):
         """Send notification for expired stock."""
         from apps.core_apps.services.messaging_service import MessagingService
@@ -844,7 +874,7 @@ class InventoryBalance(AuditableModel):
                 recipient=None,
                 notification_type='expired_stock',
                 context_data={
-                    'item_code': self.item.code,
+                    'item_code': self.variant.code,
                     'batch_number': self.batch_number,
                     'expiry_date': str(self.expiry_date),
                     'available_quantity': str(self.available_quantity),
@@ -853,12 +883,11 @@ class InventoryBalance(AuditableModel):
                 channel='email',
                 priority='urgent'
             )
-            logger.info(f"Expiry notification sent for batch {self.batch_number} of item {self.item.code}", 
-                       extra={'item_id': self.item.id, 'notification_type': 'expired_stock'})
+            logger.info(f"Expiry notification sent for batch {self.batch_number} of variant {self.variant.code}",
+                       extra={'variant_id': self.variant.id, 'notification_type': 'expired_stock'})
         except Exception as e:
-            logger.error(f"Error sending expiry notification for batch {self.batch_number}: {str(e)}", 
-                        extra={'item_id': self.item.id, 'notification_type': 'expired_stock'}, exc_info=True)
-
+            logger.error(f"Error sending expiry notification for batch {self.batch_number}: {str(e)}",
+                        extra={'variant_id': self.variant.id, 'notification_type': 'expired_stock'}, exc_info=True)
     def notify_near_expiry(self):
         """Send notification for near-expiry stock."""
         from apps.core_apps.services.messaging_service import MessagingService
@@ -869,29 +898,85 @@ class InventoryBalance(AuditableModel):
                 recipient=None,
                 notification_type='near_expiry_stock',
                 context_data={
-                    'item_code': self.item.code,
+                    'item_code': self.variant.code,
                     'batch_number': self.batch_number,
                     'expiry_date': str(self.expiry_date),
                     'available_quantity': str(self.available_quantity),
-                    'warning_days': self.item.expiry_warning_days,
+                    'warning_days': self.variant.item.expiry_warning_days,
                     'email': self.branch.email
                 },
                 channel='email',
                 priority='high'
             )
-            logger.info(f"Near-expiry notification sent for batch {self.batch_number} of item {self.item.code}", 
-                       extra={'item_id': self.item.id, 'notification_type': 'near_expiry_stock'})
+            logger.info(f"Near-expiry notification sent for batch {self.batch_number} of variant {self.variant.code}",
+                       extra={'variant_id': self.variant.id, 'notification_type': 'near_expiry_stock'})
         except Exception as e:
-            logger.error(f"Error sending near-expiry notification for batch {self.batch_number}: {str(e)}", 
-                        extra={'item_id': self.item.id, 'notification_type': 'near_expiry_stock'}, exc_info=True)
-
+            logger.error(f"Error sending near-expiry notification for batch {self.batch_number}: {str(e)}",
+                        extra={'variant_id': self.variant.id, 'notification_type': 'near_expiry_stock'}, exc_info=True)
     def get_total_quantity(self) -> Decimal:
         return self.available_quantity + self.reserved_quantity
-
     def __str__(self):
-        parts = [f"{self.item.item_group.store_group.code} - {self.item.code}"]
+        parts = [f"{self.variant.item.item_group.store_group.code} - {self.variant.code}"]
         if self.batch_number:
             parts.append(f"Batch: {self.batch_number}")
         if self.expiry_date:
             parts.append(f"Exp: {self.expiry_date}")
         return " - ".join(parts)
+
+class Attribute(AuditableModel):
+    """Dynamic attribute (e.g., 'Color', 'Size')."""
+    name = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name=_("Attribute Name")
+    )
+
+    class Meta:
+        verbose_name = _("Attribute")
+        verbose_name_plural = _("Attributes")
+
+    def __str__(self):
+        return self.name
+
+class AttributeValue(AuditableModel):
+    """Possible values (e.g., 'Red' for Color)."""
+    attribute = models.ForeignKey(
+        Attribute,
+        on_delete=models.CASCADE,
+        related_name='values',
+        verbose_name=_("Attribute")
+    )
+    value = models.CharField(
+        max_length=50,
+        verbose_name=_("Value")
+    )
+
+    class Meta:
+        verbose_name = _("Attribute Value")
+        verbose_name_plural = _("Attribute Values")
+        unique_together = [['attribute', 'value']]
+
+    def __str__(self):
+        return f"{self.attribute.name}: {self.value}"
+
+class VariantAttributeValue(AuditableModel):
+    """Assign values to variants (EAV junction)."""
+    variant = models.ForeignKey(
+        ItemVariant,
+        on_delete=models.CASCADE,
+        related_name='attribute_values',
+        verbose_name=_("Variant")
+    )
+    attribute_value = models.ForeignKey(
+        AttributeValue,
+        on_delete=models.CASCADE,
+        verbose_name=_("Attribute Value")
+    )
+
+    class Meta:
+        verbose_name = _("Variant Attribute Value")
+        verbose_name_plural = _("Variant Attribute Values")
+        unique_together = [['variant', 'attribute_value']]
+
+    def __str__(self):
+        return f"{self.variant.code} - {self.attribute_value}"

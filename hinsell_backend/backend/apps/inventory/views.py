@@ -60,14 +60,14 @@ class ItemViewSet(BaseViewSet):
     logger_name = 'inventory.item'
     
     filterset_fields = [
-        'branch', 'item_group', 'code', 'item_type', 'is_featured', 'visibility',
+        'branch', 'item_group', 'item_type', 'is_featured', 'visibility',
         'track_expiry', 'track_batches'
     ]
     search_fields = [
-        'code', 'name', 'slug', 'manufacturer', 'brand',
+        'name', 'slug', 'manufacturer', 'brand',
         'description', 'short_description', 'tags'
     ]
-    ordering_fields = ['code', 'name', 'sales_price', 'average_rating', 'created_at', 'updated_at']
+    ordering_fields = ['name', 'average_rating', 'created_at', 'updated_at']
     ordering = ['-created_at']
     
     permission_classes_by_action = {
@@ -129,7 +129,6 @@ class ItemViewSet(BaseViewSet):
                 'count': len(similar_items),
                 'reference_item': {
                     'id': item.id,
-                    'code': item.code,
                     'name': item.name
                 },
                 'similar_items': serializer.data,
@@ -174,9 +173,8 @@ class ItemViewSet(BaseViewSet):
             return Response({
                 'reference_item': {
                     'id': item.id,
-                    'code': item.code,
                     'name': item.name,
-                    'price': item.sales_price
+                    'price': item.variants.first().sales_price if item.variants.exists() else Decimal('0.00')
                 },
                 'recommendations': {
                     'similar': SimilarItemResponseSerializer(similar_items, many=True).data,
@@ -197,13 +195,33 @@ class ItemViewSet(BaseViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+class ItemVariantViewSet(BaseViewSet):
+    """ViewSet for ItemVariant model."""
+    queryset = ItemVariant.objects.all()
+    serializer_class = ItemVariantSerializer
+    logger_name = 'inventory.item_variant'
+    
+    filterset_fields = ['item', 'code']
+    search_fields = ['code', 'size', 'color']
+    ordering_fields = ['code', 'sales_price', 'created_at', 'updated_at']
+    ordering = ['code']
+    
+    permission_classes_by_action = {
+        'list': [],
+        'retrieve': [],
+        'create': [IsAuthenticated, HasRolePermission],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
+    } 
+
 class ItemUnitViewSet(BaseViewSet):
     """ViewSet for ItemUnit model."""
     queryset = ItemUnit.objects.all()
     serializer_class = ItemUnitSerializer
     logger_name = 'inventory.item_unit'
     
-    filterset_fields = ['item', 'code', 'is_default', 'is_purchase_unit', 'is_sales_unit']
+    filterset_fields = ['variant', 'code', 'is_default', 'is_purchase_unit', 'is_sales_unit']
     search_fields = ['code', 'name']
     ordering_fields = ['code', 'name', 'created_at', 'updated_at']
     ordering = ['code']
@@ -223,7 +241,7 @@ class ItemBarcodeViewSet(BaseViewSet):
     serializer_class = ItemBarcodeSerializer
     logger_name = 'inventory.item_barcode'
     
-    filterset_fields = ['item', 'barcode', 'barcode_type', 'is_primary']
+    filterset_fields = ['variant', 'barcode', 'barcode_type', 'is_primary']
     search_fields = ['barcode']
     ordering_fields = ['barcode', 'created_at', 'updated_at']
     ordering = ['barcode']
@@ -244,7 +262,7 @@ class InventoryBalanceViewSet(BaseViewSet):
     logger_name = 'inventory.inventory_balance'
     
     filterset_fields = [
-        'branch', 'item', 'batch_number', 'expiry_date',
+        'branch', 'variant', 'batch_number', 'expiry_date',
         'available_quantity', 'last_movement_date'
     ]
     search_fields = ['batch_number']
@@ -258,4 +276,4 @@ class InventoryBalanceViewSet(BaseViewSet):
         'update': [IsAuthenticated, HasRolePermission],
         'partial_update': [IsAuthenticated, HasRolePermission],
         'destroy': [IsAuthenticated, HasRolePermission],
-    } 
+    }

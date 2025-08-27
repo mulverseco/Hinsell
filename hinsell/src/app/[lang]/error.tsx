@@ -1,6 +1,8 @@
 "use client"
 
-import { Button } from "components/ui/button-old"
+import { CTAButton } from "@/components/shared/cta-button";
+import { RotateCcw } from "lucide-react";
+
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
@@ -9,9 +11,12 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           <>
             <h1 className="text-6xl font-bold">Something went wrong!</h1>
             <pre className="mt-2 text-lg">{JSON.stringify(error, null, 2)}</pre>
-            <Button variant="secondary" size="xl" className="text-[22px] hover:text-white" onClick={() => reset()}>
-              Try again
-            </Button>
+            <CTAButton
+              onClick={() => reset()}
+              icon={<RotateCcw className="h-4 w-4" aria-hidden="true" />}
+            >
+              TRY AGAIN
+            </CTAButton>
           </>
       </div>
     </div>
