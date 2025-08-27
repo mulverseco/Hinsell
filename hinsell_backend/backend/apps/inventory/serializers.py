@@ -103,13 +103,7 @@ class ItemGroupSerializer(serializers.ModelSerializer):
 
 class ItemUnitSerializer(serializers.ModelSerializer):
     """Serializer for ItemUnit model."""
-    variant_id = serializers.PrimaryKeyRelatedField(
-        queryset=ItemVariant.objects.all(),
-        source='variant',
-        write_only=True
-    )
     variant = serializers.PrimaryKeyRelatedField(
-        queryset=ItemVariant.objects.all(),
         source='variant',
         read_only=True
     )
@@ -117,7 +111,7 @@ class ItemUnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemUnit
         fields = [
-            'id', 'variant', 'variant_id', 'code', 'name', 'conversion_factor',
+            'id', 'variant', 'code', 'name', 'conversion_factor',
             'unit_price', 'unit_cost', 'is_default', 'is_purchase_unit',
             'is_sales_unit', 'created_at', 'updated_at'
         ]
@@ -126,11 +120,6 @@ class ItemUnitSerializer(serializers.ModelSerializer):
 
 class ItemBarcodeSerializer(serializers.ModelSerializer):
     """Serializer for ItemBarcode model."""
-    variant_id = serializers.PrimaryKeyRelatedField(
-        queryset=ItemVariant.objects.all(),
-        source='variant',
-        write_only=True
-    )
     variant = serializers.PrimaryKeyRelatedField(
         queryset=ItemVariant.objects.all(),
         source='variant',
@@ -146,7 +135,7 @@ class ItemBarcodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemBarcode
         fields = [
-            'id', 'variant', 'variant_id', 'barcode', 'barcode_type', 'unit_id',
+            'id', 'variant', 'barcode', 'barcode_type', 'unit_id',
             'is_primary', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -165,10 +154,6 @@ class ItemBarcodeSerializer(serializers.ModelSerializer):
 
 class ItemVariantSerializer(serializers.ModelSerializer):
     """Serializer for ItemVariant model with nested relationships."""
-    item = serializers.PrimaryKeyRelatedField(
-        queryset=Item.objects.all(),
-        write_only=True
-    )
     item_id = serializers.PrimaryKeyRelatedField(
         source='item',
         read_only=True
@@ -179,7 +164,7 @@ class ItemVariantSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemVariant
         fields = [
-            'id', 'item', 'item_id', 'code', 'size', 'color', 'shelf_location',
+            'id', 'item_id', 'code', 'size', 'color', 'shelf_location',
             'weight', 'volume', 'standard_cost', 'sales_price', 'wholesale_price',
             'minimum_price', 'maximum_price', 'reorder_level', 'maximum_stock',
             'minimum_order_quantity', 'extra_attributes', 'units', 'barcodes',
