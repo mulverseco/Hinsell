@@ -101,72 +101,6 @@ class ItemGroupSerializer(serializers.ModelSerializer):
         representation['level'] = instance.get_level()
         return representation
 
-
-class ItemVariantSerializer(serializers.ModelSerializer):
-    """Serializer for ItemVariant model with nested relationships."""
-    item = serializers.PrimaryKeyRelatedField(
-        queryset=Item.objects.all(),
-        write_only=True
-    )
-    item_id = serializers.PrimaryKeyRelatedField(
-        source='item',
-        read_only=True
-    )
-    units = ItemUnitSerializer(many=True, read_only=True)
-    barcodes = ItemBarcodeSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = ItemVariant
-        fields = [
-            'id', 'item', 'item_id', 'code', 'size', 'color', 'shelf_location',
-            'weight', 'volume', 'standard_cost', 'sales_price', 'wholesale_price',
-            'minimum_price', 'maximum_price', 'reorder_level', 'maximum_stock',
-            'minimum_order_quantity', 'extra_attributes', 'units', 'barcodes',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['created_at', 'updated_at']
-
-    def validate(self, data):
-        """Validate price and stock constraints for variant."""
-        minimum_price = data.get('minimum_price', Decimal('0'))
-        maximum_price = data.get('maximum_price', Decimal('0'))
-        sales_price = data.get('sales_price', Decimal('0'))
-        
-        if minimum_price > 0 and maximum_price > 0 and minimum_price >= maximum_price:
-            raise serializers.ValidationError(
-                {'maximum_price': _('Maximum price must be greater than minimum price.')}
-            )
-        if sales_price > 0:
-            if minimum_price > 0 and sales_price < minimum_price:
-                raise serializers.ValidationError(
-                    {'sales_price': _('Sales price cannot be less than minimum price.')}
-                )
-            if maximum_price > 0 and sales_price > maximum_price:
-                raise serializers.ValidationError(
-                    {'sales_price': _('Sales price cannot be greater than maximum price.')}
-                )
-        
-        reorder_level = data.get('reorder_level', Decimal('0'))
-        maximum_stock = data.get('maximum_stock', Decimal('0'))
-        if reorder_level > 0 and maximum_stock > 0 and reorder_level >= maximum_stock:
-            raise serializers.ValidationError(
-                {'maximum_stock': _('Maximum stock must be greater than reorder level.')}
-            )
-        
-        if data.get('item', {}).get('item_type') == 'service' and (data.get('size') or data.get('color')):
-            raise serializers.ValidationError({'size': _('Services typically do not have physical variants.')})
-        
-        return data
-
-    def to_representation(self, instance):
-        """Include calculated selling price and current stock."""
-        representation = super().to_representation(instance)
-        representation['selling_price'] = instance.calculate_selling_price()
-        representation['current_stock'] = instance.get_current_stock()
-        representation['is_low_stock'] = instance.is_low_stock()
-        return representation
-
-
 class ItemUnitSerializer(serializers.ModelSerializer):
     """Serializer for ItemUnit model."""
     variant_id = serializers.PrimaryKeyRelatedField(
@@ -228,6 +162,71 @@ class ItemBarcodeSerializer(serializers.ModelSerializer):
                 {'unit': _('Unit must belong to the same variant.')}
             )
         return data
+
+class ItemVariantSerializer(serializers.ModelSerializer):
+    """Serializer for ItemVariant model with nested relationships."""
+    item = serializers.PrimaryKeyRelatedField(
+        queryset=Item.objects.all(),
+        write_only=True
+    )
+    item_id = serializers.PrimaryKeyRelatedField(
+        source='item',
+        read_only=True
+    )
+    units = ItemUnitSerializer(many=True, read_only=True)
+    barcodes = ItemBarcodeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ItemVariant
+        fields = [
+            'id', 'item', 'item_id', 'code', 'size', 'color', 'shelf_location',
+            'weight', 'volume', 'standard_cost', 'sales_price', 'wholesale_price',
+            'minimum_price', 'maximum_price', 'reorder_level', 'maximum_stock',
+            'minimum_order_quantity', 'extra_attributes', 'units', 'barcodes',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+    def validate(self, data):
+        """Validate price and stock constraints for variant."""
+        minimum_price = data.get('minimum_price', Decimal('0'))
+        maximum_price = data.get('maximum_price', Decimal('0'))
+        sales_price = data.get('sales_price', Decimal('0'))
+        
+        if minimum_price > 0 and maximum_price > 0 and minimum_price >= maximum_price:
+            raise serializers.ValidationError(
+                {'maximum_price': _('Maximum price must be greater than minimum price.')}
+            )
+        if sales_price > 0:
+            if minimum_price > 0 and sales_price < minimum_price:
+                raise serializers.ValidationError(
+                    {'sales_price': _('Sales price cannot be less than minimum price.')}
+                )
+            if maximum_price > 0 and sales_price > maximum_price:
+                raise serializers.ValidationError(
+                    {'sales_price': _('Sales price cannot be greater than maximum price.')}
+                )
+        
+        reorder_level = data.get('reorder_level', Decimal('0'))
+        maximum_stock = data.get('maximum_stock', Decimal('0'))
+        if reorder_level > 0 and maximum_stock > 0 and reorder_level >= maximum_stock:
+            raise serializers.ValidationError(
+                {'maximum_stock': _('Maximum stock must be greater than reorder level.')}
+            )
+        
+        item = data.get('item')
+        if item and item.item_type == 'service' and (data.get('size') or data.get('color')):
+            raise serializers.ValidationError({'size': _('Services typically do not have physical variants.')})
+        
+        return data
+
+    def to_representation(self, instance):
+        """Include calculated selling price and current stock."""
+        representation = super().to_representation(instance)
+        representation['selling_price'] = instance.calculate_selling_price()
+        representation['current_stock'] = instance.get_current_stock()
+        representation['is_low_stock'] = instance.is_low_stock()
+        return representation
 
 
 class InventoryBalanceSerializer(serializers.ModelSerializer):
