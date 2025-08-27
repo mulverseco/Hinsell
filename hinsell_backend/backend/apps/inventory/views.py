@@ -6,11 +6,11 @@ from rest_framework.permissions import IsAuthenticated
 from apps.core_apps.general import BaseViewSet
 from apps.core_apps.permissions import HasRolePermission
 from apps.inventory.services.similarity_service import ItemSimilarityService
-from apps.inventory.models import StoreGroup, ItemGroup, Item, ItemUnit, ItemBarcode, InventoryBalance
+from apps.inventory.models import StoreGroup, ItemGroup, Item, ItemUnit,ItemVariant, ItemBarcode, InventoryBalance
 from apps.inventory.serializers import (
     StoreGroupSerializer, ItemGroupSerializer, ItemSerializer,
     ItemUnitSerializer, ItemBarcodeSerializer, InventoryBalanceSerializer,
-    SimilarItemResponseSerializer
+    SimilarItemResponseSerializer,ItemVariantSerializer
 )
 
 class StoreGroupViewSet(BaseViewSet):
