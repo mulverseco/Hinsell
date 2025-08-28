@@ -8,4 +8,3 @@ docker exec pharsy_backend python manage.py Initial_data \
         --reports-csv='apps/core_apps/services/management/commands/reports.csv' \
         --batch-size=5000 \
         --skip-errors
-.
