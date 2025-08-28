@@ -9,7 +9,7 @@ def check_item_stock(item_id: int):
     try:
         item = Item.objects.get(id=item_id)
         item.is_low_stock()
-        logger.info(f"Stock check completed for item {item.code}", 
+        logger.info(f"Stock check completed for item {item.name}", 
                    extra={'item_id': item_id, 'action': 'check_stock'})
     except Item.DoesNotExist:
         logger.error(f"Item {item_id} not found", extra={'item_id': item_id, 'action': 'check_stock'})
@@ -25,7 +25,7 @@ def check_inventory_balance(balance_id: int):
         balance = InventoryBalance.objects.get(id=balance_id)
         balance.is_near_expiry()
         balance.is_expired()
-        logger.info(f"Expiry check completed for balance {balance.item.code}", 
+        logger.info(f"Expiry check completed for balance {balance.item.name}", 
                    extra={'balance_id': balance_id, 'action': 'check_expiry'})
     except InventoryBalance.DoesNotExist:
         logger.error(f"Inventory balance {balance_id} not found", 

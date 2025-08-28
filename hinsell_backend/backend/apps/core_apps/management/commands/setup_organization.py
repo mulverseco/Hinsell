@@ -82,7 +82,7 @@ class Command(BaseCommand):
 
     def create_company(self, company_name):
         """Create the main company"""
-        company = Company.objects.create(
+        company = Company.objects.get_or_create(
             company_name=company_name,
             company_name_english=company_name,
             industry='E-commerce',
@@ -93,7 +93,7 @@ class Command(BaseCommand):
 
     def create_primary_branch(self, company, fiscal_year):
         """Create the primary branch"""
-        branch = Branch.objects.create(
+        branch = Branch.objects.get_or_create(
             company=company,
             branch_name=f'{company.company_name} - Main Branch',
             branch_name_english=f'{company.company_name} - Main Branch',
@@ -129,7 +129,7 @@ class Command(BaseCommand):
         
         # Create primary currency based on country
         primary_currency_data = currency_data.get(country_code, currency_data['US'])
-        primary_currency = Currency.objects.create(
+        primary_currency = Currency.objects.get_or_create(
             branch=branch,
             code=primary_currency_data['code'],
             name=primary_currency_data['name'],
@@ -143,7 +143,7 @@ class Command(BaseCommand):
         # Add other major currencies
         for code, data in currency_data.items():
             if code != country_code:
-                currency = Currency.objects.create(
+                currency = Currency.objects.get_or_create(
                     branch=branch,
                     code=data['code'],
                     name=data['name'],
@@ -189,7 +189,7 @@ class Command(BaseCommand):
         
         account_types = []
         for data in account_types_data:
-            account_type = AccountType.objects.create(
+            account_type = AccountType.objects.get_or_create(
                 branch=branch,
                 name=data['name'],
                 category=data['category'],
@@ -277,7 +277,7 @@ class Command(BaseCommand):
             if account_data.get('parent'):
                 parent_account = account_objects.get(account_data['parent'])
             
-            account = Account.objects.create(
+            account = Account.objects.get_or_create(
                 branch=branch,
                 code=account_data['code'],
                 name=account_data['name'],
@@ -315,30 +315,30 @@ class Command(BaseCommand):
         
     def create_sample_attributes(self, branch):
         """Create sample attributes for products"""
-        color_attr = Attribute.objects.create(name="Color")
-        size_attr = Attribute.objects.create(name="Size")
-        material_attr = Attribute.objects.create(name="Material")
+        color_attr = Attribute.objects.get_or_create(name="Color")
+        size_attr = Attribute.objects.get_or_create(name="Size")
+        material_attr = Attribute.objects.get_or_create(name="Material")
         
         # Color values
-        AttributeValue.objects.create(attribute=color_attr, value="Red")
-        AttributeValue.objects.create(attribute=color_attr, value="Blue")
-        AttributeValue.objects.create(attribute=color_attr, value="Green")
-        AttributeValue.objects.create(attribute=color_attr, value="Black")
-        AttributeValue.objects.create(attribute=color_attr, value="White")
+        AttributeValue.objects.get_or_create(attribute=color_attr, value="Red")
+        AttributeValue.objects.get_or_create(attribute=color_attr, value="Blue")
+        AttributeValue.objects.get_or_create(attribute=color_attr, value="Green")
+        AttributeValue.objects.get_or_create(attribute=color_attr, value="Black")
+        AttributeValue.objects.get_or_create(attribute=color_attr, value="White")
         
         # Size values
-        AttributeValue.objects.create(attribute=size_attr, value="Small")
-        AttributeValue.objects.create(attribute=size_attr, value="Medium")
-        AttributeValue.objects.create(attribute=size_attr, value="Large")
-        AttributeValue.objects.create(attribute=size_attr, value="XL")
-        AttributeValue.objects.create(attribute=size_attr, value="XXL")
+        AttributeValue.objects.get_or_create(attribute=size_attr, value="Small")
+        AttributeValue.objects.get_or_create(attribute=size_attr, value="Medium")
+        AttributeValue.objects.get_or_create(attribute=size_attr, value="Large")
+        AttributeValue.objects.get_or_create(attribute=size_attr, value="XL")
+        AttributeValue.objects.get_or_create(attribute=size_attr, value="XXL")
         
         # Material values
-        AttributeValue.objects.create(attribute=material_attr, value="Cotton")
-        AttributeValue.objects.create(attribute=material_attr, value="Polyester")
-        AttributeValue.objects.create(attribute=material_attr, value="Wool")
-        AttributeValue.objects.create(attribute=material_attr, value="Silk")
-        AttributeValue.objects.create(attribute=material_attr, value="Leather")
+        AttributeValue.objects.get_or_create(attribute=material_attr, value="Cotton")
+        AttributeValue.objects.get_or_create(attribute=material_attr, value="Polyester")
+        AttributeValue.objects.get_or_create(attribute=material_attr, value="Wool")
+        AttributeValue.objects.get_or_create(attribute=material_attr, value="Silk")
+        AttributeValue.objects.get_or_create(attribute=material_attr, value="Leather")
     
     def create_sample_data(self, branch, currency):
         """Create sample store groups, item groups, and products"""
@@ -360,7 +360,7 @@ class Command(BaseCommand):
         ).first()
         
         # Create store groups
-        apparel_store = StoreGroup.objects.create(
+        apparel_store = StoreGroup.objects.get_or_create(
             branch=branch,
             code="APP",
             name="Apparel",
@@ -371,7 +371,7 @@ class Command(BaseCommand):
             cost_of_sales_account=cost_account
         )
         
-        electronics_store = StoreGroup.objects.create(
+        electronics_store = StoreGroup.objects.get_or_create(
             branch=branch,
             code="ELEC",
             name="Electronics",
@@ -383,7 +383,7 @@ class Command(BaseCommand):
         )
         
         # Create item groups
-        mens_clothing = ItemGroup.objects.create(
+        mens_clothing = ItemGroup.objects.get_or_create(
             branch=branch,
             store_group=apparel_store,
             code="MEN",
@@ -392,7 +392,7 @@ class Command(BaseCommand):
             group_type=ItemGroup.GroupType.PRODUCT
         )
         
-        womens_clothing = ItemGroup.objects.create(
+        womens_clothing = ItemGroup.objects.get_or_create(
             branch=branch,
             store_group=apparel_store,
             code="WOMEN",
@@ -401,7 +401,7 @@ class Command(BaseCommand):
             group_type=ItemGroup.GroupType.PRODUCT
         )
         
-        smartphones = ItemGroup.objects.create(
+        smartphones = ItemGroup.objects.get_or_create(
             branch=branch,
             store_group=electronics_store,
             code="PHONE",
@@ -418,7 +418,7 @@ class Command(BaseCommand):
     def create_sample_t_shirt(self, branch, item_group, currency):
         """Create a sample t-shirt product with variants"""
         # Create base item
-        t_shirt = Item.objects.create(
+        t_shirt = Item.objects.get_or_create(
             branch=branch,
             item_group=item_group,
             name="Men's Cotton T-Shirt",
@@ -454,7 +454,7 @@ class Command(BaseCommand):
         ]
         
         for i, data in enumerate(variants_data, 1):
-            variant = ItemVariant.objects.create(
+            variant = ItemVariant.objects.get_or_create(
                 item=t_shirt,
                 code=f"TSHIRT-{data['size']}-{data['color']}",
                 size=data['size'],
@@ -469,12 +469,12 @@ class Command(BaseCommand):
             color_attr = AttributeValue.objects.get(attribute__name="Color", value=data['color'])
             size_attr = AttributeValue.objects.get(attribute__name="Size", value=data['size'])
             
-            VariantAttributeValue.objects.create(variant=variant, attribute_value=color_attr)
-            VariantAttributeValue.objects.create(variant=variant, attribute_value=size_attr)
-            VariantAttributeValue.objects.create(variant=variant, attribute_value=cotton)
+            VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=color_attr)
+            VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=size_attr)
+            VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=cotton)
             
             # Create unit
-            unit = ItemUnit.objects.create(
+            unit = ItemUnit.objects.get_or_create(
                 variant=variant,
                 code="PCS",
                 name="Piece",
@@ -487,7 +487,7 @@ class Command(BaseCommand):
             )
             
             # Create barcode
-            ItemBarcode.objects.create(
+            ItemBarcode.objects.get_or_create(
                 variant=variant,
                 barcode=f"123456789012{i}",
                 barcode_type="ean13",
@@ -496,7 +496,7 @@ class Command(BaseCommand):
             )
             
             # Create inventory balance
-            InventoryBalance.objects.create(
+            InventoryBalance.objects.get_or_create(
                 branch=branch,
                 variant=variant,
                 location="A-01",
@@ -508,7 +508,7 @@ class Command(BaseCommand):
     def create_sample_dress(self, branch, item_group, currency):
         """Create a sample dress product with variants"""
         # Create base item
-        dress = Item.objects.create(
+        dress = Item.objects.get_or_create(
             branch=branch,
             item_group=item_group,
             name="Women's Summer Dress",
@@ -544,7 +544,7 @@ class Command(BaseCommand):
         ]
         
         for i, data in enumerate(variants_data, 1):
-            variant = ItemVariant.objects.create(
+            variant = ItemVariant.objects.get_or_create(
                 item=dress,
                 code=f"DRESS-{data['size']}-{data['color']}",
                 size=data['size'],
@@ -559,12 +559,12 @@ class Command(BaseCommand):
             color_attr = AttributeValue.objects.get(attribute__name="Color", value=data['color'])
             size_attr = AttributeValue.objects.get(attribute__name="Size", value=data['size'])
             
-            VariantAttributeValue.objects.create(variant=variant, attribute_value=color_attr)
-            VariantAttributeValue.objects.create(variant=variant, attribute_value=size_attr)
-            VariantAttributeValue.objects.create(variant=variant, attribute_value=cotton)
+            VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=color_attr)
+            VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=size_attr)
+            VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=cotton)
             
             # Create unit
-            unit = ItemUnit.objects.create(
+            unit = ItemUnit.objects.get_or_create(
                 variant=variant,
                 code="PCS",
                 name="Piece",
@@ -577,7 +577,7 @@ class Command(BaseCommand):
             )
             
             # Create barcode
-            ItemBarcode.objects.create(
+            ItemBarcode.objects.get_or_create(
                 variant=variant,
                 barcode=f"223456789012{i}",
                 barcode_type="ean13",
@@ -586,7 +586,7 @@ class Command(BaseCommand):
             )
             
             # Create inventory balance
-            InventoryBalance.objects.create(
+            InventoryBalance.objects.get_or_create(
                 branch=branch,
                 variant=variant,
                 location="B-01",
@@ -598,7 +598,7 @@ class Command(BaseCommand):
     def create_sample_smartphone(self, branch, item_group, currency):
         """Create a sample smartphone product with variants"""
         # Create base item
-        smartphone = Item.objects.create(
+        smartphone = Item.objects.get_or_create(
             branch=branch,
             item_group=item_group,
             name="Premium Smartphone",
@@ -630,7 +630,7 @@ class Command(BaseCommand):
         ]
         
         for i, data in enumerate(variants_data, 1):
-            variant = ItemVariant.objects.create(
+            variant = ItemVariant.objects.get_or_create(
                 item=smartphone,
                 code=f"PHONE-{data['storage']}-{data['color']}",
                 color=data['color'],
@@ -643,10 +643,10 @@ class Command(BaseCommand):
             
             # Add attribute values
             color_attr = AttributeValue.objects.get(attribute__name="Color", value=data['color'])
-            VariantAttributeValue.objects.create(variant=variant, attribute_value=color_attr)
+            VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=color_attr)
             
             # Create unit
-            unit = ItemUnit.objects.create(
+            unit = ItemUnit.objects.get_or_create(
                 variant=variant,
                 code="PCS",
                 name="Piece",
@@ -659,7 +659,7 @@ class Command(BaseCommand):
             )
             
             # Create barcode
-            ItemBarcode.objects.create(
+            ItemBarcode.objects.get_or_create(
                 variant=variant,
                 barcode=f"323456789012{i}",
                 barcode_type="ean13",
@@ -669,7 +669,7 @@ class Command(BaseCommand):
             
             # Create inventory balance with batch number
             batch_number = f"BATCH-{date.today().strftime('%Y%m%d')}-{i:03d}"
-            InventoryBalance.objects.create(
+            InventoryBalance.objects.get_or_create(
                 branch=branch,
                 variant=variant,
                 location="C-01",
