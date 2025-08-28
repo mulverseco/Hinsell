@@ -1,3 +1,4 @@
+import { itemsList } from "@/core/generated/actions/items";
 import { CTA } from "@/features/landing/cta";
 import { Features } from "@/features/landing/features";
 import { Hero } from "@/features/landing/hero";
@@ -9,10 +10,11 @@ export const dynamic = "force-static"
 export const dynamicParams = true
 
 export default async function Home() {
+  const items = await itemsList({})
   return (
     <>
       <Hero />
-      <Features />
+      <Features initialItem={items.data} />
       <Pricing />
       <Testimonials />
       <CTA />

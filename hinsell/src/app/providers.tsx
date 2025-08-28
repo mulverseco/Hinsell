@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProviderClient } from "@/locales/client";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 
 type ProviderProps = {
   locale?: string;
@@ -51,7 +52,7 @@ export function Providers({ locale, children }: ProviderProps) {
           <TooltipProvider>
            {children}
           </TooltipProvider>
-            {/* {process.env.NODE_ENV === "development" && <ReactQueryDevtools initialIsOpen={false} />} */}
+            {process.env.NODE_ENV === "development" && <ReactQueryDevtools initialIsOpen={false} />}
         </QueryClientProvider>
         {/* </SessionProvider> */}
       </ThemeProvider>

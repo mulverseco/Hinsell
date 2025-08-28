@@ -1309,32 +1309,6 @@ export const AccountsUpdateBalanceParamsSchema = z.object({
 
 export type AccountsUpdateBalanceParams = z.infer<typeof AccountsUpdateBalanceParamsSchema>
 /**
- * Request schema for POST /accounts/{id}/update_balance/
- */
-export const AccountsUpdateBalanceRequestSchema = AccountSchema
-export type AccountsUpdateBalanceRequest = z.infer<typeof AccountsUpdateBalanceRequestSchema>
-/**
- * Success response schema for POST /accounts/{id}/update_balance/
- * Status: 201
- * 
- */
-export const AccountsUpdateBalanceResponseSchema = AccountSchema
-
-export type AccountsUpdateBalanceResponse = z.infer<typeof AccountsUpdateBalanceResponseSchema>
-/**
- * Parameters schema for POST /accounts/{id}/update_balance/
- * Path params: id
- * Query params: none
- * Header params: none
- */
-export const AccountsUpdateBalanceParamsSchema = z.object({
-  path: z.object({
-    id: z.string().uuid("Invalid UUID format")
-  })
-})
-
-export type AccountsUpdateBalanceParams = z.infer<typeof AccountsUpdateBalanceParamsSchema>
-/**
  * Success response schema for GET /api/webhooks/deliveries/
  * Status: 200
  * 

@@ -9,11 +9,13 @@ export const CTAButton = ({
     children,
     variant = "default",
     href,
+    size,
     icon,
     onClick,
   }: {
     children: React.ReactNode;
-    variant?: "default" | "outline";
+    variant?: "default" | "outline" | "ghost";
+    size?: "lg" | "sm" | "md";
     href?: string;
     icon?: React.ReactNode;
     onClick?: () => void;
@@ -24,7 +26,7 @@ export const CTAButton = ({
     );
   
     const button = (
-      <Button size="lg" variant={variant as any} className={buttonClass} onClick={onClick}>
+      <Button size={size} variant={variant as any} className={buttonClass} onClick={onClick}>
         {icon && (
           <span
             className="bg-primary-foreground/10 mr-3 -ml-2 inline-flex h-8 w-8 items-center justify-center rounded-full"

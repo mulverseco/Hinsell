@@ -1,20 +1,21 @@
 
 import type React from "react"
-import { Header } from "@/features/landing/header"
+import { Header } from "@/components/header/header"
 import { Footer } from "@/features/landing/footer"
-import { itemsList } from "@/core/generated/actions/items";
+import { itemGroupsList } from "@/core/generated/actions/itemGroups";
+import { storeGroupsList } from "@/core/generated/actions/storeGroups";
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const results = await itemsList({})
+   const [itemGroupsData, storeGroupsData] = await Promise.all([itemGroupsList({}), storeGroupsList({})])
   return (
     <>
-     <Header />
+     <Header initialItemGroups={itemGroupsData.data || []} initialStoreGroups={storeGroupsData.data || []} />
      {children}
-     <Footer />
+     <Footer initialItemGroups={itemGroupsData.data || []} initialStoreGroups={storeGroupsData.data || []} />
     </>
   )
 }

@@ -6,6 +6,9 @@ import { Zap } from "lucide-react";
 
 // Internal imports
 import { XIcon, GitHubIcon, LinkedInIcon } from "@/components/icons";
+import { useItemGroupsList } from "@/core/generated/hooks/itemGroups";
+import { useStoreGroupsList } from "@/core/generated/hooks/storeGroups";
+import { ItemGroup, StoreGroup } from "@/core/generated/schemas";
 
 /**
  * FooterHeading component for consistent section headings
@@ -38,12 +41,6 @@ const FooterLink = ({
  * Navigation data for footer links
  */
 const navigation = {
-  product: [
-    { name: "Features", href: "#features" },
-    { name: "Pricing", href: "#pricing" },
-    { name: "Testimonials", href: "#testimonials" },
-    { name: "API", href: "#" },
-  ],
   company: [
     { name: "About", href: "#" },
     { name: "Blog", href: "#" },
@@ -64,29 +61,39 @@ const navigation = {
   social: [
     {
       name: "X",
-      href: "https://x.com/KaraBharat",
+      href: "https://x.com/mulverseco",
       openInNewTab: true,
       icon: XIcon,
     },
     {
       name: "GitHub",
-      href: "https://github.com/KaraBharat/shadcn-crm-dashboard",
+      href: "https://github.com/mulverseco",
       openInNewTab: true,
       icon: GitHubIcon,
     },
     {
       name: "LinkedIn",
-      href: "https://www.linkedin.com/in/kara-bharat/",
+      href: "https://www.linkedin.com/in/mulverse-software-813943379",
       openInNewTab: true,
       icon: LinkedInIcon,
     },
   ],
 };
 
-/**
- * Main Footer component
- */
-export function Footer() {
+interface HeaderProps {
+  initialItemGroups?: ItemGroup[]
+  initialStoreGroups?: StoreGroup[]
+}
+
+export function Footer({ initialItemGroups = [], initialStoreGroups = [] }: HeaderProps) {
+
+    const { data: itemGroups } = useItemGroupsList(undefined, undefined, {
+      initialData: initialItemGroups,
+    })
+  
+    const { data: storeGroups } = useStoreGroupsList(undefined, undefined, {
+      initialData: initialStoreGroups,
+    })
   return (
     <footer
       className="border-border/50 relative border-t"
@@ -96,7 +103,6 @@ export function Footer() {
         Footer
       </h2>
 
-      {/* Background elements */}
       <div
         className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] opacity-50"
         aria-hidden="true"
@@ -147,11 +153,14 @@ export function Footer() {
               <div>
                 <FooterHeading>Product</FooterHeading>
                 <ul role="list" className="mt-4 space-y-3">
-                  {navigation.product.map((item) => (
-                    <li key={item.name}>
-                      <FooterLink href={item.href}>{item.name}</FooterLink>
-                    </li>
-                  ))}
+                  {itemGroups?.slice(0, 8).map((group: any) => {
+                    const item = group.name ?? group.slug ?? group.code ?? "Item";
+                    return (
+                      <li key={item}>
+                        <FooterLink href={`/category/plp/${group.id}`}>{item}</FooterLink>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
               <div className="mt-12 md:mt-0">
@@ -191,7 +200,7 @@ export function Footer() {
         </div>
         <div className="border-border/50 mt-12 border-t pt-8">
           <p className="text-muted-foreground text-center text-sm">
-            &copy; {new Date().getFullYear()} Piper, Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} Mulverse, Inc. All rights reserved.
           </p>
         </div>
       </div>

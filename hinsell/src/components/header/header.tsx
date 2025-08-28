@@ -2,46 +2,34 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, Zap } from "lucide-react";
+import { Menu, ShoppingCart, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useActiveSection } from "@/hooks/use-active-section";
-import { cn } from "@/lib/utils";
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { NavLink } from "./nav-link";
+import { ItemGroup, StoreGroup } from "@/core/generated/schemas";
+import { useItemGroupsList } from "@/core/generated/hooks/itemGroups";
+import { useStoreGroupsList } from "@/core/generated/hooks/storeGroups";
+import { Badge } from "../ui/badge";
 
-const NavLink = ({
-  href,
-  isActive,
-  onClick,
-  children,
-}: {
-  href: string;
-  isActive: boolean;
-  onClick?: () => void;
-  children: React.ReactNode;
-}) => {
-  return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className={cn(
-        "relative rounded-md px-4 py-2 text-sm font-medium tracking-wide transition-all",
-        isActive
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
-      )}
-      aria-current={isActive ? "page" : undefined}
-    >
-      {children}
-    </Link>
-  );
-};
 
-export function Header() {
+interface HeaderProps {
+  initialItemGroups?: ItemGroup[]
+  initialStoreGroups?: StoreGroup[]
+}
+
+export function Header({ initialItemGroups = [], initialStoreGroups = [] }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navItems = ["Home", "Features", "Pricing", "Testimonials"];
   const { activeHash } = useActiveSection(navItems);
 
+  const { data: itemGroups } = useItemGroupsList(undefined, undefined, {
+    initialData: initialItemGroups,
+  })
+
+  const { data: storeGroups } = useStoreGroupsList(undefined, undefined, {
+    initialData: initialStoreGroups,
+  })
   return (
     <>
       <header className="fixed inset-x-0 top-4 z-50">
@@ -67,32 +55,31 @@ export function Header() {
               </Link>
 
               <div className="hidden items-center gap-1 md:flex">
-                {navItems.map((item) => {
-                  const hash = `#${item.toLowerCase()}`;
-                  const isActive = activeHash === hash;
+                {itemGroups?.slice(0, 8).map((group: any) => {
+                  const item = group.name ?? group.slug ?? group.code ?? "Item";
                   return (
-                    <NavLink key={item} href={hash} isActive={isActive}>
+                    <NavLink key={group.id} href={`/category/plp/${group.id}`}>
                       {item}
                     </NavLink>
                   );
                 })}
               </div>
 
-              {/* Desktop CTA */}
               <div className="hidden items-center gap-3 md:flex">
+              <Button variant="ghost" size="sm" className="relative gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden lg:inline">$245  </span>
+                  <Badge variant={"outline"} className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs">
+                    2
+                  </Badge>
+              </Button>
                 <Button variant="ghost" className="font-medium tracking-wide">
                   Sign in
                 </Button>
-                <Link href="/dashboard">
-                  <Button className="px-4 font-medium tracking-wide">
-                    Get Started
-                  </Button>
-                </Link>
                 <ModeToggle />
                 {/* <LanguageSwitcher/> */}
               </div>
 
-              {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="hover:bg-background/80 rounded-full p-2 transition-colors md:hidden"
@@ -125,20 +112,14 @@ export function Header() {
           />
           <div className="bg-background/95 border-border/50 fixed inset-x-0 top-0 border-b p-6">
             <div className="mt-20 flex flex-col gap-2 space-y-1">
-              {navItems.map((item) => {
-                const hash = `#${item.toLowerCase()}`;
-                const isActive = activeHash === hash;
-                return (
-                  <NavLink
-                    key={item}
-                    href={hash}
-                    isActive={isActive}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item}
-                  </NavLink>
-                );
-              })}
+                {itemGroups?.slice(0, 8).map((group: any) => {
+                  const item = group.name ?? group.slug ?? group.code ?? "Item";
+                  return (
+                    <NavLink key={group.id} href={`/category/plp/${group.id}`} onClick={() => setIsMenuOpen(false)}>
+                      {item}
+                    </NavLink>
+                  );
+                })}
               <div className="border-border/50 mt-6 grid grid-cols-2 gap-3 border-t pt-6">
                 <Button
                   variant="outline"
@@ -147,14 +128,6 @@ export function Header() {
                 >
                   Sign in
                 </Button>
-                <Link href="/dashboard" className="w-full">
-                  <Button
-                    className="w-full font-medium tracking-wide"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Get Started
-                  </Button>
-                </Link>
               </div>
               <div className="flex items-center justify-end pt-6">
                 <ModeToggle />

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useSuspenseQuery, useMutation } from '@tansta
 import { useOptimistic, useTransition } from 'react'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { toast } from 'sonner'
-import { accountsList, accountsRead, accountsCreate, accountsUpdate, accountsPartialUpdate, accountsDelete, accountsUpdateBalance, accountsUpdateBalance } from '@/core/generated/actions/accounts'
+import { accountsList, accountsRead, accountsCreate, accountsUpdate, accountsPartialUpdate, accountsDelete, accountsUpdateBalance } from '@/core/generated/actions/accounts'
 import {
   AccountsListResponseSchema,
   AccountsListParamsSchema,
@@ -501,95 +501,6 @@ export function useAccountsDeleteMutation(options?: {
 
 /**
  * Optimized mutation hook for POST /accounts/{id}/update-balance/
- * Features: Optimistic updates, smart invalidation, error handling
- * @param options - Mutation options
- * @returns Mutation result with enhanced features
- */
-export function useAccountsUpdateBalanceMutation(options?: {
-  onSuccess?: (data: z.infer<typeof AccountsUpdateBalanceResponseSchema>, variables: { body: z.infer<typeof AccountsUpdateBalanceRequestSchema>, params: z.infer<typeof AccountsUpdateBalanceParamsSchema> }) => void
-  onError?: (error: Error, variables: { body: z.infer<typeof AccountsUpdateBalanceRequestSchema>, params: z.infer<typeof AccountsUpdateBalanceParamsSchema> }) => void
-  optimisticUpdate?: (variables: { body: z.infer<typeof AccountsUpdateBalanceRequestSchema>, params: z.infer<typeof AccountsUpdateBalanceParamsSchema> }) => any
-  showToast?: boolean
-}) {
-  const queryClient = useQueryClient()
-  const [isPending, startTransition] = useTransition()
-  const [optimisticData, setOptimisticData] = useOptimistic(null)
-
-  const mutation = useMutation({
-    mutationFn: async (variables: { body: z.infer<typeof AccountsUpdateBalanceRequestSchema>, params: z.infer<typeof AccountsUpdateBalanceParamsSchema> }): Promise<z.infer<typeof AccountsUpdateBalanceResponseSchema>> => {
-      try {
-        const result = await accountsUpdateBalance(variables)
-        return result
-      } catch (error) {
-        handleActionError(error)
-      }
-    },
-    
-    onMutate: async (variables) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['accounts'] })
-      
-      // Snapshot previous value
-      const previousData = queryClient.getQueryData(['accounts'])
-      
-      // Optimistic update
-      if (options?.optimisticUpdate) {
-        const optimisticValue = options.optimisticUpdate(variables)
-        setOptimisticData(optimisticValue)
-        queryClient.setQueryData(['accounts'], optimisticValue)
-      }
-      
-      return { previousData }
-    },
-    
-    onSuccess: (data, variables) => {
-      // Show success toast
-      if (options?.showToast !== false) {
-        toast.success('Operation completed successfully')
-      }
-      
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: ['accounts'] })
-      
-      // Custom success handler
-      options?.onSuccess?.(data, variables)
-    },
-    
-    onError: (error, variables, context) => {
-      // Rollback optimistic update
-      if (context?.previousData) {
-        queryClient.setQueryData(['accounts'], context.previousData)
-      }
-      
-      // Show error toast
-      if (options?.showToast !== false) {
-        toast.error(error.message || 'Operation failed')
-      }
-      
-      // Custom error handler
-      options?.onError?.(error as Error, variables)
-    },
-    
-    onSettled: () => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: ['accounts'] })
-    }
-  })
-
-  return {
-    ...mutation,
-    mutateWithTransition: (variables: { body: z.infer<typeof AccountsUpdateBalanceRequestSchema>, params: z.infer<typeof AccountsUpdateBalanceParamsSchema> }) => {
-      startTransition(() => {
-        mutation.mutate(variables)
-      })
-    },
-    isPending: isPending || mutation.isPending,
-    optimisticData
-  }
-}
-
-/**
- * Optimized mutation hook for POST /accounts/{id}/update_balance/
  * Features: Optimistic updates, smart invalidation, error handling
  * @param options - Mutation options
  * @returns Mutation result with enhanced features

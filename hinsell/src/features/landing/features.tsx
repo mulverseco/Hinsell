@@ -16,6 +16,9 @@ import {
 
 // Internal imports
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ItemCard } from "@/components/shared/items-card";
+import { Item } from "@/core/generated/schemas";
+import { useItemsList } from "@/core/generated/hooks/items";
 
 /**
  * SectionTitle component for consistent headings across sections
@@ -125,10 +128,16 @@ const features = [
   },
 ];
 
-/**
- * Main Features component
- */
-export function Features() {
+interface HeaderProps {
+  initialItem?: Item[]
+}
+
+export function Features({ initialItem = [] }: HeaderProps) {
+
+    const { data: item } = useItemsList(undefined, undefined, {
+      initialData: initialItem,
+    })
+   console.log("item", item);
   return (
     <section
       id="features"
@@ -156,8 +165,8 @@ export function Features() {
         />
 
         <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature, i) => (
-            <FeatureCard key={i} feature={feature} index={i} />
+          {features.map((it, i) => (
+            <FeatureCard key={i} feature={it} index={i} />
           ))}
         </div>
 

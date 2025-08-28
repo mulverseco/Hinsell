@@ -220,8 +220,8 @@ responseSchema: AccountsDeleteResponseSchema
   }
 
   /**
-   * Update account balance.
-   * Update account balance.
+   * ViewSet for Account model.
+   * ViewSet for Account model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof AccountsUpdateBalanceResponseSchema>>>
    * @example
@@ -242,38 +242,6 @@ const validatedParams = await AccountsUpdateBalanceParamsSchema.parseAsync(optio
     return this.request<z.infer<typeof AccountsUpdateBalanceResponseSchema>>(
       'POST',
       '/accounts/{id}/update-balance/',
-      {
-        pathParams: validatedParams.path,
-body: validatedBody,
-config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
-responseSchema: AccountsUpdateBalanceResponseSchema
-      }
-    )
-  }
-
-  /**
-   * Update account balance.
-   * Update account balance.
-   * @param options - Request options
-   * @returns Promise<ClientResponse<z.infer<typeof AccountsUpdateBalanceResponseSchema>>>
-   * @example
-   * const result = await client.accountsUpdateBalance({
-   *   config: { timeout: 5000 }
-   * })
-   */
-  accountsUpdateBalance = async (options: {
-    params: z.infer<typeof AccountsUpdateBalanceParamsSchema>
-    body: z.infer<typeof AccountsUpdateBalanceRequestSchema>
-    config?: RequestConfiguration
-  }) => {
-    // Validate request body
-    const validatedBody = await AccountsUpdateBalanceRequestSchema.parseAsync(options.body)
-// Validate and extract parameters
-const validatedParams = await AccountsUpdateBalanceParamsSchema.parseAsync(options.params)
-
-    return this.request<z.infer<typeof AccountsUpdateBalanceResponseSchema>>(
-      'POST',
-      '/accounts/{id}/update_balance/',
       {
         pathParams: validatedParams.path,
 body: validatedBody,
