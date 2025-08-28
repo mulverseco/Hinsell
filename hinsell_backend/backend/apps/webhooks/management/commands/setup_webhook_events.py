@@ -85,8 +85,6 @@ class Command(BaseCommand):
             {
                 'event_type': 'transaction.approved',
                 'name': 'Transaction Approved',
-                '  'transaction.approved',
-                'name': 'Transaction Approved',
                 'category': 'transaction',
                 'description': 'Triggered when transaction is approved',
                 'is_system_event': True,
