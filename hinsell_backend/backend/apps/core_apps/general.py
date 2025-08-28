@@ -160,7 +160,6 @@ class BaseViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated | HasAPIKey]
     permission_classes_by_action: Dict[str, List] = {}
     logger_name: str = __name__
-
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields: List[str] = []
     search_fields: List[str] = []

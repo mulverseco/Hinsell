@@ -1,17 +1,24 @@
-from rest_framework import viewsets, status
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from apps.accounting.models import Currency, CurrencyHistory, AccountType, Account, CostCenter, OpeningBalance, AccountingPeriod, Budget
+
+from apps.accounting.models import (
+    Currency, CurrencyHistory, AccountType, Account, 
+    CostCenter, OpeningBalance, AccountingPeriod, Budget
+)
 from apps.accounting.serializers import (
-    CurrencySerializer, CurrencyHistorySerializer, AccountTypeSerializer, AccountSerializer,
-    CostCenterSerializer, OpeningBalanceSerializer, AccountingPeriodSerializer, BudgetSerializer
+    CurrencySerializer, CurrencyHistorySerializer, AccountTypeSerializer, 
+    AccountSerializer, CostCenterSerializer, OpeningBalanceSerializer, 
+    AccountingPeriodSerializer, BudgetSerializer
 )
 from apps.core_apps.permissions import HasRolePermission
+from apps.core_apps.general import BaseViewSet
 
-class CurrencyViewSet(viewsets.ModelViewSet):
+
+class CurrencyViewSet(BaseViewSet):
     """ViewSet for Currency model."""
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
@@ -24,10 +31,8 @@ class CurrencyViewSet(viewsets.ModelViewSet):
             return Currency.objects.filter(branch__in=user.profile.branches.all())
         return Currency.objects.none()
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
 
-class CurrencyHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+class CurrencyHistoryViewSet(BaseViewSet):
     """ViewSet for CurrencyHistory model."""
     queryset = CurrencyHistory.objects.all()
     serializer_class = CurrencyHistorySerializer
@@ -40,7 +45,8 @@ class CurrencyHistoryViewSet(viewsets.ReadOnlyModelViewSet):
             return CurrencyHistory.objects.filter(branch__in=user.profile.branches.all())
         return CurrencyHistory.objects.none()
 
-class AccountTypeViewSet(viewsets.ModelViewSet):
+
+class AccountTypeViewSet(BaseViewSet):
     """ViewSet for AccountType model."""
     queryset = AccountType.objects.all()
     serializer_class = AccountTypeSerializer
@@ -53,10 +59,8 @@ class AccountTypeViewSet(viewsets.ModelViewSet):
             return AccountType.objects.filter(branch__in=user.profile.branches.all())
         return AccountType.objects.none()
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
 
-class AccountViewSet(viewsets.ModelViewSet):
+class AccountViewSet(BaseViewSet):
     """ViewSet for Account model."""
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
@@ -69,10 +73,10 @@ class AccountViewSet(viewsets.ModelViewSet):
             return Account.objects.filter(branch__in=user.profile.branches.all())
         return Account.objects.none()
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
-
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, HasRolePermission], required_roles=['admin', 'super_admin', 'accountant'])
+    @action(
+        detail=True, methods=['post'],
+        permission_classes=[IsAuthenticated, HasRolePermission],
+    )
     def update_balance(self, request, pk=None):
         """Update account balance."""
         try:
@@ -84,7 +88,8 @@ class AccountViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class CostCenterViewSet(viewsets.ModelViewSet):
+
+class CostCenterViewSet(BaseViewSet):
     """ViewSet for CostCenter model."""
     queryset = CostCenter.objects.all()
     serializer_class = CostCenterSerializer
@@ -97,10 +102,8 @@ class CostCenterViewSet(viewsets.ModelViewSet):
             return CostCenter.objects.filter(branch__in=user.profile.branches.all())
         return CostCenter.objects.none()
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
 
-class OpeningBalanceViewSet(viewsets.ModelViewSet):
+class OpeningBalanceViewSet(BaseViewSet):
     """ViewSet for OpeningBalance model."""
     queryset = OpeningBalance.objects.all()
     serializer_class = OpeningBalanceSerializer
@@ -113,10 +116,8 @@ class OpeningBalanceViewSet(viewsets.ModelViewSet):
             return OpeningBalance.objects.filter(branch__in=user.profile.branches.all())
         return OpeningBalance.objects.none()
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
 
-class AccountingPeriodViewSet(viewsets.ModelViewSet):
+class AccountingPeriodViewSet(BaseViewSet):
     """ViewSet for AccountingPeriod model."""
     queryset = AccountingPeriod.objects.all()
     serializer_class = AccountingPeriodSerializer
@@ -129,10 +130,8 @@ class AccountingPeriodViewSet(viewsets.ModelViewSet):
             return AccountingPeriod.objects.filter(branch__in=user.profile.branches.all())
         return AccountingPeriod.objects.none()
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
 
-class BudgetViewSet(viewsets.ModelViewSet):
+class BudgetViewSet(BaseViewSet):
     """ViewSet for Budget model."""
     queryset = Budget.objects.all()
     serializer_class = BudgetSerializer
@@ -144,6 +143,3 @@ class BudgetViewSet(viewsets.ModelViewSet):
         if user.is_authenticated and hasattr(user, 'profile'):
             return Budget.objects.filter(branch__in=user.profile.branches.all())
         return Budget.objects.none()
-
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)

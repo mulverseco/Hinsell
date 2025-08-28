@@ -19,6 +19,7 @@ import { InventoryBalancesApiClient } from './inventoryBalances'
 import { ItemBarcodesApiClient } from './itemBarcodes'
 import { ItemGroupsApiClient } from './itemGroups'
 import { ItemUnitsApiClient } from './itemUnits'
+import { ItemVariantsApiClient } from './itemVariants'
 import { ItemsApiClient } from './items'
 import { KeyboardShortcutsApiClient } from './keyboardShortcuts'
 import { LicenseTypesApiClient } from './licenseTypes'
@@ -62,6 +63,7 @@ export class ApiClient extends BaseApiClient {
   public readonly itemBarcodes: ItemBarcodesApiClient
   public readonly itemGroups: ItemGroupsApiClient
   public readonly itemUnits: ItemUnitsApiClient
+  public readonly itemVariants: ItemVariantsApiClient
   public readonly items: ItemsApiClient
   public readonly keyboardShortcuts: KeyboardShortcutsApiClient
   public readonly licenseTypes: LicenseTypesApiClient
@@ -103,6 +105,7 @@ export class ApiClient extends BaseApiClient {
     this.itemBarcodes = new ItemBarcodesApiClient()
     this.itemGroups = new ItemGroupsApiClient()
     this.itemUnits = new ItemUnitsApiClient()
+    this.itemVariants = new ItemVariantsApiClient()
     this.items = new ItemsApiClient()
     this.keyboardShortcuts = new KeyboardShortcutsApiClient()
     this.licenseTypes = new LicenseTypesApiClient()
@@ -184,6 +187,7 @@ export { InventoryBalancesApiClient } from './inventoryBalances'
 export { ItemBarcodesApiClient } from './itemBarcodes'
 export { ItemGroupsApiClient } from './itemGroups'
 export { ItemUnitsApiClient } from './itemUnits'
+export { ItemVariantsApiClient } from './itemVariants'
 export { ItemsApiClient } from './items'
 export { KeyboardShortcutsApiClient } from './keyboardShortcuts'
 export { LicenseTypesApiClient } from './licenseTypes'

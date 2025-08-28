@@ -20,13 +20,6 @@ class CurrencySerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'code', 'exchange_rate_date', 'created_at', 'updated_at']
 
-    def validate(self, data):
-        if not data.get('name').strip():
-            raise ValidationError(_('Currency name cannot be empty.'))
-        if data.get('upper_limit', 0) > 0 and data.get('lower_limit', 0) > 0 and data.get('lower_limit') >= data.get('upper_limit'):
-            raise ValidationError(_('Upper limit must be greater than lower limit.'))
-        return data
-
 class CurrencyHistorySerializer(serializers.ModelSerializer):
     """Serializer for CurrencyHistory model."""
     branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
@@ -53,10 +46,6 @@ class AccountTypeSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'code', 'created_at', 'updated_at']
 
-    def validate(self, data):
-        if not data.get('name').strip():
-            raise ValidationError(_('Name cannot be empty.'))
-        return data
 
 class AccountSerializer(serializers.ModelSerializer):
     """Serializer for Account model."""
@@ -77,13 +66,6 @@ class AccountSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'code', 'current_balance', 'created_at', 'updated_at']
 
-    def validate(self, data):
-        if not data.get('name').strip():
-            raise ValidationError(_('Name cannot be empty.'))
-        if any(data.get('enable_notifications', {}).get(channel, False) for channel in ['email', 'sms', 'whatsapp']) and not (data.get('email') or data.get('phone_number')):
-            raise ValidationError(_('Account must have email or phone for enabled notifications.'))
-        return data
-
 class CostCenterSerializer(serializers.ModelSerializer):
     """Serializer for CostCenter model."""
     branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
@@ -97,11 +79,6 @@ class CostCenterSerializer(serializers.ModelSerializer):
             'manager', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'code', 'created_at', 'updated_at']
-
-    def validate(self, data):
-        if not data.get('name').strip():
-            raise ValidationError(_('Name cannot be empty.'))
-        return data
 
 class OpeningBalanceSerializer(serializers.ModelSerializer):
     """Serializer for OpeningBalance model."""
@@ -140,14 +117,6 @@ class AccountingPeriodSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'code', 'closed_at', 'created_at', 'updated_at']
 
-    def validate(self, data):
-        if not data.get('name').strip():
-            raise ValidationError(_('Name cannot be empty.'))
-        if data.get('start_date') >= data.get('end_date'):
-            raise ValidationError(_('End date must be after start date.'))
-        if data.get('is_closed') and not data.get('closed_by'):
-            raise ValidationError(_('Closed by user must be set when closing period.'))
-        return data
 
 class BudgetSerializer(serializers.ModelSerializer):
     """Serializer for Budget model."""
@@ -163,10 +132,3 @@ class BudgetSerializer(serializers.ModelSerializer):
             'item', 'budgeted_amount', 'actual_amount', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'code', 'actual_amount', 'created_at', 'updated_at']
-
-    def validate(self, data):
-        if not data.get('name').strip():
-            raise ValidationError(_('Name cannot be empty.'))
-        if not any([data.get('account'), data.get('cost_center'), data.get('item')]):
-            raise ValidationError(_('At least one of account, cost center, or item must be set.'))
-        return data

@@ -481,7 +481,7 @@ export const InventoryBalanceSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
   branch: BranchSchema.optional(),
   branch_id: z.string().uuid("Invalid UUID format"),
-  item: z.string().uuid("Invalid UUID format"),
+  variant: z.string().uuid("Invalid UUID format"),
   location: z.string().max(50, "Maximum length is 50").optional(),
   batch_number: z.string().max(50, "Maximum length is 50").optional(),
   expiry_date: z.string().optional(),
@@ -495,7 +495,7 @@ export const InventoryBalanceSchema = z.object({
 export type InventoryBalance = z.infer<typeof InventoryBalanceSchema>
 export const ItemBarcodeSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
-  item_id: z.string().uuid("Invalid UUID format"),
+  variant: z.string().uuid("Invalid UUID format").optional(),
   barcode: z.string().min(1, "Minimum length is 1").max(50, "Maximum length is 50"),
   barcode_type: z.enum(["ean13", "ean8", "upc", "code128", "code39", "qr", "other"]).optional(),
   unit_id: z.string().uuid("Invalid UUID format"),
@@ -546,8 +546,8 @@ export const ItemGroupSchema = z.object({
 export type ItemGroup = z.infer<typeof ItemGroupSchema>
 export const ItemUnitSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
-  item_id: z.string().uuid("Invalid UUID format"),
-  code: z.string().max(20, "Maximum length is 20").optional(),
+  variant: z.string().uuid("Invalid UUID format").optional(),
+  code: z.string().max(20, "Maximum length is 20"),
   name: z.string().min(1, "Minimum length is 1").max(50, "Maximum length is 50"),
   conversion_factor: z.string().optional(),
   unit_price: z.string().optional(),
@@ -559,29 +559,42 @@ export const ItemUnitSchema = z.object({
   updated_at: z.string().optional()
 })
 export type ItemUnit = z.infer<typeof ItemUnitSchema>
+export const ItemVariantSchema = z.object({
+  id: z.string().uuid("Invalid UUID format").optional(),
+  item: z.string().uuid("Invalid UUID format").optional(),
+  code: z.string().max(20, "Maximum length is 20"),
+  size: z.string().max(50, "Maximum length is 50").optional(),
+  color: z.string().max(50, "Maximum length is 50").optional(),
+  shelf_location: z.string().max(50, "Maximum length is 50").optional(),
+  weight: z.string().optional(),
+  volume: z.string().optional(),
+  standard_cost: z.string().optional(),
+  sales_price: z.string().optional(),
+  wholesale_price: z.string().optional(),
+  minimum_price: z.string().optional(),
+  maximum_price: z.string().optional(),
+  reorder_level: z.string().optional(),
+  maximum_stock: z.string().optional(),
+  minimum_order_quantity: z.string().optional(),
+  extra_attributes: z.record(z.any()).optional(),
+  units: z.array(ItemUnitSchema).optional(),
+  barcodes: z.array(ItemBarcodeSchema).optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional()
+})
+export type ItemVariant = z.infer<typeof ItemVariantSchema>
 export const ItemSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
   branch: BranchSchema.optional(),
   branch_id: z.string().uuid("Invalid UUID format"),
   item_group: ItemGroupSchema.optional(),
   item_group_id: z.string().uuid("Invalid UUID format"),
-  code: z.string().max(20, "Maximum length is 20").optional(),
   name: z.string().min(1, "Minimum length is 1").max(200, "Maximum length is 200"),
   slug: z.string().min(1, "Minimum length is 1").regex(/^[-a-zA-Z0-9_]+$/, "Invalid format").optional(),
   item_type: z.enum(["product", "service", "kit"]).optional(),
   base_unit: z.string().min(1, "Minimum length is 1").max(20, "Maximum length is 20"),
-  shelf_location: z.string().max(50, "Maximum length is 50").optional(),
-  weight: z.string().optional(),
-  volume: z.string().optional(),
   manufacturer: z.string().max(100, "Maximum length is 100").optional(),
   brand: z.string().max(100, "Maximum length is 100").optional(),
-  size: z.string().max(50, "Maximum length is 50").optional(),
-  color: z.string().max(50, "Maximum length is 50").optional(),
-  standard_cost: z.string().optional(),
-  sales_price: z.string().optional(),
-  wholesale_price: z.string().optional(),
-  minimum_price: z.string().optional(),
-  maximum_price: z.string().optional(),
   media: z.array(MediaSchema).optional(),
   meta_title: z.string().max(60, "Maximum length is 60").optional(),
   meta_description: z.string().max(160, "Maximum length is 160").optional(),
@@ -590,14 +603,6 @@ export const ItemSchema = z.object({
   review_count: z.number().int().optional(),
   is_featured: z.boolean().optional(),
   visibility: z.enum(["public", "registered", "hidden"]).optional(),
-  reorder_level: z.string().optional(),
-  maximum_stock: z.string().optional(),
-  minimum_order_quantity: z.string().optional(),
-  markup_percentage: z.string().optional(),
-  discount_percentage: z.string().optional(),
-  commission_percentage: z.string().optional(),
-  vat_percentage: z.string().optional(),
-  handling_fee: z.string().optional(),
   is_service_item: z.boolean().optional(),
   track_expiry: z.boolean().optional(),
   track_batches: z.boolean().optional(),
@@ -607,8 +612,14 @@ export const ItemSchema = z.object({
   description: z.string().optional(),
   short_description: z.string().max(255, "Maximum length is 255").optional(),
   internal_notes: z.string().optional(),
-  units: z.array(ItemUnitSchema).optional(),
-  barcodes: z.array(ItemBarcodeSchema).optional(),
+  markup_percentage: z.string().optional(),
+  discount_percentage: z.string().optional(),
+  commission_percentage: z.string().optional(),
+  vat_percentage: z.string().optional(),
+  handling_fee: z.string().optional(),
+  variants: z.array(ItemVariantSchema).optional(),
+  units: z.string().optional(),
+  barcodes: z.string().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional()
 })
@@ -793,7 +804,8 @@ export const UserProfileSchema = z.object({
   terms_version: z.string().max(20, "Maximum length is 20").optional(),
   data_consent: z.record(z.any()).optional(),
   branches: z.string().optional(),
-  is_complete: z.string().optional()
+  is_complete: z.string().optional(),
+  wishlist_items: z.array(ItemSchema).optional()
 })
 export type UserProfile = z.infer<typeof UserProfileSchema>
 export const ReportCategorySchema = z.object({
@@ -1228,7 +1240,32 @@ export const AccountsDeleteParamsSchema = z.object({
 })
 
 export type AccountsDeleteParams = z.infer<typeof AccountsDeleteParamsSchema>
+/**
+ * Request schema for POST /accounts/{id}/update-balance/
+ */
+export const AccountsUpdateBalanceRequestSchema = AccountSchema
+export type AccountsUpdateBalanceRequest = z.infer<typeof AccountsUpdateBalanceRequestSchema>
+/**
+ * Success response schema for POST /accounts/{id}/update-balance/
+ * Status: 201
+ * 
+ */
+export const AccountsUpdateBalanceResponseSchema = AccountSchema
 
+export type AccountsUpdateBalanceResponse = z.infer<typeof AccountsUpdateBalanceResponseSchema>
+/**
+ * Parameters schema for POST /accounts/{id}/update-balance/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const AccountsUpdateBalanceParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type AccountsUpdateBalanceParams = z.infer<typeof AccountsUpdateBalanceParamsSchema>
 /**
  * Request schema for POST /accounts/{id}/update_balance/
  */
@@ -3877,6 +3914,135 @@ export const ItemUnitsDeleteParamsSchema = z.object({
 })
 
 export type ItemUnitsDeleteParams = z.infer<typeof ItemUnitsDeleteParamsSchema>
+/**
+ * Success response schema for GET /item-variants/
+ * Status: 200
+ * 
+ */
+export const ItemVariantsListResponseSchema = z.array(ItemVariantSchema)
+
+export type ItemVariantsListResponse = z.infer<typeof ItemVariantsListResponseSchema>
+/**
+ * Parameters schema for GET /item-variants/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const ItemVariantsListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type ItemVariantsListParams = z.infer<typeof ItemVariantsListParamsSchema>
+/**
+ * Request schema for POST /item-variants/
+ */
+export const ItemVariantsCreateRequestSchema = ItemVariantSchema
+export type ItemVariantsCreateRequest = z.infer<typeof ItemVariantsCreateRequestSchema>
+/**
+ * Success response schema for POST /item-variants/
+ * Status: 201
+ * 
+ */
+export const ItemVariantsCreateResponseSchema = ItemVariantSchema
+
+export type ItemVariantsCreateResponse = z.infer<typeof ItemVariantsCreateResponseSchema>
+/**
+ * Success response schema for GET /item-variants/{id}/
+ * Status: 200
+ * 
+ */
+export const ItemVariantsReadResponseSchema = ItemVariantSchema
+
+export type ItemVariantsReadResponse = z.infer<typeof ItemVariantsReadResponseSchema>
+/**
+ * Parameters schema for GET /item-variants/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const ItemVariantsReadParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type ItemVariantsReadParams = z.infer<typeof ItemVariantsReadParamsSchema>
+/**
+ * Request schema for PUT /item-variants/{id}/
+ */
+export const ItemVariantsUpdateRequestSchema = ItemVariantSchema
+export type ItemVariantsUpdateRequest = z.infer<typeof ItemVariantsUpdateRequestSchema>
+/**
+ * Success response schema for PUT /item-variants/{id}/
+ * Status: 200
+ * 
+ */
+export const ItemVariantsUpdateResponseSchema = ItemVariantSchema
+
+export type ItemVariantsUpdateResponse = z.infer<typeof ItemVariantsUpdateResponseSchema>
+/**
+ * Parameters schema for PUT /item-variants/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const ItemVariantsUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type ItemVariantsUpdateParams = z.infer<typeof ItemVariantsUpdateParamsSchema>
+/**
+ * Request schema for PATCH /item-variants/{id}/
+ */
+export const ItemVariantsPartialUpdateRequestSchema = ItemVariantSchema
+export type ItemVariantsPartialUpdateRequest = z.infer<typeof ItemVariantsPartialUpdateRequestSchema>
+/**
+ * Success response schema for PATCH /item-variants/{id}/
+ * Status: 200
+ * 
+ */
+export const ItemVariantsPartialUpdateResponseSchema = ItemVariantSchema
+
+export type ItemVariantsPartialUpdateResponse = z.infer<typeof ItemVariantsPartialUpdateResponseSchema>
+/**
+ * Parameters schema for PATCH /item-variants/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const ItemVariantsPartialUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type ItemVariantsPartialUpdateParams = z.infer<typeof ItemVariantsPartialUpdateParamsSchema>
+/**
+ * Success response schema for DELETE /item-variants/{id}/
+ * Status: 204
+ * 
+ */
+export const ItemVariantsDeleteResponseSchema = z.void()
+
+export type ItemVariantsDeleteResponse = z.infer<typeof ItemVariantsDeleteResponseSchema>
+/**
+ * Parameters schema for DELETE /item-variants/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const ItemVariantsDeleteParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type ItemVariantsDeleteParams = z.infer<typeof ItemVariantsDeleteParamsSchema>
 /**
  * Success response schema for GET /items/
  * Status: 200
