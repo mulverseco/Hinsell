@@ -1,11 +1,17 @@
+from datetime import date
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.contrib.auth import get_user_model
 from decimal import Decimal
-from datetime import date
+from django.utils.text import slugify
 from apps.organization.models import Company, Branch
 from apps.accounting.models import AccountType, Account, Currency
 from apps.core_apps.utils import Logger
+from apps.inventory.models import (
+    StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, 
+    ItemBarcode, InventoryBalance, Attribute, AttributeValue, 
+    VariantAttributeValue
+)
 
 User = get_user_model()
 logger = Logger(__name__)
@@ -19,6 +25,7 @@ class Command(BaseCommand):
         parser.add_argument('--admin-password', type=str, required=True, help='Admin user password')
         parser.add_argument('--country-code', type=str, default='US', help='Country code for currency')
         parser.add_argument('--fiscal-year', type=int, default=date.today().year, help='Current fiscal year')
+        parser.add_argument('--create-sample-data', action='store_true', help='Create sample products and categories')
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -56,6 +63,11 @@ class Command(BaseCommand):
             # Setup additional e-commerce tables
             self.setup_ecommerce_tables(branch)
             self.stdout.write('Setup additional e-commerce tables')
+            
+            # Create sample data if requested
+            if options['create_sample_data']:
+                self.create_sample_data(branch, currencies[0])
+                self.stdout.write('Created sample products and categories')
             
             self.stdout.write(
                 self.style.SUCCESS('Organization setup completed successfully!')
@@ -298,6 +310,371 @@ class Command(BaseCommand):
 
     def setup_ecommerce_tables(self, branch):
         """Setup additional e-commerce specific configurations"""
-        # This method can be extended to create additional tables
-        # like payment methods, shipping methods, tax configurations, etc.
-        pass
+        # Create attributes for product variants
+        self.create_sample_attributes(branch)
+        
+    def create_sample_attributes(self, branch):
+        """Create sample attributes for products"""
+        color_attr = Attribute.objects.create(name="Color")
+        size_attr = Attribute.objects.create(name="Size")
+        material_attr = Attribute.objects.create(name="Material")
+        
+        # Color values
+        AttributeValue.objects.create(attribute=color_attr, value="Red")
+        AttributeValue.objects.create(attribute=color_attr, value="Blue")
+        AttributeValue.objects.create(attribute=color_attr, value="Green")
+        AttributeValue.objects.create(attribute=color_attr, value="Black")
+        AttributeValue.objects.create(attribute=color_attr, value="White")
+        
+        # Size values
+        AttributeValue.objects.create(attribute=size_attr, value="Small")
+        AttributeValue.objects.create(attribute=size_attr, value="Medium")
+        AttributeValue.objects.create(attribute=size_attr, value="Large")
+        AttributeValue.objects.create(attribute=size_attr, value="XL")
+        AttributeValue.objects.create(attribute=size_attr, value="XXL")
+        
+        # Material values
+        AttributeValue.objects.create(attribute=material_attr, value="Cotton")
+        AttributeValue.objects.create(attribute=material_attr, value="Polyester")
+        AttributeValue.objects.create(attribute=material_attr, value="Wool")
+        AttributeValue.objects.create(attribute=material_attr, value="Silk")
+        AttributeValue.objects.create(attribute=material_attr, value="Leather")
+    
+    def create_sample_data(self, branch, currency):
+        """Create sample store groups, item groups, and products"""
+        # Get inventory accounts
+        stock_account = Account.objects.filter(
+            branch=branch, 
+            code='1132',  # بضاعة تامة الصنع
+            account_nature='inventory'
+        ).first()
+        
+        sales_account = Account.objects.filter(
+            branch=branch, 
+            code='4110'  # مبيعات المنتجات
+        ).first()
+        
+        cost_account = Account.objects.filter(
+            branch=branch, 
+            code='5100'  # تكاليف المنتجات
+        ).first()
+        
+        # Create store groups
+        apparel_store = StoreGroup.objects.create(
+            branch=branch,
+            code="APP",
+            name="Apparel",
+            slug=slugify("Apparel"),
+            cost_method=StoreGroup.CostMethod.AVERAGE,
+            stock_account=stock_account,
+            sales_account=sales_account,
+            cost_of_sales_account=cost_account
+        )
+        
+        electronics_store = StoreGroup.objects.create(
+            branch=branch,
+            code="ELEC",
+            name="Electronics",
+            slug=slugify("Electronics"),
+            cost_method=StoreGroup.CostMethod.AVERAGE,
+            stock_account=stock_account,
+            sales_account=sales_account,
+            cost_of_sales_account=cost_account
+        )
+        
+        # Create item groups
+        mens_clothing = ItemGroup.objects.create(
+            branch=branch,
+            store_group=apparel_store,
+            code="MEN",
+            name="Men's Clothing",
+            slug=slugify("Men's Clothing"),
+            group_type=ItemGroup.GroupType.PRODUCT
+        )
+        
+        womens_clothing = ItemGroup.objects.create(
+            branch=branch,
+            store_group=apparel_store,
+            code="WOMEN",
+            name="Women's Clothing",
+            slug=slugify("Women's Clothing"),
+            group_type=ItemGroup.GroupType.PRODUCT
+        )
+        
+        smartphones = ItemGroup.objects.create(
+            branch=branch,
+            store_group=electronics_store,
+            code="PHONE",
+            name="Smartphones",
+            slug=slugify("Smartphones"),
+            group_type=ItemGroup.GroupType.PRODUCT
+        )
+        
+        # Create sample products
+        self.create_sample_t_shirt(branch, mens_clothing, currency)
+        self.create_sample_dress(branch, womens_clothing, currency)
+        self.create_sample_smartphone(branch, smartphones, currency)
+    
+    def create_sample_t_shirt(self, branch, item_group, currency):
+        """Create a sample t-shirt product with variants"""
+        # Create base item
+        t_shirt = Item.objects.create(
+            branch=branch,
+            item_group=item_group,
+            name="Men's Cotton T-Shirt",
+            slug=slugify("Men's Cotton T-Shirt"),
+            item_type=Item.ItemType.PRODUCT,
+            base_unit="Piece",
+            manufacturer="FashionCo",
+            brand="FashionCo",
+            markup_percentage=Decimal('50.00'),
+            vat_percentage=Decimal('15.00'),
+            track_expiry=False,
+            track_batches=False,
+            allow_discount=True,
+            allow_bonus=True
+        )
+        
+        # Get attribute values
+        red = AttributeValue.objects.get(attribute__name="Color", value="Red")
+        blue = AttributeValue.objects.get(attribute__name="Color", value="Blue")
+        small = AttributeValue.objects.get(attribute__name="Size", value="Small")
+        medium = AttributeValue.objects.get(attribute__name="Size", value="Medium")
+        large = AttributeValue.objects.get(attribute__name="Size", value="Large")
+        cotton = AttributeValue.objects.get(attribute__name="Material", value="Cotton")
+        
+        # Create variants
+        variants_data = [
+            {'size': 'S', 'color': 'Red', 'cost': 10.00, 'price': 19.99},
+            {'size': 'M', 'color': 'Red', 'cost': 10.50, 'price': 20.99},
+            {'size': 'L', 'color': 'Red', 'cost': 11.00, 'price': 21.99},
+            {'size': 'S', 'color': 'Blue', 'cost': 10.00, 'price': 19.99},
+            {'size': 'M', 'color': 'Blue', 'cost': 10.50, 'price': 20.99},
+            {'size': 'L', 'color': 'Blue', 'cost': 11.00, 'price': 21.99},
+        ]
+        
+        for i, data in enumerate(variants_data, 1):
+            variant = ItemVariant.objects.create(
+                item=t_shirt,
+                code=f"TSHIRT-{data['size']}-{data['color']}",
+                size=data['size'],
+                color=data['color'],
+                standard_cost=Decimal(str(data['cost'])),
+                sales_price=Decimal(str(data['price'])),
+                reorder_level=Decimal('50.0000'),
+                maximum_stock=Decimal('500.0000')
+            )
+            
+            # Add attribute values
+            color_attr = AttributeValue.objects.get(attribute__name="Color", value=data['color'])
+            size_attr = AttributeValue.objects.get(attribute__name="Size", value=data['size'])
+            
+            VariantAttributeValue.objects.create(variant=variant, attribute_value=color_attr)
+            VariantAttributeValue.objects.create(variant=variant, attribute_value=size_attr)
+            VariantAttributeValue.objects.create(variant=variant, attribute_value=cotton)
+            
+            # Create unit
+            unit = ItemUnit.objects.create(
+                variant=variant,
+                code="PCS",
+                name="Piece",
+                conversion_factor=Decimal('1.00000000'),
+                unit_price=Decimal(str(data['price'])),
+                unit_cost=Decimal(str(data['cost'])),
+                is_default=True,
+                is_purchase_unit=True,
+                is_sales_unit=True
+            )
+            
+            # Create barcode
+            ItemBarcode.objects.create(
+                variant=variant,
+                barcode=f"123456789012{i}",
+                barcode_type="ean13",
+                unit=unit,
+                is_primary=True
+            )
+            
+            # Create inventory balance
+            InventoryBalance.objects.create(
+                branch=branch,
+                variant=variant,
+                location="A-01",
+                available_quantity=Decimal('100.00000000'),
+                reserved_quantity=Decimal('0.00000000'),
+                average_cost=Decimal(str(data['cost']))
+            )
+    
+    def create_sample_dress(self, branch, item_group, currency):
+        """Create a sample dress product with variants"""
+        # Create base item
+        dress = Item.objects.create(
+            branch=branch,
+            item_group=item_group,
+            name="Women's Summer Dress",
+            slug=slugify("Women's Summer Dress"),
+            item_type=Item.ItemType.PRODUCT,
+            base_unit="Piece",
+            manufacturer="FashionCo",
+            brand="FashionCo",
+            markup_percentage=Decimal('60.00'),
+            vat_percentage=Decimal('15.00'),
+            track_expiry=False,
+            track_batches=False,
+            allow_discount=True,
+            allow_bonus=True
+        )
+        
+        # Get attribute values
+        black = AttributeValue.objects.get(attribute__name="Color", value="Black")
+        white = AttributeValue.objects.get(attribute__name="Color", value="White")
+        small = AttributeValue.objects.get(attribute__name="Size", value="Small")
+        medium = AttributeValue.objects.get(attribute__name="Size", value="Medium")
+        large = AttributeValue.objects.get(attribute__name="Size", value="Large")
+        cotton = AttributeValue.objects.get(attribute__name="Material", value="Cotton")
+        
+        # Create variants
+        variants_data = [
+            {'size': 'S', 'color': 'Black', 'cost': 25.00, 'price': 49.99},
+            {'size': 'M', 'color': 'Black', 'cost': 26.00, 'price': 51.99},
+            {'size': 'L', 'color': 'Black', 'cost': 27.00, 'price': 53.99},
+            {'size': 'S', 'color': 'White', 'cost': 25.00, 'price': 49.99},
+            {'size': 'M', 'color': 'White', 'cost': 26.00, 'price': 51.99},
+            {'size': 'L', 'color': 'White', 'cost': 27.00, 'price': 53.99},
+        ]
+        
+        for i, data in enumerate(variants_data, 1):
+            variant = ItemVariant.objects.create(
+                item=dress,
+                code=f"DRESS-{data['size']}-{data['color']}",
+                size=data['size'],
+                color=data['color'],
+                standard_cost=Decimal(str(data['cost'])),
+                sales_price=Decimal(str(data['price'])),
+                reorder_level=Decimal('30.0000'),
+                maximum_stock=Decimal('300.0000')
+            )
+            
+            # Add attribute values
+            color_attr = AttributeValue.objects.get(attribute__name="Color", value=data['color'])
+            size_attr = AttributeValue.objects.get(attribute__name="Size", value=data['size'])
+            
+            VariantAttributeValue.objects.create(variant=variant, attribute_value=color_attr)
+            VariantAttributeValue.objects.create(variant=variant, attribute_value=size_attr)
+            VariantAttributeValue.objects.create(variant=variant, attribute_value=cotton)
+            
+            # Create unit
+            unit = ItemUnit.objects.create(
+                variant=variant,
+                code="PCS",
+                name="Piece",
+                conversion_factor=Decimal('1.00000000'),
+                unit_price=Decimal(str(data['price'])),
+                unit_cost=Decimal(str(data['cost'])),
+                is_default=True,
+                is_purchase_unit=True,
+                is_sales_unit=True
+            )
+            
+            # Create barcode
+            ItemBarcode.objects.create(
+                variant=variant,
+                barcode=f"223456789012{i}",
+                barcode_type="ean13",
+                unit=unit,
+                is_primary=True
+            )
+            
+            # Create inventory balance
+            InventoryBalance.objects.create(
+                branch=branch,
+                variant=variant,
+                location="B-01",
+                available_quantity=Decimal('75.00000000'),
+                reserved_quantity=Decimal('0.00000000'),
+                average_cost=Decimal(str(data['cost']))
+            )
+    
+    def create_sample_smartphone(self, branch, item_group, currency):
+        """Create a sample smartphone product with variants"""
+        # Create base item
+        smartphone = Item.objects.create(
+            branch=branch,
+            item_group=item_group,
+            name="Premium Smartphone",
+            slug=slugify("Premium Smartphone"),
+            item_type=Item.ItemType.PRODUCT,
+            base_unit="Piece",
+            manufacturer="TechCorp",
+            brand="TechCorp",
+            markup_percentage=Decimal('30.00'),
+            vat_percentage=Decimal('15.00'),
+            track_expiry=False,
+            track_batches=True,
+            allow_discount=True,
+            allow_bonus=False
+        )
+        
+        # Get attribute values
+        black = AttributeValue.objects.get(attribute__name="Color", value="Black")
+        white = AttributeValue.objects.get(attribute__name="Color", value="White")
+        
+        # Create variants
+        variants_data = [
+            {'storage': '128GB', 'color': 'Black', 'cost': 400.00, 'price': 599.99},
+            {'storage': '256GB', 'color': 'Black', 'cost': 450.00, 'price': 649.99},
+            {'storage': '512GB', 'color': 'Black', 'cost': 500.00, 'price': 699.99},
+            {'storage': '128GB', 'color': 'White', 'cost': 400.00, 'price': 599.99},
+            {'storage': '256GB', 'color': 'White', 'cost': 450.00, 'price': 649.99},
+            {'storage': '512GB', 'color': 'White', 'cost': 500.00, 'price': 699.99},
+        ]
+        
+        for i, data in enumerate(variants_data, 1):
+            variant = ItemVariant.objects.create(
+                item=smartphone,
+                code=f"PHONE-{data['storage']}-{data['color']}",
+                color=data['color'],
+                standard_cost=Decimal(str(data['cost'])),
+                sales_price=Decimal(str(data['price'])),
+                reorder_level=Decimal('20.0000'),
+                maximum_stock=Decimal('200.0000'),
+                extra_attributes={'storage': data['storage']}
+            )
+            
+            # Add attribute values
+            color_attr = AttributeValue.objects.get(attribute__name="Color", value=data['color'])
+            VariantAttributeValue.objects.create(variant=variant, attribute_value=color_attr)
+            
+            # Create unit
+            unit = ItemUnit.objects.create(
+                variant=variant,
+                code="PCS",
+                name="Piece",
+                conversion_factor=Decimal('1.00000000'),
+                unit_price=Decimal(str(data['price'])),
+                unit_cost=Decimal(str(data['cost'])),
+                is_default=True,
+                is_purchase_unit=True,
+                is_sales_unit=True
+            )
+            
+            # Create barcode
+            ItemBarcode.objects.create(
+                variant=variant,
+                barcode=f"323456789012{i}",
+                barcode_type="ean13",
+                unit=unit,
+                is_primary=True
+            )
+            
+            # Create inventory balance with batch number
+            batch_number = f"BATCH-{date.today().strftime('%Y%m%d')}-{i:03d}"
+            InventoryBalance.objects.create(
+                branch=branch,
+                variant=variant,
+                location="C-01",
+                batch_number=batch_number,
+                available_quantity=Decimal('50.00000000'),
+                reserved_quantity=Decimal('0.00000000'),
+                average_cost=Decimal(str(data['cost']))
+            )
