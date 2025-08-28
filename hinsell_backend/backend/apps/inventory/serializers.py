@@ -103,10 +103,7 @@ class ItemGroupSerializer(serializers.ModelSerializer):
 
 class ItemUnitSerializer(serializers.ModelSerializer):
     """Serializer for ItemUnit model."""
-    variant = serializers.PrimaryKeyRelatedField(
-        source='variant',
-        read_only=True
-    )
+    variant = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = ItemUnit
@@ -120,10 +117,7 @@ class ItemUnitSerializer(serializers.ModelSerializer):
 
 class ItemBarcodeSerializer(serializers.ModelSerializer):
     """Serializer for ItemBarcode model."""
-    variant = serializers.PrimaryKeyRelatedField(
-        source='variant',
-        read_only=True
-    )
+    variant = serializers.PrimaryKeyRelatedField(read_only=True)
     unit_id = serializers.PrimaryKeyRelatedField(
         queryset=ItemUnit.objects.all(),
         source='unit',
@@ -139,31 +133,16 @@ class ItemBarcodeSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['created_at', 'updated_at']
 
-    def validate(self, data):
-        """Validate barcode and unit-variant relationship."""
-        if not data.get('barcode', '').strip():
-            raise serializers.ValidationError({'barcode': _('Barcode cannot be empty.')})
-        unit = data.get('unit')
-        variant = data.get('variant')
-        if unit and unit.variant != variant:
-            raise serializers.ValidationError(
-                {'unit': _('Unit must belong to the same variant.')}
-            )
-        return data
-
 class ItemVariantSerializer(serializers.ModelSerializer):
     """Serializer for ItemVariant model with nested relationships."""
-    item_id = serializers.PrimaryKeyRelatedField(
-        source='item',
-        read_only=True
-    )
+    item = serializers.PrimaryKeyRelatedField(read_only=True)  # Remove source='item'
     units = ItemUnitSerializer(many=True, read_only=True)
     barcodes = ItemBarcodeSerializer(many=True, read_only=True)
 
     class Meta:
         model = ItemVariant
         fields = [
-            'id', 'item_id', 'code', 'size', 'color', 'shelf_location',
+            'id', 'item', 'code', 'size', 'color', 'shelf_location',
             'weight', 'volume', 'standard_cost', 'sales_price', 'wholesale_price',
             'minimum_price', 'maximum_price', 'reorder_level', 'maximum_stock',
             'minimum_order_quantity', 'extra_attributes', 'units', 'barcodes',

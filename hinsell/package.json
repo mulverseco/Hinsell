@@ -73,6 +73,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@mulverse/bridge": "^3.2.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
