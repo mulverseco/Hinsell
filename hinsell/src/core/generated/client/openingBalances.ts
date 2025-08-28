@@ -6,6 +6,7 @@ import type { ClientResponse, RequestConfiguration } from './base'
 import { defaultMiddleware } from './middleware'
 import {
   OpeningBalancesListResponseSchema,
+  OpeningBalancesListParamsSchema,
   OpeningBalancesCreateRequestSchema,
   OpeningBalancesCreateResponseSchema,
   OpeningBalancesReadResponseSchema,
@@ -49,11 +50,18 @@ export class OpeningBalancesApiClient extends BaseApiClient {
    *   config: { timeout: 5000 }
    * })
    */
-  openingBalancesList = cache(async (options?: { config?: RequestConfiguration }) => {
+  openingBalancesList = cache(async (options: {
+    params: z.infer<typeof OpeningBalancesListParamsSchema>
+    config?: RequestConfiguration
+  }) => {
+// Validate and extract parameters
+const validatedParams = await OpeningBalancesListParamsSchema.parseAsync(options.params)
+
     return this.request<z.infer<typeof OpeningBalancesListResponseSchema>>(
       'GET',
       '/opening-balances/',
       {
+queryParams: validatedParams.query,
 config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
 responseSchema: OpeningBalancesListResponseSchema
       }

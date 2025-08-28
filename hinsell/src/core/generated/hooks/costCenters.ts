@@ -1,10 +1,12 @@
 'use client'
 import { useQuery, useQueryClient, useSuspenseQuery, useMutation } from '@tanstack/react-query'
 import { useOptimistic, useTransition } from 'react'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { toast } from 'sonner'
 import { costCentersList, costCentersRead, costCentersCreate, costCentersUpdate, costCentersPartialUpdate, costCentersDelete } from '@/core/generated/actions/costCenters'
 import {
   CostCentersListResponseSchema,
+  CostCentersListParamsSchema,
   CostCentersReadResponseSchema,
   CostCentersReadParamsSchema,
   CostCentersCreateResponseSchema,
@@ -20,7 +22,14 @@ import {
 } from '@/core/generated/schemas'
 import type { z } from 'zod'
 
-
+// Search params parsers for filtering and sorting
+const searchParamsParser = {
+  page: parseAsInteger.withDefault(1),
+  limit: parseAsInteger.withDefault(10),
+  search: parseAsString.withDefault(''),
+  sort: parseAsString.withDefault(''),
+  filter: parseAsString.withDefault(''),
+}
 
 // Error handling utility
 function handleActionError(error: unknown): never {
@@ -34,14 +43,14 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof CostCentersListResponseSchema>
  */
-export function useCostCentersList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CostCentersListResponseSchema> }) {
+export function useCostCentersList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CostCentersListResponseSchema> }) {
   const { initialData, ...restOptions } = options ?? {}
 
   return useQuery({
-    queryKey: ['costCentersList'],
+    queryKey: ['costCentersList', search, ordering],
     queryFn: async ({ signal }) => {
       try {
-        const result = await costCentersList({})
+        const result = await costCentersList({ params: { query: { search, ordering } } })
         return result
       } catch (error) {
         handleActionError(error)
@@ -65,13 +74,13 @@ export function useCostCentersList(options?: { enabled?: boolean; suspense?: boo
  * Suspense version for /cost-centers/
  * @returns useSuspenseQuery result with data of type z.infer<typeof CostCentersListResponseSchema>
  */
-export function useSuspenseCostCentersList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CostCentersListResponseSchema> }) {
+export function useSuspenseCostCentersList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof CostCentersListResponseSchema> }) {
   const { initialData, ...restOptions } = options ?? {}
 
   return useSuspenseQuery({
-    queryKey: ['costCentersList'],
+    queryKey: ['costCentersList', search, ordering],
     queryFn: async () => {
-      const result = await costCentersList({})
+      const result = await costCentersList({ params: { query: { search, ordering } } })
       return result
     },
     staleTime: 180000,

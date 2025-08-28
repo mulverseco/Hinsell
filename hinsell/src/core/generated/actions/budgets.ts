@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import { apiClient } from '@/core/generated/client'
 import { actionClientWithMeta, ActionError } from '@/core/generated/lib/safe-action'
 import {
+  BudgetsListParamsSchema,
   BudgetsListResponseSchema,
   BudgetsCreateRequestSchema,
   BudgetsCreateResponseSchema,
@@ -84,14 +85,16 @@ export const budgetsList = cache(
       name: "budgets-list",
       requiresAuth: false
     })
-    .schema(z.void())
+    .schema(BudgetsListParamsSchema)
     .action(async ({ parsedInput, ctx }) => {
       const startTime = Date.now()
       
       try {
+    // Validate and sanitize parameters
+    const validatedParams = await validateAndSanitizeInput(BudgetsListParamsSchema, parsedInput)
 
         // Execute API call with enhanced error handling
-        const response = await apiClient.budgets.budgetsList({
+        const response = await apiClient.budgets.budgetsList({params: validatedParams,
           config: {
             timeout: 30000,
             retries: 3,

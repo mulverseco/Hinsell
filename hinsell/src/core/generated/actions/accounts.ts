@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import { apiClient } from '@/core/generated/client'
 import { actionClientWithMeta, ActionError } from '@/core/generated/lib/safe-action'
 import {
+  AccountsListParamsSchema,
   AccountsListResponseSchema,
   AccountsCreateRequestSchema,
   AccountsCreateResponseSchema,
@@ -87,14 +88,16 @@ export const accountsList = cache(
       name: "accounts-list",
       requiresAuth: false
     })
-    .schema(z.void())
+    .schema(AccountsListParamsSchema)
     .action(async ({ parsedInput, ctx }) => {
       const startTime = Date.now()
       
       try {
+    // Validate and sanitize parameters
+    const validatedParams = await validateAndSanitizeInput(AccountsListParamsSchema, parsedInput)
 
         // Execute API call with enhanced error handling
-        const response = await apiClient.accounts.accountsList({
+        const response = await apiClient.accounts.accountsList({params: validatedParams,
           config: {
             timeout: 30000,
             retries: 3,

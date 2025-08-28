@@ -6,6 +6,7 @@ import type { ClientResponse, RequestConfiguration } from './base'
 import { defaultMiddleware } from './middleware'
 import {
   BudgetsListResponseSchema,
+  BudgetsListParamsSchema,
   BudgetsCreateRequestSchema,
   BudgetsCreateResponseSchema,
   BudgetsReadResponseSchema,
@@ -49,11 +50,18 @@ export class BudgetsApiClient extends BaseApiClient {
    *   config: { timeout: 5000 }
    * })
    */
-  budgetsList = cache(async (options?: { config?: RequestConfiguration }) => {
+  budgetsList = cache(async (options: {
+    params: z.infer<typeof BudgetsListParamsSchema>
+    config?: RequestConfiguration
+  }) => {
+// Validate and extract parameters
+const validatedParams = await BudgetsListParamsSchema.parseAsync(options.params)
+
     return this.request<z.infer<typeof BudgetsListResponseSchema>>(
       'GET',
       '/budgets/',
       {
+queryParams: validatedParams.query,
 config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
 responseSchema: BudgetsListResponseSchema
       }

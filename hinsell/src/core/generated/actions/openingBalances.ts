@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import { apiClient } from '@/core/generated/client'
 import { actionClientWithMeta, ActionError } from '@/core/generated/lib/safe-action'
 import {
+  OpeningBalancesListParamsSchema,
   OpeningBalancesListResponseSchema,
   OpeningBalancesCreateRequestSchema,
   OpeningBalancesCreateResponseSchema,
@@ -84,14 +85,16 @@ export const openingBalancesList = cache(
       name: "opening-balances-list",
       requiresAuth: false
     })
-    .schema(z.void())
+    .schema(OpeningBalancesListParamsSchema)
     .action(async ({ parsedInput, ctx }) => {
       const startTime = Date.now()
       
       try {
+    // Validate and sanitize parameters
+    const validatedParams = await validateAndSanitizeInput(OpeningBalancesListParamsSchema, parsedInput)
 
         // Execute API call with enhanced error handling
-        const response = await apiClient.openingBalances.openingBalancesList({
+        const response = await apiClient.openingBalances.openingBalancesList({params: validatedParams,
           config: {
             timeout: 30000,
             retries: 3,

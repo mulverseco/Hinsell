@@ -1,10 +1,12 @@
 'use client'
 import { useQuery, useQueryClient, useSuspenseQuery, useMutation } from '@tanstack/react-query'
 import { useOptimistic, useTransition } from 'react'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { toast } from 'sonner'
 import { accountsList, accountsRead, accountsCreate, accountsUpdate, accountsPartialUpdate, accountsDelete, accountsUpdateBalance, accountsUpdateBalance } from '@/core/generated/actions/accounts'
 import {
   AccountsListResponseSchema,
+  AccountsListParamsSchema,
   AccountsReadResponseSchema,
   AccountsReadParamsSchema,
   AccountsCreateResponseSchema,
@@ -23,7 +25,14 @@ import {
 } from '@/core/generated/schemas'
 import type { z } from 'zod'
 
-
+// Search params parsers for filtering and sorting
+const searchParamsParser = {
+  page: parseAsInteger.withDefault(1),
+  limit: parseAsInteger.withDefault(10),
+  search: parseAsString.withDefault(''),
+  sort: parseAsString.withDefault(''),
+  filter: parseAsString.withDefault(''),
+}
 
 // Error handling utility
 function handleActionError(error: unknown): never {
@@ -37,14 +46,14 @@ function handleActionError(error: unknown): never {
  * Features: Smart caching, error handling, type safety
  * @returns useQuery result with data of type z.infer<typeof AccountsListResponseSchema>
  */
-export function useAccountsList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountsListResponseSchema> }) {
+export function useAccountsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountsListResponseSchema> }) {
   const { initialData, ...restOptions } = options ?? {}
 
   return useQuery({
-    queryKey: ['accountsList'],
+    queryKey: ['accountsList', search, ordering],
     queryFn: async ({ signal }) => {
       try {
-        const result = await accountsList({})
+        const result = await accountsList({ params: { query: { search, ordering } } })
         return result
       } catch (error) {
         handleActionError(error)
@@ -68,13 +77,13 @@ export function useAccountsList(options?: { enabled?: boolean; suspense?: boolea
  * Suspense version for /accounts/
  * @returns useSuspenseQuery result with data of type z.infer<typeof AccountsListResponseSchema>
  */
-export function useSuspenseAccountsList(options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountsListResponseSchema> }) {
+export function useSuspenseAccountsList(search?: string, ordering?: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof AccountsListResponseSchema> }) {
   const { initialData, ...restOptions } = options ?? {}
 
   return useSuspenseQuery({
-    queryKey: ['accountsList'],
+    queryKey: ['accountsList', search, ordering],
     queryFn: async () => {
-      const result = await accountsList({})
+      const result = await accountsList({ params: { query: { search, ordering } } })
       return result
     },
     staleTime: 180000,

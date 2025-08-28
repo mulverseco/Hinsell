@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import { apiClient } from '@/core/generated/client'
 import { actionClientWithMeta, ActionError } from '@/core/generated/lib/safe-action'
 import {
+  CostCentersListParamsSchema,
   CostCentersListResponseSchema,
   CostCentersCreateRequestSchema,
   CostCentersCreateResponseSchema,
@@ -84,14 +85,16 @@ export const costCentersList = cache(
       name: "cost-centers-list",
       requiresAuth: false
     })
-    .schema(z.void())
+    .schema(CostCentersListParamsSchema)
     .action(async ({ parsedInput, ctx }) => {
       const startTime = Date.now()
       
       try {
+    // Validate and sanitize parameters
+    const validatedParams = await validateAndSanitizeInput(CostCentersListParamsSchema, parsedInput)
 
         // Execute API call with enhanced error handling
-        const response = await apiClient.costCenters.costCentersList({
+        const response = await apiClient.costCenters.costCentersList({params: validatedParams,
           config: {
             timeout: 30000,
             retries: 3,

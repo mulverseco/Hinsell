@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import { apiClient } from '@/core/generated/client'
 import { actionClientWithMeta, ActionError } from '@/core/generated/lib/safe-action'
 import {
+  CurrenciesListParamsSchema,
   CurrenciesListResponseSchema,
   CurrenciesCreateRequestSchema,
   CurrenciesCreateResponseSchema,
@@ -84,14 +85,16 @@ export const currenciesList = cache(
       name: "currencies-list",
       requiresAuth: false
     })
-    .schema(z.void())
+    .schema(CurrenciesListParamsSchema)
     .action(async ({ parsedInput, ctx }) => {
       const startTime = Date.now()
       
       try {
+    // Validate and sanitize parameters
+    const validatedParams = await validateAndSanitizeInput(CurrenciesListParamsSchema, parsedInput)
 
         // Execute API call with enhanced error handling
-        const response = await apiClient.currencies.currenciesList({
+        const response = await apiClient.currencies.currenciesList({params: validatedParams,
           config: {
             timeout: 30000,
             retries: 3,

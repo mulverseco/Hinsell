@@ -73,21 +73,6 @@ class AccountViewSet(BaseViewSet):
             return Account.objects.filter(branch__in=user.profile.branches.all())
         return Account.objects.none()
 
-    @action(
-        detail=True, methods=['post'],
-        permission_classes=[IsAuthenticated, HasRolePermission],
-    )
-    def update_balance(self, request, pk=None):
-        """Update account balance."""
-        try:
-            account = self.get_object()
-            account.update_balance(user=self.request.user)
-            return Response({'status': _('Balance updated successfully.')}, status=status.HTTP_200_OK)
-        except ValidationError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 class CostCenterViewSet(BaseViewSet):
     """ViewSet for CostCenter model."""

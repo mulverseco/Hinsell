@@ -6,6 +6,7 @@ import type { ClientResponse, RequestConfiguration } from './base'
 import { defaultMiddleware } from './middleware'
 import {
   CostCentersListResponseSchema,
+  CostCentersListParamsSchema,
   CostCentersCreateRequestSchema,
   CostCentersCreateResponseSchema,
   CostCentersReadResponseSchema,
@@ -49,11 +50,18 @@ export class CostCentersApiClient extends BaseApiClient {
    *   config: { timeout: 5000 }
    * })
    */
-  costCentersList = cache(async (options?: { config?: RequestConfiguration }) => {
+  costCentersList = cache(async (options: {
+    params: z.infer<typeof CostCentersListParamsSchema>
+    config?: RequestConfiguration
+  }) => {
+// Validate and extract parameters
+const validatedParams = await CostCentersListParamsSchema.parseAsync(options.params)
+
     return this.request<z.infer<typeof CostCentersListResponseSchema>>(
       'GET',
       '/cost-centers/',
       {
+queryParams: validatedParams.query,
 config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
 responseSchema: CostCentersListResponseSchema
       }

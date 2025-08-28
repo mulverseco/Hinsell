@@ -6,6 +6,7 @@ import type { ClientResponse, RequestConfiguration } from './base'
 import { defaultMiddleware } from './middleware'
 import {
   AccountingPeriodsListResponseSchema,
+  AccountingPeriodsListParamsSchema,
   AccountingPeriodsCreateRequestSchema,
   AccountingPeriodsCreateResponseSchema,
   AccountingPeriodsReadResponseSchema,
@@ -49,11 +50,18 @@ export class AccountingPeriodsApiClient extends BaseApiClient {
    *   config: { timeout: 5000 }
    * })
    */
-  accountingPeriodsList = cache(async (options?: { config?: RequestConfiguration }) => {
+  accountingPeriodsList = cache(async (options: {
+    params: z.infer<typeof AccountingPeriodsListParamsSchema>
+    config?: RequestConfiguration
+  }) => {
+// Validate and extract parameters
+const validatedParams = await AccountingPeriodsListParamsSchema.parseAsync(options.params)
+
     return this.request<z.infer<typeof AccountingPeriodsListResponseSchema>>(
       'GET',
       '/accounting-periods/',
       {
+queryParams: validatedParams.query,
 config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
 responseSchema: AccountingPeriodsListResponseSchema
       }

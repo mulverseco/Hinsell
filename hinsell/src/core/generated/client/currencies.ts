@@ -6,6 +6,7 @@ import type { ClientResponse, RequestConfiguration } from './base'
 import { defaultMiddleware } from './middleware'
 import {
   CurrenciesListResponseSchema,
+  CurrenciesListParamsSchema,
   CurrenciesCreateRequestSchema,
   CurrenciesCreateResponseSchema,
   CurrenciesReadResponseSchema,
@@ -49,11 +50,18 @@ export class CurrenciesApiClient extends BaseApiClient {
    *   config: { timeout: 5000 }
    * })
    */
-  currenciesList = cache(async (options?: { config?: RequestConfiguration }) => {
+  currenciesList = cache(async (options: {
+    params: z.infer<typeof CurrenciesListParamsSchema>
+    config?: RequestConfiguration
+  }) => {
+// Validate and extract parameters
+const validatedParams = await CurrenciesListParamsSchema.parseAsync(options.params)
+
     return this.request<z.infer<typeof CurrenciesListResponseSchema>>(
       'GET',
       '/currencies/',
       {
+queryParams: validatedParams.query,
 config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
 responseSchema: CurrenciesListResponseSchema
       }

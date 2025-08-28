@@ -6,6 +6,7 @@ import type { ClientResponse, RequestConfiguration } from './base'
 import { defaultMiddleware } from './middleware'
 import {
   AccountTypesListResponseSchema,
+  AccountTypesListParamsSchema,
   AccountTypesCreateRequestSchema,
   AccountTypesCreateResponseSchema,
   AccountTypesReadResponseSchema,
@@ -49,11 +50,18 @@ export class AccountTypesApiClient extends BaseApiClient {
    *   config: { timeout: 5000 }
    * })
    */
-  accountTypesList = cache(async (options?: { config?: RequestConfiguration }) => {
+  accountTypesList = cache(async (options: {
+    params: z.infer<typeof AccountTypesListParamsSchema>
+    config?: RequestConfiguration
+  }) => {
+// Validate and extract parameters
+const validatedParams = await AccountTypesListParamsSchema.parseAsync(options.params)
+
     return this.request<z.infer<typeof AccountTypesListResponseSchema>>(
       'GET',
       '/account-types/',
       {
+queryParams: validatedParams.query,
 config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
 responseSchema: AccountTypesListResponseSchema
       }

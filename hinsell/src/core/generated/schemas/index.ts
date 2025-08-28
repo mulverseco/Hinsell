@@ -904,6 +904,20 @@ export const AccountTypesListResponseSchema = z.array(AccountTypeSchema)
 
 export type AccountTypesListResponse = z.infer<typeof AccountTypesListResponseSchema>
 /**
+ * Parameters schema for GET /account-types/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const AccountTypesListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type AccountTypesListParams = z.infer<typeof AccountTypesListParamsSchema>
+/**
  * Request schema for POST /account-types/
  */
 export const AccountTypesCreateRequestSchema = AccountTypeSchema
@@ -1019,6 +1033,20 @@ export const AccountingPeriodsListResponseSchema = z.array(AccountingPeriodSchem
 
 export type AccountingPeriodsListResponse = z.infer<typeof AccountingPeriodsListResponseSchema>
 /**
+ * Parameters schema for GET /accounting-periods/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const AccountingPeriodsListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type AccountingPeriodsListParams = z.infer<typeof AccountingPeriodsListParamsSchema>
+/**
  * Request schema for POST /accounting-periods/
  */
 export const AccountingPeriodsCreateRequestSchema = AccountingPeriodSchema
@@ -1133,6 +1161,20 @@ export type AccountingPeriodsDeleteParams = z.infer<typeof AccountingPeriodsDele
 export const AccountsListResponseSchema = z.array(AccountSchema)
 
 export type AccountsListResponse = z.infer<typeof AccountsListResponseSchema>
+/**
+ * Parameters schema for GET /accounts/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const AccountsListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type AccountsListParams = z.infer<typeof AccountsListParamsSchema>
 /**
  * Request schema for POST /accounts/
  */
@@ -2542,6 +2584,20 @@ export const BudgetsListResponseSchema = z.array(BudgetSchema)
 
 export type BudgetsListResponse = z.infer<typeof BudgetsListResponseSchema>
 /**
+ * Parameters schema for GET /budgets/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const BudgetsListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type BudgetsListParams = z.infer<typeof BudgetsListParamsSchema>
+/**
  * Request schema for POST /budgets/
  */
 export const BudgetsCreateRequestSchema = BudgetSchema
@@ -2993,6 +3049,20 @@ export const CostCentersListResponseSchema = z.array(CostCenterSchema)
 
 export type CostCentersListResponse = z.infer<typeof CostCentersListResponseSchema>
 /**
+ * Parameters schema for GET /cost-centers/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const CostCentersListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type CostCentersListParams = z.infer<typeof CostCentersListParamsSchema>
+/**
  * Request schema for POST /cost-centers/
  */
 export const CostCentersCreateRequestSchema = CostCenterSchema
@@ -3263,6 +3333,20 @@ export const CurrenciesListResponseSchema = z.array(CurrencySchema)
 
 export type CurrenciesListResponse = z.infer<typeof CurrenciesListResponseSchema>
 /**
+ * Parameters schema for GET /currencies/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const CurrenciesListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type CurrenciesListParams = z.infer<typeof CurrenciesListParamsSchema>
+/**
  * Request schema for POST /currencies/
  */
 export const CurrenciesCreateRequestSchema = CurrencySchema
@@ -3378,6 +3462,33 @@ export const CurrencyHistoryListResponseSchema = z.array(CurrencyHistorySchema)
 
 export type CurrencyHistoryListResponse = z.infer<typeof CurrencyHistoryListResponseSchema>
 /**
+ * Parameters schema for GET /currency-history/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const CurrencyHistoryListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type CurrencyHistoryListParams = z.infer<typeof CurrencyHistoryListParamsSchema>
+/**
+ * Request schema for POST /currency-history/
+ */
+export const CurrencyHistoryCreateRequestSchema = CurrencyHistorySchema
+export type CurrencyHistoryCreateRequest = z.infer<typeof CurrencyHistoryCreateRequestSchema>
+/**
+ * Success response schema for POST /currency-history/
+ * Status: 201
+ * 
+ */
+export const CurrencyHistoryCreateResponseSchema = CurrencyHistorySchema
+
+export type CurrencyHistoryCreateResponse = z.infer<typeof CurrencyHistoryCreateResponseSchema>
+/**
  * Success response schema for GET /currency-history/{id}/
  * Status: 200
  * 
@@ -3398,6 +3509,79 @@ export const CurrencyHistoryReadParamsSchema = z.object({
 })
 
 export type CurrencyHistoryReadParams = z.infer<typeof CurrencyHistoryReadParamsSchema>
+/**
+ * Request schema for PUT /currency-history/{id}/
+ */
+export const CurrencyHistoryUpdateRequestSchema = CurrencyHistorySchema
+export type CurrencyHistoryUpdateRequest = z.infer<typeof CurrencyHistoryUpdateRequestSchema>
+/**
+ * Success response schema for PUT /currency-history/{id}/
+ * Status: 200
+ * 
+ */
+export const CurrencyHistoryUpdateResponseSchema = CurrencyHistorySchema
+
+export type CurrencyHistoryUpdateResponse = z.infer<typeof CurrencyHistoryUpdateResponseSchema>
+/**
+ * Parameters schema for PUT /currency-history/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const CurrencyHistoryUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type CurrencyHistoryUpdateParams = z.infer<typeof CurrencyHistoryUpdateParamsSchema>
+/**
+ * Request schema for PATCH /currency-history/{id}/
+ */
+export const CurrencyHistoryPartialUpdateRequestSchema = CurrencyHistorySchema
+export type CurrencyHistoryPartialUpdateRequest = z.infer<typeof CurrencyHistoryPartialUpdateRequestSchema>
+/**
+ * Success response schema for PATCH /currency-history/{id}/
+ * Status: 200
+ * 
+ */
+export const CurrencyHistoryPartialUpdateResponseSchema = CurrencyHistorySchema
+
+export type CurrencyHistoryPartialUpdateResponse = z.infer<typeof CurrencyHistoryPartialUpdateResponseSchema>
+/**
+ * Parameters schema for PATCH /currency-history/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const CurrencyHistoryPartialUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type CurrencyHistoryPartialUpdateParams = z.infer<typeof CurrencyHistoryPartialUpdateParamsSchema>
+/**
+ * Success response schema for DELETE /currency-history/{id}/
+ * Status: 204
+ * 
+ */
+export const CurrencyHistoryDeleteResponseSchema = z.void()
+
+export type CurrencyHistoryDeleteResponse = z.infer<typeof CurrencyHistoryDeleteResponseSchema>
+/**
+ * Parameters schema for DELETE /currency-history/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const CurrencyHistoryDeleteParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type CurrencyHistoryDeleteParams = z.infer<typeof CurrencyHistoryDeleteParamsSchema>
 /**
  * Success response schema for GET /inventory-balances/
  * Status: 200
@@ -5298,6 +5482,20 @@ export type OffersApplyParams = z.infer<typeof OffersApplyParamsSchema>
 export const OpeningBalancesListResponseSchema = z.array(OpeningBalanceSchema)
 
 export type OpeningBalancesListResponse = z.infer<typeof OpeningBalancesListResponseSchema>
+/**
+ * Parameters schema for GET /opening-balances/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const OpeningBalancesListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type OpeningBalancesListParams = z.infer<typeof OpeningBalancesListParamsSchema>
 /**
  * Request schema for POST /opening-balances/
  */

@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import { apiClient } from '@/core/generated/client'
 import { actionClientWithMeta, ActionError } from '@/core/generated/lib/safe-action'
 import {
+  AccountingPeriodsListParamsSchema,
   AccountingPeriodsListResponseSchema,
   AccountingPeriodsCreateRequestSchema,
   AccountingPeriodsCreateResponseSchema,
@@ -84,14 +85,16 @@ export const accountingPeriodsList = cache(
       name: "accounting-periods-list",
       requiresAuth: false
     })
-    .schema(z.void())
+    .schema(AccountingPeriodsListParamsSchema)
     .action(async ({ parsedInput, ctx }) => {
       const startTime = Date.now()
       
       try {
+    // Validate and sanitize parameters
+    const validatedParams = await validateAndSanitizeInput(AccountingPeriodsListParamsSchema, parsedInput)
 
         // Execute API call with enhanced error handling
-        const response = await apiClient.accountingPeriods.accountingPeriodsList({
+        const response = await apiClient.accountingPeriods.accountingPeriodsList({params: validatedParams,
           config: {
             timeout: 30000,
             retries: 3,
