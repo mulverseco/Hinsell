@@ -15,10 +15,10 @@ import {
 } from "lucide-react";
 
 // Internal imports
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ItemCard } from "@/components/shared/items-card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { Item } from "@/core/generated/schemas";
 import { useItemsList } from "@/core/generated/hooks/items";
+import { ItemCard } from "@/components/item-card";
 
 /**
  * SectionTitle component for consistent headings across sections
@@ -160,13 +160,13 @@ export function Features({ initialItem = [] }: HeaderProps) {
 
       <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 lg:py-40">
         <SectionTitle
-          title="Powerful Features"
-          subtitle="Everything you need to manage relationships, close deals, and grow your business effectively."
+          title="New Arrivals"
+          subtitle=""
         />
 
         <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((it, i) => (
-            <FeatureCard key={i} feature={it} index={i} />
+          {initialItem?.map((item, index) => (
+            <ItemCard key={index} item={item} isPopular={true} />
           ))}
         </div>
 

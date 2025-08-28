@@ -1,22 +1,12 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
-import { slugToName } from "utils/slug-name"
 import { type CurrencyType, mapCurrencyToSign } from "utils/map-currency-to-sign"
 import {
-  getCombinationByMultiOption,
-  getCombinationByVisualOption,
   getImagesForCarousel,
   getMultiOptionFromSlug,
-  getOriginalOptionValue,
-  getVisualOptionFromSlug,
-  hasValidMultiOption,
-  hasValidVisualOption,
-  removeMultiOptionFromSlug,
-  removeVisualOptionFromSlug,
 } from "utils/visual-variant-utils"
 
 import { Breadcrumbs } from "components/breadcrumbs"
-
 import { FavoriteMarker } from "components/product/favorite-marker"
 import { SimilarProductsSection } from "components/product/similar-products-section"
 import { SimilarProductsSectionSkeleton } from "components/product/similar-product-section-skeleton"
@@ -25,7 +15,6 @@ import { ProductTitle } from "components/product/product-title"
 import { ProductImages } from "components/product/product-images"
 import { RightSection } from "components/product/right-section"
 import { FaqAccordionItem, FaqSectionClient } from "components/product/faq-section/faq-section-client"
-import { ShopifyRichText } from "components/product/faq-section/shopify-rich-text"
 import { nameToSlug } from "utils/slug-name"
 import { AddToCartButton } from "components/product/add-to-cart-button"
 import { ReviewsSection } from "components/product/reviews-section"
@@ -44,11 +33,8 @@ interface ProductProps {
 
 export default async function Product(props: ProductProps) {
   const params = await props.params
-
   const { id } = params
-
   const multiOptions = getMultiOptionFromSlug(id)
-  const baseHandle = Object.keys(multiOptions).length > 0 ? removeMultiOptionFromSlug(id) : removeVisualOptionFromSlug(id)
 
   const product = await itemsRead({ path: { id: id } })
 
@@ -58,36 +44,8 @@ export default async function Product(props: ProductProps) {
 
   const item: Item = product.data
 
-  let combination
-  const hasInvalidOptions = false
+  const combinationPrice = item?.unit_price || item.sales_price || null
 
-  // if (Object.keys(multiOptions).length > 0) {
-  //   hasInvalidOptions = !hasValidMultiOption(item.units?.[0]?.name || "", multiOptions)
-  //   combination = getCombinationByMultiOption(item.units, multiOptions)
-  // } else {
-  //   const visualValue = getVisualOptionFromSlug(id)
-  //   hasInvalidOptions = !hasValidVisualOption(item.units || [], visualValue)
-  //   combination = getCombinationByVisualOption(item.units, visualValue)
-  // }
-
-  if (hasInvalidOptions) {
-    return notFound()
-  }
-
-  const combinationPrice = combination?.unit_price || item.sales_price || null
-
-  let visualValue: string | null = null
-  if (Object.keys(multiOptions).length > 0) {
-    if (multiOptions.color) {
-      // visualValue = getOriginalOptionValue(item?.units, "color", multiOptions.color)
-    }
-    if (!visualValue && Object.keys(multiOptions).length > 0) {
-      const firstOption = Object.entries(multiOptions)[0]
-      // visualValue = getOriginalOptionValue(item?.units, firstOption[0], firstOption[1])
-    }
-  } else {
-    visualValue = getVisualOptionFromSlug(id)
-  }
 
   const { images: imagesToShow, activeIndex } = getImagesForCarousel(item?.media || [], visualValue)
 
@@ -193,7 +151,7 @@ function makeBreadcrumbs(item: Item) {
 
   return {
     Home: "/",
-    [itemGroup?.name ? slugToName(itemGroup.name) : "Products"]: itemGroup?.slug
+    [itemGroup?.name ? itemGroup.name : "Products"]: itemGroup?.slug
       ? `/category/${itemGroup.id}`
       : "/search",
     [item.name || ""]: "",

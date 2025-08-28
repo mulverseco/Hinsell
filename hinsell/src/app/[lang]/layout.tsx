@@ -4,6 +4,7 @@ import { Header } from "@/components/header/header"
 import { Footer } from "@/features/landing/footer"
 import { itemGroupsList } from "@/core/generated/actions/itemGroups";
 import { storeGroupsList } from "@/core/generated/actions/storeGroups";
+import { DayPickerProvider } from "react-day-picker";
 
 export default async function RootLayout({
   children,
