@@ -194,65 +194,65 @@ class Command(BaseCommand):
         
         accounts_data = [
             # الأصول
-            {'code': '1000', 'name': 'الأصول', 'type': 'Current Assets', 'is_header': True},        
+            {'code': '1000', 'name': 'الأصول', 'type': 'الأصول المتداولة', 'is_header': True},        
 
             # الأصول المتداولة
-            {'code': '1100', 'name': 'الأصول المتداولة', 'type': 'Current Assets', 'parent': '1000', 'is_header': True},
-            {'code': '1110', 'name': 'النقد وما في حكمه', 'type': 'Current Assets', 'parent': '1100', 'nature': 'cash'},
-            {'code': '1111', 'name': 'الصندوق', 'type': 'Current Assets', 'parent': '1110', 'nature': 'cash'},
-            {'code': '1112', 'name': 'الحساب البنكي الرئيسي', 'type': 'Current Assets', 'parent': '1110', 'nature': 'bank'},
-            {'code': '1113', 'name': 'حساب الرواتب', 'type': 'Current Assets', 'parent': '1110', 'nature': 'bank'},
-            {'code': '1120', 'name': 'المدينون', 'type': 'Current Assets', 'parent': '1100', 'nature': 'customer'},
-            {'code': '1121', 'name': 'العملاء', 'type': 'Current Assets', 'parent': '1120', 'nature': 'customer'},
-            {'code': '1122', 'name': 'مدينون آخرون', 'type': 'Current Assets', 'parent': '1120'},
-            {'code': '1130', 'name': 'المخزون', 'type': 'Current Assets', 'parent': '1100', 'nature': 'inventory'},
-            {'code': '1131', 'name': 'مواد خام', 'type': 'Current Assets', 'parent': '1130', 'nature': 'inventory'},
-            {'code': '1132', 'name': 'بضاعة تامة الصنع', 'type': 'Current Assets', 'parent': '1130', 'nature': 'inventory'},
-            {'code': '1133', 'name': 'بضاعة تحت التشغيل', 'type': 'Current Assets', 'parent': '1130', 'nature': 'inventory'},        
+            {'code': '1100', 'name': 'الأصول المتداولة', 'type': 'الأصول المتداولة', 'parent': '1000', 'is_header': True},
+            {'code': '1110', 'name': 'النقد وما في حكمه', 'type': 'الأصول المتداولة', 'parent': '1100', 'nature': 'cash'},
+            {'code': '1111', 'name': 'الصندوق', 'type': 'الأصول المتداولة', 'parent': '1110', 'nature': 'cash'},
+            {'code': '1112', 'name': 'الحساب البنكي الرئيسي', 'type': 'الأصول المتداولة', 'parent': '1110', 'nature': 'bank'},
+            {'code': '1113', 'name': 'حساب الرواتب', 'type': 'الأصول المتداولة', 'parent': '1110', 'nature': 'bank'},
+            {'code': '1120', 'name': 'المدينون', 'type': 'الأصول المتداولة', 'parent': '1100', 'nature': 'customer'},
+            {'code': '1121', 'name': 'العملاء', 'type': 'الأصول المتداولة', 'parent': '1120', 'nature': 'customer'},
+            {'code': '1122', 'name': 'مدينون آخرون', 'type': 'الأصول المتداولة', 'parent': '1120'},
+            {'code': '1130', 'name': 'المخزون', 'type': 'الأصول المتداولة', 'parent': '1100', 'nature': 'inventory'},
+            {'code': '1131', 'name': 'مواد خام', 'type': 'الأصول المتداولة', 'parent': '1130', 'nature': 'inventory'},
+            {'code': '1132', 'name': 'بضاعة تامة الصنع', 'type': 'الأصول المتداولة', 'parent': '1130', 'nature': 'inventory'},
+            {'code': '1133', 'name': 'بضاعة تحت التشغيل', 'type': 'الأصول المتداولة', 'parent': '1130', 'nature': 'inventory'},        
 
             # الأصول الثابتة
-            {'code': '1200', 'name': 'الأصول الثابتة', 'type': 'Fixed Assets', 'parent': '1000', 'is_header': True},
-            {'code': '1210', 'name': 'العقارات والمعدات', 'type': 'Fixed Assets', 'parent': '1200', 'nature': 'fixed_asset'},
-            {'code': '1211', 'name': 'الأراضي', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},
-            {'code': '1212', 'name': 'المباني', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},
-            {'code': '1213', 'name': 'المعدات', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},
-            {'code': '1214', 'name': 'المركبات', 'type': 'Fixed Assets', 'parent': '1210', 'nature': 'fixed_asset'},        
+            {'code': '1200', 'name': 'الأصول الثابتة', 'type': 'الأصول الثابتة', 'parent': '1000', 'is_header': True},
+            {'code': '1210', 'name': 'العقارات والمعدات', 'type': 'الأصول الثابتة', 'parent': '1200', 'nature': 'fixed_asset'},
+            {'code': '1211', 'name': 'الأراضي', 'type': 'الأصول الثابتة', 'parent': '1210', 'nature': 'fixed_asset'},
+            {'code': '1212', 'name': 'المباني', 'type': 'الأصول الثابتة', 'parent': '1210', 'nature': 'fixed_asset'},
+            {'code': '1213', 'name': 'المعدات', 'type': 'الأصول الثابتة', 'parent': '1210', 'nature': 'fixed_asset'},
+            {'code': '1214', 'name': 'المركبات', 'type': 'الأصول الثابتة', 'parent': '1210', 'nature': 'fixed_asset'},        
 
             # الالتزامات
-            {'code': '2000', 'name': 'الالتزامات', 'type': 'Current Liabilities', 'is_header': True},        
+            {'code': '2000', 'name': 'الالتزامات', 'type': 'الالتزامات المتداولة', 'is_header': True},        
 
             # الالتزامات المتداولة
-            {'code': '2100', 'name': 'الالتزامات المتداولة', 'type': 'Current Liabilities', 'parent': '2000', 'is_header': True},
-            {'code': '2110', 'name': 'الدائنون', 'type': 'Current Liabilities', 'parent': '2100', 'nature': 'supplier'},
-            {'code': '2111', 'name': 'الموردون', 'type': 'Current Liabilities', 'parent': '2110', 'nature': 'supplier'},
-            {'code': '2112', 'name': 'دائنون آخرون', 'type': 'Current Liabilities', 'parent': '2110'},
-            {'code': '2120', 'name': 'المصروفات المستحقة', 'type': 'Current Liabilities', 'parent': '2100'},
-            {'code': '2130', 'name': 'ضريبة المبيعات المستحقة', 'type': 'Current Liabilities', 'parent': '2100'},
-            {'code': '2140', 'name': 'ضريبة القيمة المضافة المستحقة', 'type': 'Current Liabilities', 'parent': '2100'},        
+            {'code': '2100', 'name': 'الالتزامات المتداولة', 'type': 'الالتزامات المتداولة', 'parent': '2000', 'is_header': True},
+            {'code': '2110', 'name': 'الدائنون', 'type': 'الالتزامات المتداولة', 'parent': '2100', 'nature': 'supplier'},
+            {'code': '2111', 'name': 'الموردون', 'type': 'الالتزامات المتداولة', 'parent': '2110', 'nature': 'supplier'},
+            {'code': '2112', 'name': 'دائنون آخرون', 'type': 'الالتزامات المتداولة', 'parent': '2110'},
+            {'code': '2120', 'name': 'المصروفات المستحقة', 'type': 'الالتزامات المتداولة', 'parent': '2100'},
+            {'code': '2130', 'name': 'ضريبة المبيعات المستحقة', 'type': 'الالتزامات المتداولة', 'parent': '2100'},
+            {'code': '2140', 'name': 'ضريبة القيمة المضافة المستحقة', 'type': 'الالتزامات المتداولة', 'parent': '2100'},        
 
             # حقوق الملكية
-            {'code': '3000', 'name': 'حقوق الملكية', 'type': 'Owner Equity', 'is_header': True},
-            {'code': '3100', 'name': 'رأس المال', 'type': 'Owner Equity', 'parent': '3000'},
-            {'code': '3200', 'name': 'الأرباح المحتجزة', 'type': 'Retained Earnings', 'parent': '3000'},        
+            {'code': '3000', 'name': 'حقوق الملكية', 'type': 'حقوق الملكية', 'is_header': True},
+            {'code': '3100', 'name': 'رأس المال', 'type': 'حقوق الملكية', 'parent': '3000'},
+            {'code': '3200', 'name': 'الأرباح المحتجزة', 'type': 'الأرباح المحتجزة', 'parent': '3000'},        
 
             # الإيرادات
-            {'code': '4000', 'name': 'الإيرادات', 'type': 'Sales Revenue', 'is_header': True},
-            {'code': '4100', 'name': 'إيرادات المبيعات', 'type': 'Sales Revenue', 'parent': '4000'},
-            {'code': '4110', 'name': 'مبيعات المنتجات', 'type': 'Sales Revenue', 'parent': '4100'},
-            {'code': '4120', 'name': 'إيرادات الخدمات', 'type': 'Service Revenue', 'parent': '4100'},
-            {'code': '4130', 'name': 'إيرادات الشحن', 'type': 'Sales Revenue', 'parent': '4100'},
-            {'code': '4200', 'name': 'إيرادات أخرى', 'type': 'Other Revenue', 'parent': '4000'},        
+            {'code': '4000', 'name': 'الإيرادات', 'type': 'إيرادات المبيعات', 'is_header': True},
+            {'code': '4100', 'name': 'إيرادات المبيعات', 'type': 'إيرادات المبيعات', 'parent': '4000'},
+            {'code': '4110', 'name': 'مبيعات المنتجات', 'type': 'إيرادات المبيعات', 'parent': '4100'},
+            {'code': '4120', 'name': 'إيرادات الخدمات', 'type': 'إيرادات الخدمات', 'parent': '4100'},
+            {'code': '4130', 'name': 'إيرادات الشحن', 'type': 'إيرادات المبيعات', 'parent': '4100'},
+            {'code': '4200', 'name': 'إيرادات أخرى', 'type': 'إيرادات أخرى', 'parent': '4000'},        
 
             # المصروفات
-            {'code': '5000', 'name': 'تكلفة البضاعة المباعة', 'type': 'Cost of Goods Sold', 'is_header': True},
-            {'code': '5100', 'name': 'تكاليف المنتجات', 'type': 'Cost of Goods Sold', 'parent': '5000'},
-            {'code': '5200', 'name': 'تكاليف الشحن', 'type': 'Cost of Goods Sold', 'parent': '5000'},        
+            {'code': '5000', 'name': 'تكلفة البضاعة المباعة', 'type': 'تكلفة البضاعة المباعة', 'is_header': True},
+            {'code': '5100', 'name': 'تكاليف المنتجات', 'type': 'تكلفة البضاعة المباعة', 'parent': '5000'},
+            {'code': '5200', 'name': 'تكاليف الشحن', 'type': 'تكلفة البضاعة المباعة', 'parent': '5000'},        
 
-            {'code': '6000', 'name': 'المصروفات التشغيلية', 'type': 'Operating Expenses', 'is_header': True},
-            {'code': '6100', 'name': 'المصروفات التسويقية', 'type': 'Operating Expenses', 'parent': '6000'},
-            {'code': '6200', 'name': 'المصروفات التقنية', 'type': 'Operating Expenses', 'parent': '6000'},
-            {'code': '6300', 'name': 'المصروفات الإدارية', 'type': 'Administrative Expenses', 'parent': '6000'},
-            {'code': '6400', 'name': 'مصروفات الرواتب', 'type': 'Operating Expenses', 'parent': '6000'},
+            {'code': '6000', 'name': 'المصروفات التشغيلية', 'type': 'المصروفات التشغيلية', 'is_header': True},
+            {'code': '6100', 'name': 'المصروفات التسويقية', 'type': 'المصروفات التشغيلية', 'parent': '6000'},
+            {'code': '6200', 'name': 'المصروفات التقنية', 'type': 'المصروفات التشغيلية', 'parent': '6000'},
+            {'code': '6300', 'name': 'المصروفات الإدارية', 'type': 'المصروفات الإدارية', 'parent': '6000'},
+            {'code': '6400', 'name': 'مصروفات الرواتب', 'type': 'المصروفات التشغيلية', 'parent': '6000'},
         ]
 
         
