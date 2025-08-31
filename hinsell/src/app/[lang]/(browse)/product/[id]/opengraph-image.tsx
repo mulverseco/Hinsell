@@ -1,7 +1,5 @@
+import { itemsRead } from "@/core/generated/actions"
 import { ImageResponse } from "next/og"
-import { removeOptionsFromUrl } from "utils/product-options-utils"
-import { env } from "env.mjs"
-import { getProduct } from "lib/algolia"
 
 export const revalidate = 86400
 
@@ -15,10 +13,10 @@ export const size = {
 export const contentType = "image/png"
 
 export default async function Image({ params: { slug } }: { params: { slug: string } }) {
-  const interRegular = fetch(new URL(`${env.LIVE_URL}/fonts/Inter-Regular.ttf`)).then((res) => res.arrayBuffer())
-  const interBold = fetch(new URL(`${env.LIVE_URL}/fonts/Inter-Bold.ttf`)).then((res) => res.arrayBuffer())
+  const interRegular = fetch(new URL(`${process.env.LIVE_URL}/fonts/Inter-Regular.ttf`)).then((res) => res.arrayBuffer())
+  const interBold = fetch(new URL(`${process.env.LIVE_URL}/fonts/Inter-Bold.ttf`)).then((res) => res.arrayBuffer())
 
-  const product = await getProduct(removeOptionsFromUrl(slug))
+  const product = await itemsRead({ path: { id: slug }})
 
   return new ImageResponse(
     (
@@ -45,7 +43,7 @@ export default async function Image({ params: { slug } }: { params: { slug: stri
             backgroundColor: "#eaeaea",
           }}
         >
-          <img src={product?.featuredImage?.url} width={280} height={280} style={{ objectFit: "contain" }} />
+          <img src={product?.data?.media?.[0].file} width={280} height={280} style={{ objectFit: "contain" }} />
         </div>
         <div
           style={{
@@ -57,7 +55,7 @@ export default async function Image({ params: { slug } }: { params: { slug: stri
             height: "80px",
           }}
         >
-          {product?.images
+          {product?.data?.media
             ?.slice(0, 4)
             ?.map((image, idx) => (
               <img
@@ -68,7 +66,7 @@ export default async function Image({ params: { slug } }: { params: { slug: stri
                   border: "1px solid black",
                   padding: "5px",
                 }}
-                src={image.url}
+                src={image.file}
                 width={85}
                 height={80}
               />
@@ -89,7 +87,7 @@ export default async function Image({ params: { slug } }: { params: { slug: stri
             letterSpacing: "-0.05em",
           }}
         >
-          {product?.title}
+          {product?.data?.name}
         </div>
 
         <div
@@ -105,7 +103,7 @@ export default async function Image({ params: { slug } }: { params: { slug: stri
             top: 230,
           }}
         >
-          {product?.description}
+          {product?.data?.description}
         </div>
         <div
           style={{
@@ -119,7 +117,7 @@ export default async function Image({ params: { slug } }: { params: { slug: stri
             letterSpacing: "-0.05em",
           }}
         >
-          {product?.priceRange.minVariantPrice.amount + " " + product?.priceRange.minVariantPrice.currencyCode}
+          {product?.data?.variants?.[0]?.sales_price ?? ""}
         </div>
       </div>
     ),

@@ -13,6 +13,7 @@ interface ItemCardProps {
   item: Item
   variant?: "default" | "compact" | "featured"
   className?: string
+  href?:string
   onAddToCart?: (item: Item, variant?: ItemVariant) => void
   onToggleFavorite?: (item: Item) => void
   isFavorited?: boolean
@@ -22,6 +23,7 @@ interface ItemCardProps {
 export function ItemCard({
   item,
   variant = "default",
+  href,
   className,
   onAddToCart,
   onToggleFavorite,
@@ -34,7 +36,7 @@ export function ItemCard({
   const originalPrice = selectedVariant?.wholesale_price
   const hasDiscount = originalPrice && price && Number.parseFloat(originalPrice) > Number.parseFloat(price)
 
-  const productUrl = `/product/${item.id || item.name?.toLowerCase().replace(/\s+/g, "-")}`
+  const productUrl = href || `/product/${item.id || item.name?.toLowerCase().replace(/\s+/g, "-")}`
 
   const handleAddToCart = () => {
     onAddToCart?.(item, selectedVariant)
