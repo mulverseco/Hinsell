@@ -1,20 +1,12 @@
 import type React from "react"
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Badge } from "@/components/ui/badge"
 import { Crown, Gift, Users } from "lucide-react"
 import { Item, ItemVariant, Media } from "@/core/generated/schemas"
 import { ProductGallery } from "@/features/product/product-images"
 import { ProductInfo } from "@/features/product/product-info"
 import { ProductReviews } from "@/features/product/product-reviews"
 import { itemsRead } from "@/core/generated/actions"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 
 
 const mockProduct: Partial<Item> & {
@@ -160,37 +152,20 @@ const mockReviews = [
   },
 ]
 
-export default async function ProductPage({id}:{id : string}) {
+interface ProductPageProps {
+  params: Promise<{ id: string }>
+}
+
+export default async function ProductPage(props: ProductPageProps) {
+    const { id } = await props.params
     const data = await itemsRead({path:{id:id}})
     const item = data.data
+    console.log("item : ",item)
+    console.log("id : ",id)
   return (
     <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/">Home</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/women">Women Apparel</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/women/clothing">Women Clothing</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/women/sweatshirts">Women Sweatshirts</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage className="text-balance">
-                 {item?.name}
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <Breadcrumbs className="mb-8" items={makeBreadcrumbs(item)} />
         </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -201,8 +176,8 @@ export default async function ProductPage({id}:{id : string}) {
           <div>
             <ProductInfo
               name={item?.name || ""}
-              price={item?.variants?.[0].sales_price || 0}
-              originalPrice={item?.variants?.[0].standard_cost || 0}
+              price={Number(item?.variants?.[0].sales_price) || 0}
+              originalPrice={Number(item?.variants?.[0].standard_cost) || 0}
               rating={Number.parseFloat(mockProduct.average_rating || "0")}
               reviewCount={item?.review_count || 0}
               description={item?.description || ""}
@@ -232,4 +207,16 @@ export default async function ProductPage({id}:{id : string}) {
       </div>
     </div>
   )
+}
+
+function makeBreadcrumbs(item?: Item) {
+  const itemGroup = item?.item_group
+
+  return {
+    Home: "/",
+    [itemGroup?.name || "Products"]: itemGroup?.slug
+      ? `/category/${itemGroup?.id}`
+      : "/search",
+    [item?.name || ""]: "",
+  }
 }
