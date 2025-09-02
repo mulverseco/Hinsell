@@ -10,12 +10,15 @@ logger = Logger(__name__)
 
 @receiver(post_save, sender=TransactionType)
 def transaction_type_saved(sender, instance, created, **kwargs):
+    user = instance.created_by if created else instance.updated_by
+    username = user.username if user else None
+
     action = 'transaction_type_created' if created else 'transaction_type_updated'
     AuditService.create_audit_log(
         branch=instance.branch,
         user=instance.created_by if created else instance.updated_by,
         action_type=action,
-        username=instance.created_by.username if created else instance.updated_by.username,
+        username=username,
         details={'code': instance.code, 'name': instance.name}
     )
     logger.info(
@@ -25,12 +28,15 @@ def transaction_type_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=TransactionHeader)
 def transaction_header_saved(sender, instance, created, **kwargs):
+    user = instance.created_by if created else instance.updated_by
+    username = user.username if user else None
+
     action = 'transaction_header_created' if created else 'transaction_header_updated'
     AuditService.create_audit_log(
         branch=instance.branch,
         user=instance.created_by if created else instance.updated_by,
         action_type=action,
-        username=instance.created_by.username if created else instance.updated_by.username,
+        username=username,
         details={'code': instance.code, 'transaction_number': instance.transaction_number, 'status': instance.status}
     )
     logger.info(
@@ -61,12 +67,15 @@ def transaction_header_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=TransactionDetail)
 def transaction_detail_saved(sender, instance, created, **kwargs):
+    user = instance.created_by if created else instance.updated_by
+    username = user.username if user else None
+
     action = 'transaction_detail_created' if created else 'transaction_detail_updated'
     AuditService.create_audit_log(
         branch=instance.header.branch,
         user=instance.created_by if created else instance.updated_by,
         action_type=action,
-        username=instance.created_by.username if created else instance.updated_by.username,
+        username=username,
         details={'header_code': instance.header.code, 'line_number': instance.line_number}
     )
     logger.info(
@@ -76,12 +85,15 @@ def transaction_detail_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=LedgerEntry)
 def ledger_entry_saved(sender, instance, created, **kwargs):
+    user = instance.created_by if created else instance.updated_by
+    username = user.username if user else None
+
     action = 'ledger_entry_created' if created else 'ledger_entry_updated'
     AuditService.create_audit_log(
         branch=instance.branch,
         user=instance.created_by if created else instance.updated_by,
         action_type=action,
-        username=instance.created_by.username if created else instance.updated_by.username,
+        username=username,
         details={'code': instance.code, 'account': instance.account.code}
     )
     logger.info(
