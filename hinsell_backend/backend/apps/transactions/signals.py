@@ -12,6 +12,7 @@ logger = Logger(__name__)
 def transaction_type_saved(sender, instance, created, **kwargs):
     user = instance.created_by if created else instance.updated_by
     username = user.username if user else None
+    user_id = user.id if user else None
 
     action = 'transaction_type_created' if created else 'transaction_type_updated'
     AuditService.create_audit_log(
@@ -23,13 +24,14 @@ def transaction_type_saved(sender, instance, created, **kwargs):
     )
     logger.info(
         f"{'Created' if created else 'Updated'} TransactionType {instance.code}",
-        extra={'object_id': instance.id, 'user_id': instance.created_by.id if created else instance.updated_by.id}
+         extra={'object_id': instance.id, 'user_id': user_id}
     )
 
 @receiver(post_save, sender=TransactionHeader)
 def transaction_header_saved(sender, instance, created, **kwargs):
     user = instance.created_by if created else instance.updated_by
     username = user.username if user else None
+    user_id = user.id if user else None
 
     action = 'transaction_header_created' if created else 'transaction_header_updated'
     AuditService.create_audit_log(
@@ -41,7 +43,7 @@ def transaction_header_saved(sender, instance, created, **kwargs):
     )
     logger.info(
         f"{'Created' if created else 'Updated'} TransactionHeader {instance.code}",
-        extra={'object_id': instance.id, 'user_id': instance.created_by.id if created else instance.updated_by.id}
+        extra={'object_id': instance.id, 'user_id': user_id}
     )
 
     if instance.status == TransactionHeader.Status.APPROVED and instance.approved_by:
@@ -69,6 +71,7 @@ def transaction_header_saved(sender, instance, created, **kwargs):
 def transaction_detail_saved(sender, instance, created, **kwargs):
     user = instance.created_by if created else instance.updated_by
     username = user.username if user else None
+    user_id = user.id if user else None
 
     action = 'transaction_detail_created' if created else 'transaction_detail_updated'
     AuditService.create_audit_log(
@@ -80,13 +83,14 @@ def transaction_detail_saved(sender, instance, created, **kwargs):
     )
     logger.info(
         f"{'Created' if created else 'Updated'} TransactionDetail for header {instance.header.code}",
-        extra={'object_id': instance.id, 'user_id': instance.created_by.id if created else instance.updated_by.id}
+         extra={'object_id': instance.id, 'user_id': user_id}
     )
 
 @receiver(post_save, sender=LedgerEntry)
 def ledger_entry_saved(sender, instance, created, **kwargs):
     user = instance.created_by if created else instance.updated_by
     username = user.username if user else None
+    user_id = user.id if user else None
 
     action = 'ledger_entry_created' if created else 'ledger_entry_updated'
     AuditService.create_audit_log(
@@ -98,7 +102,7 @@ def ledger_entry_saved(sender, instance, created, **kwargs):
     )
     logger.info(
         f"{'Created' if created else 'Updated'} LedgerEntry {instance.code}",
-        extra={'object_id': instance.id, 'user_id': instance.created_by.id if created else instance.updated_by.id}
+         extra={'object_id': instance.id, 'user_id': user_id}
     )
 
 @receiver(post_delete, sender=TransactionType)
