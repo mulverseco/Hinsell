@@ -664,15 +664,19 @@ class TransactionDetail(AuditableModel):
         ]
 
     def clean(self):
-        super().clean()
-        if self.item_unit and self.item_unit.item != self.item:
-            raise ValidationError({'item_unit': _('Item unit must belong to the selected item.')})
-        if self.header.branch.use_batch_no and self.item.track_batches and not self.batch_number:
-            raise ValidationError({'batch_number': _('Batch number is required for this item.')})
-        if self.header.branch.use_expire_date and self.item.track_expiry and not self.expiry_date:
-            raise ValidationError({'expiry_date': _('Expiry date is required for this item.')})
-        if self.expiry_date and self.expiry_date < timezone.now().date():
-            raise ValidationError({'expiry_date': _('Cannot use expired products.')})
+        super().clean()    
+
+        if not self.item_unit:
+            raise ValidationError({'item_unit': _('Item unit is required.')})    
+        item = self.item_unit.variant.item    
+
+        if item.track_expiry and not self.expiry_date:
+            raise ValidationError({'expiry_date': _('Expiry date required.')})    
+        if item.track_batch and not self.batch_number:
+            raise ValidationError({'batch_number': _('Batch number required.')})      
+        if self.quantity <= 0:
+            raise ValidationError({'quantity': _('Quantity must be greater than zero.')})
+
 
     def save(self, *args, **kwargs):
         if self.item_unit and not self.unit_size:
