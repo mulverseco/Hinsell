@@ -12,9 +12,9 @@ import {
 // Internal components
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 /**
  * DashboardHeader Component
@@ -44,11 +44,11 @@ export const DashboardHeader = () => {
           aria-controls="main-sidebar"
         />
         <Separator orientation="vertical" className="h-4" aria-hidden="true" />
-        <Breadcrumbs
-          homeLabel="Dashboard"
-          homeHref="/dashboard"
+        <Breadcrumb
+          // homeLabel="Dashboard"
+          // homeHref="/dashboard"
           className="overflow-hidden"
-          showHome={false}
+          // showHome={false}
         />
       </div>
 

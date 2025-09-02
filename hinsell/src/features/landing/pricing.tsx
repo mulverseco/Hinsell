@@ -174,7 +174,6 @@ const tiers = [
 export function Pricing() {
   return (
     <section
-      id="pricing"
       className="relative"
       aria-labelledby="pricing-heading"
     >

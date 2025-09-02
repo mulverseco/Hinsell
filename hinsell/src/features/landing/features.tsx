@@ -140,7 +140,6 @@ export function Features({ initialItem = [] }: HeaderProps) {
    console.log("item", item);
   return (
     <section
-      id="features"
       className="relative"
       aria-labelledby="features-heading"
     >

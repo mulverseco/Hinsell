@@ -122,7 +122,6 @@ const testimonials = [
 export function Testimonials() {
   return (
     <section
-      id="testimonials"
       className="relative"
       aria-labelledby="testimonials-heading"
     >

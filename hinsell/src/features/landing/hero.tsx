@@ -39,7 +39,7 @@ const BadgeLabel = ({ text }: { text: string }) => {
  */
 export function Hero() {
   return (
-    <section className="relative overflow-hidden" id="home" aria-labelledby="hero-heading">
+    <section className="relative overflow-hidden" aria-labelledby="hero-heading">
       {/* Background elements */}
       <div
         className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"

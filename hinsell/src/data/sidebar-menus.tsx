@@ -15,8 +15,8 @@ import {
 
 export const sidebarMenus = {
   user: {
-    name: "James",
-    email: "james@example.com",
+    name: "Mohamed Alhabob",
+    email: "alhapopy@gmail.com",
     avatar: "/avatars/avatar.png",
   },
   navMain: [
