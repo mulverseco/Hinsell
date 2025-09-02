@@ -699,7 +699,7 @@ class TransactionDetail(AuditableModel):
         return self.quantity + self.bonus_quantity
 
     def __str__(self):
-        return f"{self.header.code} - Line {self.line_number}: {self.item.item_name}"
+        return f"{self.header.code} - Line {self.line_number}: {self.item.name}"
 
 class LedgerEntry(AuditableModel):
     """General ledger entries for all accounting transactions."""
