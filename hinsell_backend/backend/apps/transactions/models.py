@@ -672,7 +672,7 @@ class TransactionDetail(AuditableModel):
 
         if item.track_expiry and not self.expiry_date:
             raise ValidationError({'expiry_date': _('Expiry date required.')})    
-        if item.track_batch and not self.batch_number:
+        if item.track_batches and not self.batch_number:
             raise ValidationError({'batch_number': _('Batch number required.')})      
         if self.quantity <= 0:
             raise ValidationError({'quantity': _('Quantity must be greater than zero.')})
