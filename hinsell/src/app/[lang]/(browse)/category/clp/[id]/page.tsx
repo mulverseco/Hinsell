@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { CategoryCLPView } from "components/category/category-clp-view"
+import { CategoryCLPView } from "@/components/category/category-clp-view"
 import { SearchParamsType } from "types"
 
 export const revalidate = 86400

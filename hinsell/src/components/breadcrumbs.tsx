@@ -26,7 +26,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
                   {title}
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              {!isLast && <BreadcrumbSeparator className="text-transparent [&>svg]:size-2 [&>svg]:fill-black" />}
+              {!isLast && <BreadcrumbSeparator className="text-transparent [&>svg]:size-2 [&>svg]:fill-black dark:[&>svg]:fill-white" />}
             </React.Fragment>
           )
         })}

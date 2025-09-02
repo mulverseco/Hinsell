@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { CategoryCLPView } from "components/category/category-clp-view"
+import { CategoryCLPView } from "@/components/category/category-clp-view"
 
 export const revalidate = 86400
 export const dynamic = "force-static"

@@ -166,38 +166,14 @@ export function ProductInfo({
         </div>
       )}
 
-      {/* Quantity and Add to Cart */}
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <span className="font-medium">Quantity:</span>
-          <div className="flex items-center border rounded-md">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="h-8 w-8 hover:bg-muted"
-            >
-              <Minus className="h-3 w-3" />
-            </Button>
-            <span className="px-3 py-1 text-sm font-medium min-w-[2rem] text-center">{quantity}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setQuantity(quantity + 1)}
-              className="h-8 w-8 hover:bg-muted"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-
         <div className="flex gap-3">
           <CTAButton className="flex-1 font-bold" icon={<ShoppingCart className="h-4 w-4" />} disabled={!inStock}>
             {inStock ? "ADD TO CART" : "OUT OF STOCK"}
           </CTAButton>
           <Button
-            variant="outline"
-            size="icon"
+            variant={"outline"}
+            size={"icon"}
             onClick={() => setIsWishlisted(!isWishlisted)}
             className={cn("shrink-0 transition-colors", isWishlisted && "text-red-500 border-red-500 bg-red-50")}
           >
