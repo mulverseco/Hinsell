@@ -314,7 +314,7 @@ class TransactionHeader(AuditableModel):
             raise ValidationError({'currency': _('Multi-currency not supported by license.')})
         if self.transaction_type.requires_approval and self.status == self.Status.APPROVED and not self.approved_by:
             raise ValidationError({'approved_by': _('Approver required for transactions requiring approval.')})
-        if self.pk:
+        if self.pk and TransactionHeader.objects.filter(pk=self.pk).exists():
             old_instance = TransactionHeader.objects.get(pk=self.pk)
             if not self._is_valid_status_transition(old_instance.status, self.status):
                 raise ValidationError({'status': _('Invalid status transition.')})
