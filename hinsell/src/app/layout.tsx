@@ -6,6 +6,7 @@ import "./globals.css"
 import { getServerLocale } from "@/utils/language-utils"
 import { Providers } from "./providers"
 import { sharedMetadata } from "./shared-metadata"
+import { auth } from "@/core/auth"
 
 export const metadata: Metadata = {
   metadataBase: sharedMetadata.metadataBase,
@@ -18,11 +19,11 @@ export default async function RootLayout({
   children: React.ReactNode
 }>) {
   const locale = await getServerLocale()
-
+const session = await auth()
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Providers locale={locale}>
+        <Providers locale={locale} session={session}>
           {children}
         </Providers>
       </body>

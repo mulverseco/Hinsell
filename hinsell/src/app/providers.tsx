@@ -8,13 +8,17 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProviderClient } from "@/locales/client";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
+import { SessionProvider } from "next-auth/react"
+import { auth } from "@/core/auth";
+import { Session } from "next-auth";
 
 type ProviderProps = {
   locale?: string;
   children: ReactNode;
+  session: Session | null;
 };
 
-export function Providers({ locale, children }: ProviderProps) {
+export  function Providers({ locale,session, children }: ProviderProps) {
  const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -47,14 +51,14 @@ export function Providers({ locale, children }: ProviderProps) {
   return (
     <I18nProviderClient locale={locale || "en"}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        {/* <SessionProvider> */}
+        <SessionProvider basePath={"/auth"} session={session}>
          <QueryClientProvider client={queryClient}>
           <TooltipProvider>
            {children}
           </TooltipProvider>
             {process.env.NODE_ENV === "development" && <ReactQueryDevtools initialIsOpen={false} />}
         </QueryClientProvider>
-        {/* </SessionProvider> */}
+        </SessionProvider>
       </ThemeProvider>
     </I18nProviderClient>
   );
