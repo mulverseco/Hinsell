@@ -13,6 +13,7 @@ import { CTAButton } from "@/components/shared/cta-button"
 import { cn } from "@/lib/utils"
 import { ItemVariant } from "@/core/generated/schemas"
 import { ProductOffers } from "./product-offers"
+import AddToCartButton from "@/components/AddToCartButton"
 
 
 interface ProductInfoProps {
@@ -171,6 +172,14 @@ export function ProductInfo({
           <CTAButton className="flex-1 font-bold" icon={<ShoppingCart className="h-4 w-4" />} disabled={!inStock}>
             {inStock ? "ADD TO CART" : "OUT OF STOCK"}
           </CTAButton>
+          {/* <AddToCartButton
+            variant={selectedVariant}
+            unit={selectedUnit}
+            quantity={1}
+            className={cn(
+              "gap-2 font-medium tracking-wide bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 py-2.5 shadow-lg border-0",
+            )}
+          /> */}
           <Button
             variant={"outline"}
             size={"icon"}

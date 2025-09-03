@@ -11,6 +11,7 @@ import { ItemGroup, StoreGroup } from "@/core/generated/schemas";
 import { useItemGroupsList } from "@/core/generated/hooks/itemGroups";
 import { useStoreGroupsList } from "@/core/generated/hooks/storeGroups";
 import { Badge } from "../ui/badge";
+import CartSheet from "../CartSheet";
 
 
 interface HeaderProps {
@@ -66,13 +67,7 @@ export function Header({ initialItemGroups = [], initialStoreGroups = [] }: Head
               </div>
 
               <div className="hidden items-center gap-3 md:flex">
-              <Button variant="ghost" size="sm" className="relative gap-2">
-                <ShoppingCart className="h-4 w-4" />
-                <span className="hidden lg:inline">$245  </span>
-                  <Badge variant={"outline"} className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs">
-                    2
-                  </Badge>
-              </Button>
+              <CartSheet/>
                 <Button variant="ghost" className="font-medium tracking-wide">
                   Sign in
                 </Button>

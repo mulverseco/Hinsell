@@ -7,13 +7,14 @@ import { Heart, Star, Info } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import { ItemMedia } from "./item-media"
-import { Item, ItemVariant } from "@/core/generated/schemas"
+import { Item, ItemVariant, ItemUnit } from "@/core/generated/schemas"
+import AddToCartButton from "./AddToCartButton"
 
 interface ItemCardProps {
   item: Item
   variant?: "default" | "compact" | "featured"
   className?: string
-  href?:string
+  href?: string
   onAddToCart?: (item: Item, variant?: ItemVariant) => void
   onToggleFavorite?: (item: Item) => void
   isFavorited?: boolean
@@ -31,6 +32,9 @@ export function ItemCard({
   isPopular = false,
 }: ItemCardProps) {
   const [selectedVariant, setSelectedVariant] = useState<ItemVariant | undefined>(item.variants?.[0])
+  const [selectedUnit, setSelectedUnit] = useState<ItemUnit | undefined>(
+    selectedVariant?.units?.find((u) => u.is_default) || selectedVariant?.units?.[0]
+  )
 
   const price = selectedVariant?.sales_price || selectedVariant?.standard_cost
   const originalPrice = selectedVariant?.wholesale_price
@@ -177,22 +181,23 @@ export function ItemCard({
               )}
             </div>
 
-            <Button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleAddToCart()
-              }}
-              className={cn(
-                "gap-2 font-medium tracking-wide",
-                price
-                  ? "bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 py-2.5 shadow-lg border-0"
-                  : "bg-gray-200 text-gray-500 rounded-full px-6 py-2.5 cursor-not-allowed border-0",
-              )}
-              disabled={!price}
-            >
-              {price ? "Add to Cart" : "Cart disabled"}
-            </Button>
+            {selectedVariant && selectedUnit ? (
+              <AddToCartButton
+                variant={selectedVariant}
+                unit={selectedUnit}
+                quantity={1}
+                className={cn(
+                  "gap-2 font-medium tracking-wide bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 py-2.5 shadow-lg border-0",
+                )}
+              />
+            ) : (
+              <Button
+                className="gap-2 font-medium tracking-wide bg-gray-200 text-gray-500 rounded-full px-6 py-2.5 cursor-not-allowed border-0"
+                disabled
+              >
+                Cart disabled
+              </Button>
+            )}
           </div>
         </div>
       </div>
