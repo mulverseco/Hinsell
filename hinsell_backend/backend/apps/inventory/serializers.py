@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.utils import timezone
-from django.db.models import Avg, Count, Window, F, RowNumber
+from django.db.models import Avg, Count, Window, F
+from django.db.models.functions.window import RowNumber
 from django.db.models.functions import DenseRank
 from apps.inventory.models import (
     StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, ItemBarcode,
