@@ -863,8 +863,6 @@ class Command(BaseCommand):
         """Create sample coupons, offers, campaigns, and reviews"""
         try:
             now = timezone.now()
-            end = now + timezone.timedelta(days=60)
-            print(f"now type: {type(now)}, End type: {type(end)}")
             
             # Create sample offers
             percentage_offer, _ = Offer.objects.get_or_create(
