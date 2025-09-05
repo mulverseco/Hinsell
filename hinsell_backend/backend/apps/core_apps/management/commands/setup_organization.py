@@ -1,7 +1,9 @@
+import traceback
 from datetime import date
 from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
@@ -43,51 +45,39 @@ class Command(BaseCommand):
         try:
             self.stdout.write(self.style.SUCCESS('Starting organization setup...'))
 
-            # Company
             company = self.create_company(options['company_name'])
             self.stdout.write(f'Created/found company: {company.company_name}')
 
-            # Branch
             branch = self.create_primary_branch(company, options['fiscal_year'])
             self.stdout.write(f'Created/found primary branch: {branch.branch_name}')
 
-            # Currencies
             currencies = self.setup_currencies(branch, options['country_code'])
             self.stdout.write(f'Setup {len(currencies)} currencies')
 
-            # Account types
             account_types = self.create_account_types(branch)
             self.stdout.write(f'Created/found {len(account_types)} account types')
 
-            # Chart of accounts
             accounts = self.create_chart_of_accounts(branch, account_types, currencies[0])
             self.stdout.write(f'Created/found {len(accounts)} accounts')
 
-            # Accounting periods
             accounting_periods = self.create_accounting_periods(branch, options['fiscal_year'])
             self.stdout.write(f'Created/found {len(accounting_periods)} accounting periods')
 
-            # Transaction types
             transaction_types = self.create_transaction_types(branch, accounts)
             self.stdout.write(f'Created/found {len(transaction_types)} transaction types')
 
-            # Tax configurations
             tax_configs = self.create_tax_configurations(branch, accounts)
             self.stdout.write(f'Created/found {len(tax_configs)} tax configurations')
 
-            # Payment methods
             payment_methods = self.create_payment_methods(branch, accounts)
             self.stdout.write(f'Created/found {len(payment_methods)} payment methods')
 
-            # Admin user
             admin_user = self.create_admin_user(options['admin_email'], options['admin-password'], branch)
             self.stdout.write(f'Created/found admin user: {admin_user.email}')
 
-            # Notification templates
             notification_templates = self.create_notification_templates(branch)
             self.stdout.write(f'Created/found {len(notification_templates)} notification templates')
 
-            # Sample data
             if options['create-sample-data']:
                 self.create_sample_data(branch, currencies[0])
                 self.create_sample_coupons_and_reviews(branch, admin_user)
@@ -99,7 +89,6 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error(f"Organization setup failed: {str(e)}")
             self.stdout.write(self.style.ERROR(f'Setup failed: {str(e)}'))
-            # Don't raise the exception to allow the command to complete gracefully
 
     # -----------------------
     # Basic Accounting Operations
@@ -115,7 +104,6 @@ class Command(BaseCommand):
         
         for month in range(1, 13):
             try:
-                # Calculate start and end dates for each period
                 if month == 12:
                     start_date = date(fiscal_year, month, 1)
                     end_date = date(fiscal_year, month, 31)
@@ -250,7 +238,7 @@ class Command(BaseCommand):
                 'is_inclusive': False,
                 'is_active': True,
                 'effective_from': date.today(),
-                'tax_account': self.find_account(accounts, '2140'),  # ضريبة القيمة المضافة المستحقة
+                'tax_account': self.find_account(accounts, '2140'),
             },
             {
                 'code': 'SALES10',
@@ -260,7 +248,7 @@ class Command(BaseCommand):
                 'is_inclusive': False,
                 'is_active': True,
                 'effective_from': date.today(),
-                'tax_account': self.find_account(accounts, '2130'),  # ضريبة المبيعات المستحقة
+                'tax_account': self.find_account(accounts, '2130'),
             },
         ]
         
@@ -286,7 +274,7 @@ class Command(BaseCommand):
                 'code': 'CASH',
                 'name': 'Cash',
                 'payment_type': PaymentMethod.PaymentType.CASH,
-                'account': self.find_account(accounts, '1111'),  # الصندوق
+                'account': self.find_account(accounts, '1111'),
                 'is_active': True,
                 'processing_fee_rate': Decimal('0.00'),
             },
@@ -297,7 +285,7 @@ class Command(BaseCommand):
                 'account': self.find_account(accounts, '1112'),
                 'is_active': True,
                 'processing_fee_rate': Decimal('0.50'),
-                'processing_fee_account': self.find_account(accounts, '6200'),  # المصروفات التقنية
+                'processing_fee_account': self.find_account(accounts, '6200'),
             },
             {
                 'code': 'CREDIT',
@@ -306,7 +294,7 @@ class Command(BaseCommand):
                 'account': self.find_account(accounts, '1112'),
                 'is_active': True,
                 'processing_fee_rate': Decimal('2.50'),
-                'processing_fee_account': self.find_account(accounts, '6200'),  # المصروفات التقنية
+                'processing_fee_account': self.find_account(accounts, '6200'),
             },
             {
                 'code': 'DIGITAL',
@@ -315,7 +303,7 @@ class Command(BaseCommand):
                 'account': self.find_account(accounts, '1112'),
                 'is_active': True,
                 'processing_fee_rate': Decimal('1.50'),
-                'processing_fee_account': self.find_account(accounts, '6200'),  # المصروفات التقنية
+                'processing_fee_account': self.find_account(accounts, '6200'),
             },
         ]
         
@@ -404,11 +392,15 @@ class Command(BaseCommand):
     def setup_currencies(self, branch, country_code='US'):
         """Setup default currencies; return list of objects"""
         currency_data = {
-            'US': {'code': 'USD', 'name': 'US Dollar', 'symbol': '$'},
-            'EU': {'code': 'EUR', 'name': 'Euro', 'symbol': '€'},
-            'GB': {'code': 'GBP', 'name': 'British Pound', 'symbol': '£'},
-            'JP': {'code': 'JPY', 'name': 'Japanese Yen', 'symbol': '¥'},
-            'CA': {'code': 'CAD', 'name': 'Canadian Dollar', 'symbol': 'C$'},
+            'US': {'code': 'USD', 'name': 'الدولار الأمريكي', 'symbol': '$'},
+            'EU': {'code': 'EUR', 'name': 'اليورو', 'symbol': '€'},
+            'GB': {'code': 'GBP', 'name': 'الجنيه الإسترليني', 'symbol': '£'},
+            'JP': {'code': 'JPY', 'name': 'الين الياباني', 'symbol': '¥'},
+            'CA': {'code': 'CAD', 'name': 'الدولار الكندي', 'symbol': 'C$'},
+            'YE': {'code': 'YER', 'name': 'الريال اليمني', 'symbol': '﷼'},
+            'SA': {'code': 'SAR', 'name': 'الريال السعودي', 'symbol': '﷼'},
+            'EG': {'code': 'EGP', 'name': 'الجنيه المصري', 'symbol': 'ج.م'},
+            'CN': {'code': 'CNY', 'name': 'اليوان الصيني (رنمينبي)', 'symbol': '¥'},
         }
 
         currencies = []
@@ -620,22 +612,42 @@ class Command(BaseCommand):
                 }
             )
             if created:
-                user.set_password(password)
-                user.save()
+                try:
+                    user.set_password(password)
+                    user.save()
+                    self.stdout.write(f"Created new admin user: {email}")
+                except ValidationError as ve:
+                    logger.error(f"Password validation failed for admin user {email}: {str(ve)}")
+                    raise ValueError(f"Password validation failed: {str(ve)}")
+                except Exception as e:
+                    logger.error(f"Error setting password for new admin user {email}: {str(e)}\n{traceback.format_exc()}")
+                    raise ValueError(f"Failed to set password for new admin user: {str(e)}")
             else:
-                # Ensure flags/branch are correct; do not reset password silently
+                # Update existing user attributes if necessary
                 changed = False
-                for f, v in [('is_staff', True), ('is_superuser', True), ('default_branch', branch)]:
-                    if getattr(user, f) != v:
-                        setattr(user, f, v)
+                updates = {
+                    'user_type': 'admin',
+                    'is_staff': True,
+                    'is_superuser': True,
+                    'default_branch': branch,
+                }
+                for field, value in updates.items():
+                    if getattr(user, field) != value:
+                        setattr(user, field, value)
                         changed = True
                 if changed:
-                    user.save()
+                    try:
+                        user.save()
+                        self.stdout.write(f"Updated existing admin user: {email}")
+                    except Exception as e:
+                        logger.error(f"Error updating existing admin user {email}: {str(e)}\n{traceback.format_exc()}")
+                        raise ValueError(f"Failed to update existing admin user: {str(e)}")
+                else:
+                    self.stdout.write(f"Admin user already exists with correct settings: {email}")
             return user
         except Exception as e:
-            logger.error(f"Error creating admin user: {str(e)}")
-            # Return existing user if possible
-            return User.objects.filter(email=email).first()
+            logger.error(f"Error in create_admin_user for {email}: {str(e)}\n{traceback.format_exc()}")
+            raise ValueError(f"Failed to create or update admin user {email}: {str(e)}")
 
 
     # -----------------------
