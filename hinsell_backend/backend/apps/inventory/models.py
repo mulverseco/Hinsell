@@ -8,7 +8,6 @@ from apps.core_apps.general import AuditableModel
 from apps.core_apps.validators import validate_positive_decimal, validate_percentage
 from apps.organization.models import Branch
 from apps.accounting.models import Account
-from apps.core_apps.utils import Logger, generate_unique_slug
 from apps.shared.models import Media
 
 class StoreGroup(AuditableModel):
@@ -38,6 +37,7 @@ class StoreGroup(AuditableModel):
     slug = models.SlugField(
         max_length=120,
         unique=True,
+        blank=True,
         verbose_name=_("Slug")
     )
     cost_method = models.CharField(
@@ -119,6 +119,7 @@ class ItemGroup(AuditableModel):
     slug = models.SlugField(
         max_length=120,
         unique=True,
+        blank=True,
         verbose_name=_("Slug")
     )
     parent = models.ForeignKey(
@@ -235,6 +236,7 @@ class Item(AuditableModel):
     slug = models.SlugField(
         max_length=220,
         unique=True,
+        blank=True,
         verbose_name=_("Slug")
     )
     item_type = models.CharField(

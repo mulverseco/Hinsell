@@ -89,7 +89,9 @@ class Command(BaseCommand):
 
         except Exception as e:
             logger.error(f"Organization setup failed: {str(e)}")
+            logger.error(f"Error details: {traceback.format_exc()}")
             self.stdout.write(self.style.ERROR(f'Setup failed: {str(e)}'))
+            raise
 
     # -----------------------
     # Basic Accounting Operations
@@ -745,7 +747,7 @@ class Command(BaseCommand):
                     recipient=admin_user,
                     defaults={
                         'notification_type': NotificationTemplate.NotificationType.WELCOME,
-                        'channel': 'email',
+                        'channel': 'email',  # Fixed: use string instead of Notification.Channel
                         'priority': 'normal',
                         'subject': 'Welcome to Our E-commerce Platform!',
                         'content': f'''
@@ -757,7 +759,7 @@ class Command(BaseCommand):
                         'status': 'sent',
                         'sent_at': timezone.now(),
                     }
-                )
+                )    
 
             if order_template:
                 # Create sample order confirmation
@@ -767,8 +769,8 @@ class Command(BaseCommand):
                     recipient=admin_user,
                     defaults={
                         'notification_type': NotificationTemplate.NotificationType.TRANSACTION_APPROVED,
-                        'channel': Notification.Channel.EMAIL,
-                        'priority': Notification.Priority.HIGH,
+                        'channel': 'email',  # Fixed: use string instead of Notification.Channel
+                        'priority': 'high',  # Fixed: use string instead of Notification.Priority
                         'subject': 'Order Confirmation - #ORD-001',
                         'content': f'''
                         <h1>Order Confirmation</h1>
@@ -778,26 +780,27 @@ class Command(BaseCommand):
                         <p>We'll send you another email when your order ships.</p>
                         <p>Best regards,<br>Our E-commerce Platform</p>
                         ''',
-                        'status': Notification.Status.PENDING,
+                        'status': 'pending',  # Fixed: use string instead of Notification.Status
                     }
-                )
+                )    
 
         except Exception as e:
             logger.error(f"Error creating sample notifications: {str(e)}")
+            logger.error(f"Error details: {traceback.format_exc()}")
 
     def create_sample_data(self, branch, currency):
         """Create sample store groups, item groups, and products"""
         try:
             stock_account = Account.objects.filter(branch=branch, code='1132', account_nature='inventory').first()
             sales_account = Account.objects.filter(branch=branch, code='4110').first()
-            cost_account = Account.objects.filter(branch=branch, code='5100').first()
+            cost_account = Account.objects.filter(branch=branch, code='5100').first()    
 
             apparel_store, _ = StoreGroup.objects.get_or_create(
                 branch=branch,
                 code="APP",
                 defaults={
                     'name': "Apparel",
-                    'slug': "apparel",
+                    'slug': "apparel",  # Ensure slug is provided
                     'cost_method': StoreGroup.CostMethod.AVERAGE,
                     'stock_account': stock_account,
                     'sales_account': sales_account,
@@ -808,14 +811,14 @@ class Command(BaseCommand):
                 branch=branch,
                 code="ELEC",
                 defaults={
-                    'name': "The Prophet's birthday",
-                    'slug': "the-propthat-birthday",
+                    'name': "Electronics",  # Fixed the name
+                    'slug': "electronics",  # Ensure slug is provided
                     'cost_method': StoreGroup.CostMethod.AVERAGE,
                     'stock_account': stock_account,
                     'sales_account': sales_account,
                     'cost_of_sales_account': cost_account,
                 }
-            )
+            )    
 
             mens_clothing, _ = ItemGroup.objects.get_or_create(
                 branch=branch,
@@ -823,6 +826,7 @@ class Command(BaseCommand):
                 code="MEN",
                 defaults={
                     'name': "Men's Clothing",
+                    'slug': "mens-clothing",  # Add slug
                     'group_type': ItemGroup.GroupType.PRODUCT,
                 }
             )
@@ -832,6 +836,7 @@ class Command(BaseCommand):
                 code="WOMEN",
                 defaults={
                     'name': "Women's Clothing",
+                    'slug': "womens-clothing",  # Add slug
                     'group_type': ItemGroup.GroupType.PRODUCT,
                 }
             )
@@ -841,15 +846,18 @@ class Command(BaseCommand):
                 code="PHONE",
                 defaults={
                     'name': "Smartphones",
+                    'slug': "smartphones",  # Add slug
                     'group_type': ItemGroup.GroupType.PRODUCT,
                 }
-            )
+            )    
 
             self.create_sample_t_shirt(branch, mens_clothing, currency)
             self.create_sample_dress(branch, womens_clothing, currency)
             self.create_sample_smartphone(branch, smartphones, currency)
         except Exception as e:
             logger.error(f"Error creating sample data: {str(e)}")
+            # Add more detailed logging
+            logger.error(f"Error details: {traceback.format_exc()}")
 
     def create_sample_coupons_and_reviews(self, branch, admin_user):
         """Create sample coupons, offers, campaigns, and reviews"""
