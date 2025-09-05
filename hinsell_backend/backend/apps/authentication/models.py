@@ -313,6 +313,7 @@ class UserProfile(AuditableModel):
     )
     address = models.TextField(
         blank=True,
+        null=True,
         verbose_name=_("Address")
     )
     nationality = models.CharField(
