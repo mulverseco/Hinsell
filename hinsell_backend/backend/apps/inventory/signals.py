@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from decimal import Decimal
 from apps.inventory.models import Item, InventoryBalance
+from apps.hinsell.models import ItemReview
 from apps.inventory.tasks import check_inventory_balance
 from apps.core_apps.utils import Logger
 logger = Logger(__name__)
