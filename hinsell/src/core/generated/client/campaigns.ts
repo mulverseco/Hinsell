@@ -50,7 +50,8 @@ export class CampaignsApiClient extends BaseApiClient {
   }
 
   /**
-   * GET /campaigns/
+   * ViewSet for Campaign model.
+   * ViewSet for Campaign model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CampaignsListResponseSchema>>>
    * @example
@@ -77,7 +78,8 @@ responseSchema: CampaignsListResponseSchema
   })
 
   /**
-   * POST /campaigns/
+   * ViewSet for Campaign model.
+   * ViewSet for Campaign model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CampaignsCreateResponseSchema>>>
    * @example
@@ -104,7 +106,8 @@ responseSchema: CampaignsCreateResponseSchema
   }
 
   /**
-   * GET /campaigns/{id}/
+   * ViewSet for Campaign model.
+   * ViewSet for Campaign model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CampaignsReadResponseSchema>>>
    * @example
@@ -131,7 +134,8 @@ responseSchema: CampaignsReadResponseSchema
   })
 
   /**
-   * PUT /campaigns/{id}/
+   * ViewSet for Campaign model.
+   * ViewSet for Campaign model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CampaignsUpdateResponseSchema>>>
    * @example
@@ -162,7 +166,8 @@ responseSchema: CampaignsUpdateResponseSchema
   }
 
   /**
-   * PATCH /campaigns/{id}/
+   * ViewSet for Campaign model.
+   * ViewSet for Campaign model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CampaignsPartialUpdateResponseSchema>>>
    * @example
@@ -193,7 +198,8 @@ responseSchema: CampaignsPartialUpdateResponseSchema
   }
 
   /**
-   * DELETE /campaigns/{id}/
+   * ViewSet for Campaign model.
+   * ViewSet for Campaign model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CampaignsDeleteResponseSchema>>>
    * @example
@@ -220,8 +226,8 @@ responseSchema: CampaignsDeleteResponseSchema
   }
 
   /**
-   * Track a campaign click.
-   * Track a campaign click.
+   * ViewSet for Campaign model.
+   * ViewSet for Campaign model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CampaignsTrackClickResponseSchema>>>
    * @example
@@ -241,7 +247,7 @@ const validatedParams = await CampaignsTrackClickParamsSchema.parseAsync(options
 
     return this.request<z.infer<typeof CampaignsTrackClickResponseSchema>>(
       'POST',
-      '/campaigns/{id}/track_click/',
+      '/campaigns/{id}/track-click/',
       {
         pathParams: validatedParams.path,
 body: validatedBody,
@@ -252,8 +258,8 @@ responseSchema: CampaignsTrackClickResponseSchema
   }
 
   /**
-   * Track a campaign conversion.
-   * Track a campaign conversion.
+   * ViewSet for Campaign model.
+   * ViewSet for Campaign model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CampaignsTrackConversionResponseSchema>>>
    * @example
@@ -273,7 +279,7 @@ const validatedParams = await CampaignsTrackConversionParamsSchema.parseAsync(op
 
     return this.request<z.infer<typeof CampaignsTrackConversionResponseSchema>>(
       'POST',
-      '/campaigns/{id}/track_conversion/',
+      '/campaigns/{id}/track-conversion/',
       {
         pathParams: validatedParams.path,
 body: validatedBody,
@@ -284,8 +290,8 @@ responseSchema: CampaignsTrackConversionResponseSchema
   }
 
   /**
-   * Track a campaign impression.
-   * Track a campaign impression.
+   * ViewSet for Campaign model.
+   * ViewSet for Campaign model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CampaignsTrackImpressionResponseSchema>>>
    * @example
@@ -305,7 +311,7 @@ const validatedParams = await CampaignsTrackImpressionParamsSchema.parseAsync(op
 
     return this.request<z.infer<typeof CampaignsTrackImpressionResponseSchema>>(
       'POST',
-      '/campaigns/{id}/track_impression/',
+      '/campaigns/{id}/track-impression/',
       {
         pathParams: validatedParams.path,
 body: validatedBody,

@@ -21,6 +21,8 @@ import {
   ItemsDeleteParamsSchema,
   ItemsItemRecommendationsResponseSchema,
   ItemsItemRecommendationsParamsSchema,
+  ItemsGetReviewsResponseSchema,
+  ItemsGetReviewsParamsSchema,
   ItemsSimilarItemsResponseSchema,
   ItemsSimilarItemsParamsSchema
 } from '@/core/generated/schemas'
@@ -244,6 +246,34 @@ const validatedParams = await ItemsItemRecommendationsParamsSchema.parseAsync(op
         pathParams: validatedParams.path,
 config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
 responseSchema: ItemsItemRecommendationsResponseSchema
+      }
+    )
+  })
+
+  /**
+   * ViewSet for Item model.
+   * ViewSet for Item model.
+   * @param options - Request options
+   * @returns Promise<ClientResponse<z.infer<typeof ItemsGetReviewsResponseSchema>>>
+   * @example
+   * const result = await client.itemsGetReviews({
+   *   config: { timeout: 5000 }
+   * })
+   */
+  itemsGetReviews = cache(async (options: {
+    params: z.infer<typeof ItemsGetReviewsParamsSchema>
+    config?: RequestConfiguration
+  }) => {
+// Validate and extract parameters
+const validatedParams = await ItemsGetReviewsParamsSchema.parseAsync(options.params)
+
+    return this.request<z.infer<typeof ItemsGetReviewsResponseSchema>>(
+      'GET',
+      '/items/{id}/reviews/',
+      {
+        pathParams: validatedParams.path,
+config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
+responseSchema: ItemsGetReviewsResponseSchema
       }
     )
   })

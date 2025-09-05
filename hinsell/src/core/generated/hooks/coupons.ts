@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useSuspenseQuery, useMutation } from '@tansta
 import { useOptimistic, useTransition } from 'react'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { toast } from 'sonner'
-import { couponsList, couponsRead, couponsCreate, couponsUpdate, couponsPartialUpdate, couponsDelete, couponsApply } from '@/core/generated/actions/coupons'
+import { couponsList, couponsRead, couponsCreate, couponsUpdate, couponsPartialUpdate, couponsDelete, couponsApplyCoupon } from '@/core/generated/actions/coupons'
 import {
   CouponsListResponseSchema,
   CouponsListParamsSchema,
@@ -19,9 +19,9 @@ import {
   CouponsPartialUpdateParamsSchema,
   CouponsDeleteResponseSchema,
   CouponsDeleteParamsSchema,
-  CouponsApplyResponseSchema,
-  CouponsApplyRequestSchema,
-  CouponsApplyParamsSchema
+  CouponsApplyCouponResponseSchema,
+  CouponsApplyCouponRequestSchema,
+  CouponsApplyCouponParamsSchema
 } from '@/core/generated/schemas'
 import type { z } from 'zod'
 
@@ -505,10 +505,10 @@ export function useCouponsDeleteMutation(options?: {
  * @param options - Mutation options
  * @returns Mutation result with enhanced features
  */
-export function useCouponsApplyMutation(options?: {
-  onSuccess?: (data: z.infer<typeof CouponsApplyResponseSchema>, variables: { body: z.infer<typeof CouponsApplyRequestSchema>, params: z.infer<typeof CouponsApplyParamsSchema> }) => void
-  onError?: (error: Error, variables: { body: z.infer<typeof CouponsApplyRequestSchema>, params: z.infer<typeof CouponsApplyParamsSchema> }) => void
-  optimisticUpdate?: (variables: { body: z.infer<typeof CouponsApplyRequestSchema>, params: z.infer<typeof CouponsApplyParamsSchema> }) => any
+export function useCouponsApplyCouponMutation(options?: {
+  onSuccess?: (data: z.infer<typeof CouponsApplyCouponResponseSchema>, variables: { body: z.infer<typeof CouponsApplyCouponRequestSchema>, params: z.infer<typeof CouponsApplyCouponParamsSchema> }) => void
+  onError?: (error: Error, variables: { body: z.infer<typeof CouponsApplyCouponRequestSchema>, params: z.infer<typeof CouponsApplyCouponParamsSchema> }) => void
+  optimisticUpdate?: (variables: { body: z.infer<typeof CouponsApplyCouponRequestSchema>, params: z.infer<typeof CouponsApplyCouponParamsSchema> }) => any
   showToast?: boolean
 }) {
   const queryClient = useQueryClient()
@@ -516,9 +516,9 @@ export function useCouponsApplyMutation(options?: {
   const [optimisticData, setOptimisticData] = useOptimistic(null)
 
   const mutation = useMutation({
-    mutationFn: async (variables: { body: z.infer<typeof CouponsApplyRequestSchema>, params: z.infer<typeof CouponsApplyParamsSchema> }): Promise<z.infer<typeof CouponsApplyResponseSchema>> => {
+    mutationFn: async (variables: { body: z.infer<typeof CouponsApplyCouponRequestSchema>, params: z.infer<typeof CouponsApplyCouponParamsSchema> }): Promise<z.infer<typeof CouponsApplyCouponResponseSchema>> => {
       try {
-        const result = await couponsApply(variables)
+        const result = await couponsApplyCoupon(variables)
         return result
       } catch (error) {
         handleActionError(error)
@@ -578,7 +578,7 @@ export function useCouponsApplyMutation(options?: {
 
   return {
     ...mutation,
-    mutateWithTransition: (variables: { body: z.infer<typeof CouponsApplyRequestSchema>, params: z.infer<typeof CouponsApplyParamsSchema> }) => {
+    mutateWithTransition: (variables: { body: z.infer<typeof CouponsApplyCouponRequestSchema>, params: z.infer<typeof CouponsApplyCouponParamsSchema> }) => {
       startTransition(() => {
         mutation.mutate(variables)
       })

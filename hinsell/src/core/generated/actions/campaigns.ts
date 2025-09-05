@@ -84,7 +84,7 @@ async function logActionExecution(
 }
 
 /**
- * GET /campaigns/
+ * ViewSet for Campaign model.
  * @generated from GET /campaigns/
  * Features: React cache, input validation, error handling
  */
@@ -145,7 +145,7 @@ export const campaignsList = cache(
 )
 
 /**
- * POST /campaigns/
+ * ViewSet for Campaign model.
  * @generated from POST /campaigns/
  * Features: Input validation, revalidation, error handling
  */
@@ -219,7 +219,7 @@ export const campaignsCreate = actionClientWithMeta
   })
 
 /**
- * GET /campaigns/{id}/
+ * ViewSet for Campaign model.
  * @generated from GET /campaigns/{id}/
  * Features: React cache, input validation, error handling
  */
@@ -280,7 +280,7 @@ export const campaignsRead = cache(
 )
 
 /**
- * PUT /campaigns/{id}/
+ * ViewSet for Campaign model.
  * @generated from PUT /campaigns/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -363,7 +363,7 @@ body: validatedBody,
   })
 
 /**
- * PATCH /campaigns/{id}/
+ * ViewSet for Campaign model.
  * @generated from PATCH /campaigns/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -446,7 +446,7 @@ body: validatedBody,
   })
 
 /**
- * DELETE /campaigns/{id}/
+ * ViewSet for Campaign model.
  * @generated from DELETE /campaigns/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -520,8 +520,8 @@ export const campaignsDelete = actionClientWithMeta
   })
 
 /**
- * Track a campaign click.
- * @generated from POST /campaigns/{id}/track_click/
+ * ViewSet for Campaign model.
+ * @generated from POST /campaigns/{id}/track-click/
  * Features: Input validation, revalidation, error handling
  */
 export const campaignsTrackClick = actionClientWithMeta
@@ -575,7 +575,7 @@ body: validatedBody,
       const duration = Date.now() - startTime
       await logActionExecution('campaignsTrackClick', true, duration, {
         method: 'POST',
-        path: '/campaigns/{id}/track_click/'
+        path: '/campaigns/{id}/track-click/'
       })
       
       return response.data
@@ -585,7 +585,7 @@ body: validatedBody,
       // Enhanced error logging
       await logActionExecution('campaignsTrackClick', false, duration, {
         method: 'POST',
-        path: '/campaigns/{id}/track_click/',
+        path: '/campaigns/{id}/track-click/',
         error: error instanceof Error ? error.message : 'Unknown error'
       })
       
@@ -593,7 +593,7 @@ body: validatedBody,
       throw new ActionExecutionError(
         error instanceof Error ? error.message : 'Unknown error occurred',
         {
-          endpoint: '/campaigns/{id}/track_click/',
+          endpoint: '/campaigns/{id}/track-click/',
           method: 'POST',
           timestamp: Date.now()
         },
@@ -603,8 +603,8 @@ body: validatedBody,
   })
 
 /**
- * Track a campaign conversion.
- * @generated from POST /campaigns/{id}/track_conversion/
+ * ViewSet for Campaign model.
+ * @generated from POST /campaigns/{id}/track-conversion/
  * Features: Input validation, revalidation, error handling
  */
 export const campaignsTrackConversion = actionClientWithMeta
@@ -658,7 +658,7 @@ body: validatedBody,
       const duration = Date.now() - startTime
       await logActionExecution('campaignsTrackConversion', true, duration, {
         method: 'POST',
-        path: '/campaigns/{id}/track_conversion/'
+        path: '/campaigns/{id}/track-conversion/'
       })
       
       return response.data
@@ -668,7 +668,7 @@ body: validatedBody,
       // Enhanced error logging
       await logActionExecution('campaignsTrackConversion', false, duration, {
         method: 'POST',
-        path: '/campaigns/{id}/track_conversion/',
+        path: '/campaigns/{id}/track-conversion/',
         error: error instanceof Error ? error.message : 'Unknown error'
       })
       
@@ -676,7 +676,7 @@ body: validatedBody,
       throw new ActionExecutionError(
         error instanceof Error ? error.message : 'Unknown error occurred',
         {
-          endpoint: '/campaigns/{id}/track_conversion/',
+          endpoint: '/campaigns/{id}/track-conversion/',
           method: 'POST',
           timestamp: Date.now()
         },
@@ -686,8 +686,8 @@ body: validatedBody,
   })
 
 /**
- * Track a campaign impression.
- * @generated from POST /campaigns/{id}/track_impression/
+ * ViewSet for Campaign model.
+ * @generated from POST /campaigns/{id}/track-impression/
  * Features: Input validation, revalidation, error handling
  */
 export const campaignsTrackImpression = actionClientWithMeta
@@ -741,7 +741,7 @@ body: validatedBody,
       const duration = Date.now() - startTime
       await logActionExecution('campaignsTrackImpression', true, duration, {
         method: 'POST',
-        path: '/campaigns/{id}/track_impression/'
+        path: '/campaigns/{id}/track-impression/'
       })
       
       return response.data
@@ -751,7 +751,7 @@ body: validatedBody,
       // Enhanced error logging
       await logActionExecution('campaignsTrackImpression', false, duration, {
         method: 'POST',
-        path: '/campaigns/{id}/track_impression/',
+        path: '/campaigns/{id}/track-impression/',
         error: error instanceof Error ? error.message : 'Unknown error'
       })
       
@@ -759,7 +759,7 @@ body: validatedBody,
       throw new ActionExecutionError(
         error instanceof Error ? error.message : 'Unknown error occurred',
         {
-          endpoint: '/campaigns/{id}/track_impression/',
+          endpoint: '/campaigns/{id}/track-impression/',
           method: 'POST',
           timestamp: Date.now()
         },

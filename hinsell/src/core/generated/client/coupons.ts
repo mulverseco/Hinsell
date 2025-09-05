@@ -19,9 +19,9 @@ import {
   CouponsPartialUpdateParamsSchema,
   CouponsDeleteResponseSchema,
   CouponsDeleteParamsSchema,
-  CouponsApplyRequestSchema,
-  CouponsApplyResponseSchema,
-  CouponsApplyParamsSchema
+  CouponsApplyCouponRequestSchema,
+  CouponsApplyCouponResponseSchema,
+  CouponsApplyCouponParamsSchema
 } from '@/core/generated/schemas'
 
 export class CouponsApiClient extends BaseApiClient {
@@ -44,7 +44,8 @@ export class CouponsApiClient extends BaseApiClient {
   }
 
   /**
-   * GET /coupons/
+   * ViewSet for Coupon model.
+   * ViewSet for Coupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CouponsListResponseSchema>>>
    * @example
@@ -71,7 +72,8 @@ responseSchema: CouponsListResponseSchema
   })
 
   /**
-   * POST /coupons/
+   * ViewSet for Coupon model.
+   * ViewSet for Coupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CouponsCreateResponseSchema>>>
    * @example
@@ -98,7 +100,8 @@ responseSchema: CouponsCreateResponseSchema
   }
 
   /**
-   * GET /coupons/{id}/
+   * ViewSet for Coupon model.
+   * ViewSet for Coupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CouponsReadResponseSchema>>>
    * @example
@@ -125,7 +128,8 @@ responseSchema: CouponsReadResponseSchema
   })
 
   /**
-   * PUT /coupons/{id}/
+   * ViewSet for Coupon model.
+   * ViewSet for Coupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CouponsUpdateResponseSchema>>>
    * @example
@@ -156,7 +160,8 @@ responseSchema: CouponsUpdateResponseSchema
   }
 
   /**
-   * PATCH /coupons/{id}/
+   * ViewSet for Coupon model.
+   * ViewSet for Coupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CouponsPartialUpdateResponseSchema>>>
    * @example
@@ -187,7 +192,8 @@ responseSchema: CouponsPartialUpdateResponseSchema
   }
 
   /**
-   * DELETE /coupons/{id}/
+   * ViewSet for Coupon model.
+   * ViewSet for Coupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof CouponsDeleteResponseSchema>>>
    * @example
@@ -214,33 +220,33 @@ responseSchema: CouponsDeleteResponseSchema
   }
 
   /**
-   * Apply a coupon to a given price.
-   * Apply a coupon to a given price.
+   * ViewSet for Coupon model.
+   * ViewSet for Coupon model.
    * @param options - Request options
-   * @returns Promise<ClientResponse<z.infer<typeof CouponsApplyResponseSchema>>>
+   * @returns Promise<ClientResponse<z.infer<typeof CouponsApplyCouponResponseSchema>>>
    * @example
-   * const result = await client.couponsApply({
+   * const result = await client.couponsApplyCoupon({
    *   config: { timeout: 5000 }
    * })
    */
-  couponsApply = async (options: {
-    params: z.infer<typeof CouponsApplyParamsSchema>
-    body: z.infer<typeof CouponsApplyRequestSchema>
+  couponsApplyCoupon = async (options: {
+    params: z.infer<typeof CouponsApplyCouponParamsSchema>
+    body: z.infer<typeof CouponsApplyCouponRequestSchema>
     config?: RequestConfiguration
   }) => {
     // Validate request body
-    const validatedBody = await CouponsApplyRequestSchema.parseAsync(options.body)
+    const validatedBody = await CouponsApplyCouponRequestSchema.parseAsync(options.body)
 // Validate and extract parameters
-const validatedParams = await CouponsApplyParamsSchema.parseAsync(options.params)
+const validatedParams = await CouponsApplyCouponParamsSchema.parseAsync(options.params)
 
-    return this.request<z.infer<typeof CouponsApplyResponseSchema>>(
+    return this.request<z.infer<typeof CouponsApplyCouponResponseSchema>>(
       'POST',
       '/coupons/{id}/apply/',
       {
         pathParams: validatedParams.path,
 body: validatedBody,
 config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
-responseSchema: CouponsApplyResponseSchema
+responseSchema: CouponsApplyCouponResponseSchema
       }
     )
   }

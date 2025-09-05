@@ -23,6 +23,8 @@ import {
   ItemsDeleteResponseSchema,
   ItemsItemRecommendationsParamsSchema,
   ItemsItemRecommendationsResponseSchema,
+  ItemsGetReviewsParamsSchema,
+  ItemsGetReviewsResponseSchema,
   ItemsSimilarItemsParamsSchema,
   ItemsSimilarItemsResponseSchema
 } from '@/core/generated/schemas'
@@ -566,6 +568,67 @@ export const itemsItemRecommendations = cache(
           error instanceof Error ? error.message : 'Unknown error occurred',
           {
             endpoint: '/items/{id}/recommendations/',
+            method: 'GET',
+            timestamp: Date.now()
+          },
+          error
+        )
+      }
+    })
+)
+
+/**
+ * ViewSet for Item model.
+ * @generated from GET /items/{id}/reviews/
+ * Features: React cache, input validation, error handling
+ */
+export const itemsGetReviews = cache(
+  actionClientWithMeta
+    .metadata({
+      name: "items-get-reviews",
+      requiresAuth: false
+    })
+    .schema(ItemsGetReviewsParamsSchema)
+    .action(async ({ parsedInput, ctx }) => {
+      const startTime = Date.now()
+      
+      try {
+    // Validate and sanitize parameters
+    const validatedParams = await validateAndSanitizeInput(ItemsGetReviewsParamsSchema, parsedInput)
+
+        // Execute API call with enhanced error handling
+        const response = await apiClient.items.itemsGetReviews({params: validatedParams,
+          config: {
+            timeout: 30000,
+            retries: 3,
+            validateResponse: false,
+            responseSchema: ItemsGetReviewsResponseSchema
+          }
+        })
+        
+        // Log successful execution
+        const duration = Date.now() - startTime
+        await logActionExecution('itemsGetReviews', true, duration, {
+          method: 'GET',
+          path: '/items/{id}/reviews/'
+        })
+        
+        return response.data
+      } catch (error) {
+        const duration = Date.now() - startTime
+        
+        // Enhanced error logging
+        await logActionExecution('itemsGetReviews', false, duration, {
+          method: 'GET',
+          path: '/items/{id}/reviews/',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        })
+        
+        // Throw enhanced error with context
+        throw new ActionExecutionError(
+          error instanceof Error ? error.message : 'Unknown error occurred',
+          {
+            endpoint: '/items/{id}/reviews/',
             method: 'GET',
             timestamp: Date.now()
           },

@@ -19,9 +19,9 @@ import {
   OffersPartialUpdateParamsSchema,
   OffersDeleteResponseSchema,
   OffersDeleteParamsSchema,
-  OffersApplyRequestSchema,
-  OffersApplyResponseSchema,
-  OffersApplyParamsSchema
+  OffersApplyOfferRequestSchema,
+  OffersApplyOfferResponseSchema,
+  OffersApplyOfferParamsSchema
 } from '@/core/generated/schemas'
 
 export class OffersApiClient extends BaseApiClient {
@@ -44,7 +44,8 @@ export class OffersApiClient extends BaseApiClient {
   }
 
   /**
-   * GET /offers/
+   * ViewSet for Offer model.
+   * ViewSet for Offer model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof OffersListResponseSchema>>>
    * @example
@@ -71,7 +72,8 @@ responseSchema: OffersListResponseSchema
   })
 
   /**
-   * POST /offers/
+   * ViewSet for Offer model.
+   * ViewSet for Offer model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof OffersCreateResponseSchema>>>
    * @example
@@ -98,7 +100,8 @@ responseSchema: OffersCreateResponseSchema
   }
 
   /**
-   * GET /offers/{id}/
+   * ViewSet for Offer model.
+   * ViewSet for Offer model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof OffersReadResponseSchema>>>
    * @example
@@ -125,7 +128,8 @@ responseSchema: OffersReadResponseSchema
   })
 
   /**
-   * PUT /offers/{id}/
+   * ViewSet for Offer model.
+   * ViewSet for Offer model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof OffersUpdateResponseSchema>>>
    * @example
@@ -156,7 +160,8 @@ responseSchema: OffersUpdateResponseSchema
   }
 
   /**
-   * PATCH /offers/{id}/
+   * ViewSet for Offer model.
+   * ViewSet for Offer model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof OffersPartialUpdateResponseSchema>>>
    * @example
@@ -187,7 +192,8 @@ responseSchema: OffersPartialUpdateResponseSchema
   }
 
   /**
-   * DELETE /offers/{id}/
+   * ViewSet for Offer model.
+   * ViewSet for Offer model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof OffersDeleteResponseSchema>>>
    * @example
@@ -214,33 +220,33 @@ responseSchema: OffersDeleteResponseSchema
   }
 
   /**
-   * Apply an offer to a given price and quantity.
-   * Apply an offer to a given price and quantity.
+   * ViewSet for Offer model.
+   * ViewSet for Offer model.
    * @param options - Request options
-   * @returns Promise<ClientResponse<z.infer<typeof OffersApplyResponseSchema>>>
+   * @returns Promise<ClientResponse<z.infer<typeof OffersApplyOfferResponseSchema>>>
    * @example
-   * const result = await client.offersApply({
+   * const result = await client.offersApplyOffer({
    *   config: { timeout: 5000 }
    * })
    */
-  offersApply = async (options: {
-    params: z.infer<typeof OffersApplyParamsSchema>
-    body: z.infer<typeof OffersApplyRequestSchema>
+  offersApplyOffer = async (options: {
+    params: z.infer<typeof OffersApplyOfferParamsSchema>
+    body: z.infer<typeof OffersApplyOfferRequestSchema>
     config?: RequestConfiguration
   }) => {
     // Validate request body
-    const validatedBody = await OffersApplyRequestSchema.parseAsync(options.body)
+    const validatedBody = await OffersApplyOfferRequestSchema.parseAsync(options.body)
 // Validate and extract parameters
-const validatedParams = await OffersApplyParamsSchema.parseAsync(options.params)
+const validatedParams = await OffersApplyOfferParamsSchema.parseAsync(options.params)
 
-    return this.request<z.infer<typeof OffersApplyResponseSchema>>(
+    return this.request<z.infer<typeof OffersApplyOfferResponseSchema>>(
       'POST',
       '/offers/{id}/apply/',
       {
         pathParams: validatedParams.path,
 body: validatedBody,
 config: { ...options?.config, middleware: [...defaultMiddleware, ...(options?.config?.middleware || [])] },
-responseSchema: OffersApplyResponseSchema
+responseSchema: OffersApplyOfferResponseSchema
       }
     )
   }

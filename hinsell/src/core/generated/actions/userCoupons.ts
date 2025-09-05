@@ -75,7 +75,7 @@ async function logActionExecution(
 }
 
 /**
- * GET /user-coupons/
+ * ViewSet for UserCoupon model.
  * @generated from GET /user-coupons/
  * Features: React cache, input validation, error handling
  */
@@ -136,7 +136,7 @@ export const userCouponsList = cache(
 )
 
 /**
- * POST /user-coupons/
+ * ViewSet for UserCoupon model.
  * @generated from POST /user-coupons/
  * Features: Input validation, revalidation, error handling
  */
@@ -210,7 +210,7 @@ export const userCouponsCreate = actionClientWithMeta
   })
 
 /**
- * GET /user-coupons/{id}/
+ * ViewSet for UserCoupon model.
  * @generated from GET /user-coupons/{id}/
  * Features: React cache, input validation, error handling
  */
@@ -271,7 +271,7 @@ export const userCouponsRead = cache(
 )
 
 /**
- * PUT /user-coupons/{id}/
+ * ViewSet for UserCoupon model.
  * @generated from PUT /user-coupons/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -354,7 +354,7 @@ body: validatedBody,
   })
 
 /**
- * PATCH /user-coupons/{id}/
+ * ViewSet for UserCoupon model.
  * @generated from PATCH /user-coupons/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -437,7 +437,7 @@ body: validatedBody,
   })
 
 /**
- * DELETE /user-coupons/{id}/
+ * ViewSet for UserCoupon model.
  * @generated from DELETE /user-coupons/{id}/
  * Features: Input validation, revalidation, error handling
  */

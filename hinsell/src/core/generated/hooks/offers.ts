@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useSuspenseQuery, useMutation } from '@tansta
 import { useOptimistic, useTransition } from 'react'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { toast } from 'sonner'
-import { offersList, offersRead, offersCreate, offersUpdate, offersPartialUpdate, offersDelete, offersApply } from '@/core/generated/actions/offers'
+import { offersList, offersRead, offersCreate, offersUpdate, offersPartialUpdate, offersDelete, offersApplyOffer } from '@/core/generated/actions/offers'
 import {
   OffersListResponseSchema,
   OffersListParamsSchema,
@@ -19,9 +19,9 @@ import {
   OffersPartialUpdateParamsSchema,
   OffersDeleteResponseSchema,
   OffersDeleteParamsSchema,
-  OffersApplyResponseSchema,
-  OffersApplyRequestSchema,
-  OffersApplyParamsSchema
+  OffersApplyOfferResponseSchema,
+  OffersApplyOfferRequestSchema,
+  OffersApplyOfferParamsSchema
 } from '@/core/generated/schemas'
 import type { z } from 'zod'
 
@@ -505,10 +505,10 @@ export function useOffersDeleteMutation(options?: {
  * @param options - Mutation options
  * @returns Mutation result with enhanced features
  */
-export function useOffersApplyMutation(options?: {
-  onSuccess?: (data: z.infer<typeof OffersApplyResponseSchema>, variables: { body: z.infer<typeof OffersApplyRequestSchema>, params: z.infer<typeof OffersApplyParamsSchema> }) => void
-  onError?: (error: Error, variables: { body: z.infer<typeof OffersApplyRequestSchema>, params: z.infer<typeof OffersApplyParamsSchema> }) => void
-  optimisticUpdate?: (variables: { body: z.infer<typeof OffersApplyRequestSchema>, params: z.infer<typeof OffersApplyParamsSchema> }) => any
+export function useOffersApplyOfferMutation(options?: {
+  onSuccess?: (data: z.infer<typeof OffersApplyOfferResponseSchema>, variables: { body: z.infer<typeof OffersApplyOfferRequestSchema>, params: z.infer<typeof OffersApplyOfferParamsSchema> }) => void
+  onError?: (error: Error, variables: { body: z.infer<typeof OffersApplyOfferRequestSchema>, params: z.infer<typeof OffersApplyOfferParamsSchema> }) => void
+  optimisticUpdate?: (variables: { body: z.infer<typeof OffersApplyOfferRequestSchema>, params: z.infer<typeof OffersApplyOfferParamsSchema> }) => any
   showToast?: boolean
 }) {
   const queryClient = useQueryClient()
@@ -516,9 +516,9 @@ export function useOffersApplyMutation(options?: {
   const [optimisticData, setOptimisticData] = useOptimistic(null)
 
   const mutation = useMutation({
-    mutationFn: async (variables: { body: z.infer<typeof OffersApplyRequestSchema>, params: z.infer<typeof OffersApplyParamsSchema> }): Promise<z.infer<typeof OffersApplyResponseSchema>> => {
+    mutationFn: async (variables: { body: z.infer<typeof OffersApplyOfferRequestSchema>, params: z.infer<typeof OffersApplyOfferParamsSchema> }): Promise<z.infer<typeof OffersApplyOfferResponseSchema>> => {
       try {
-        const result = await offersApply(variables)
+        const result = await offersApplyOffer(variables)
         return result
       } catch (error) {
         handleActionError(error)
@@ -578,7 +578,7 @@ export function useOffersApplyMutation(options?: {
 
   return {
     ...mutation,
-    mutateWithTransition: (variables: { body: z.infer<typeof OffersApplyRequestSchema>, params: z.infer<typeof OffersApplyParamsSchema> }) => {
+    mutateWithTransition: (variables: { body: z.infer<typeof OffersApplyOfferRequestSchema>, params: z.infer<typeof OffersApplyOfferParamsSchema> }) => {
       startTransition(() => {
         mutation.mutate(variables)
       })

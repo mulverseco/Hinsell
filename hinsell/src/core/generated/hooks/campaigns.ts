@@ -506,7 +506,7 @@ export function useCampaignsDeleteMutation(options?: {
 }
 
 /**
- * Optimized mutation hook for POST /campaigns/{id}/track_click/
+ * Optimized mutation hook for POST /campaigns/{id}/track-click/
  * Features: Optimistic updates, smart invalidation, error handling
  * @param options - Mutation options
  * @returns Mutation result with enhanced features
@@ -595,7 +595,7 @@ export function useCampaignsTrackClickMutation(options?: {
 }
 
 /**
- * Optimized mutation hook for POST /campaigns/{id}/track_conversion/
+ * Optimized mutation hook for POST /campaigns/{id}/track-conversion/
  * Features: Optimistic updates, smart invalidation, error handling
  * @param options - Mutation options
  * @returns Mutation result with enhanced features
@@ -684,7 +684,7 @@ export function useCampaignsTrackConversionMutation(options?: {
 }
 
 /**
- * Optimized mutation hook for POST /campaigns/{id}/track_impression/
+ * Optimized mutation hook for POST /campaigns/{id}/track-impression/
  * Features: Optimistic updates, smart invalidation, error handling
  * @param options - Mutation options
  * @returns Mutation result with enhanced features

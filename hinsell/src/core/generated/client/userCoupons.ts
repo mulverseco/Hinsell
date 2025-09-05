@@ -41,7 +41,8 @@ export class UserCouponsApiClient extends BaseApiClient {
   }
 
   /**
-   * GET /user-coupons/
+   * ViewSet for UserCoupon model.
+   * ViewSet for UserCoupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof UserCouponsListResponseSchema>>>
    * @example
@@ -68,7 +69,8 @@ responseSchema: UserCouponsListResponseSchema
   })
 
   /**
-   * POST /user-coupons/
+   * ViewSet for UserCoupon model.
+   * ViewSet for UserCoupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof UserCouponsCreateResponseSchema>>>
    * @example
@@ -95,7 +97,8 @@ responseSchema: UserCouponsCreateResponseSchema
   }
 
   /**
-   * GET /user-coupons/{id}/
+   * ViewSet for UserCoupon model.
+   * ViewSet for UserCoupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof UserCouponsReadResponseSchema>>>
    * @example
@@ -122,7 +125,8 @@ responseSchema: UserCouponsReadResponseSchema
   })
 
   /**
-   * PUT /user-coupons/{id}/
+   * ViewSet for UserCoupon model.
+   * ViewSet for UserCoupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof UserCouponsUpdateResponseSchema>>>
    * @example
@@ -153,7 +157,8 @@ responseSchema: UserCouponsUpdateResponseSchema
   }
 
   /**
-   * PATCH /user-coupons/{id}/
+   * ViewSet for UserCoupon model.
+   * ViewSet for UserCoupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof UserCouponsPartialUpdateResponseSchema>>>
    * @example
@@ -184,7 +189,8 @@ responseSchema: UserCouponsPartialUpdateResponseSchema
   }
 
   /**
-   * DELETE /user-coupons/{id}/
+   * ViewSet for UserCoupon model.
+   * ViewSet for UserCoupon model.
    * @param options - Request options
    * @returns Promise<ClientResponse<z.infer<typeof UserCouponsDeleteResponseSchema>>>
    * @example

@@ -21,9 +21,9 @@ import {
   OffersPartialUpdateResponseSchema,
   OffersDeleteParamsSchema,
   OffersDeleteResponseSchema,
-  OffersApplyRequestSchema,
-  OffersApplyParamsSchema,
-  OffersApplyResponseSchema
+  OffersApplyOfferRequestSchema,
+  OffersApplyOfferParamsSchema,
+  OffersApplyOfferResponseSchema
 } from '@/core/generated/schemas'
 
 
@@ -78,7 +78,7 @@ async function logActionExecution(
 }
 
 /**
- * GET /offers/
+ * ViewSet for Offer model.
  * @generated from GET /offers/
  * Features: React cache, input validation, error handling
  */
@@ -139,7 +139,7 @@ export const offersList = cache(
 )
 
 /**
- * POST /offers/
+ * ViewSet for Offer model.
  * @generated from POST /offers/
  * Features: Input validation, revalidation, error handling
  */
@@ -213,7 +213,7 @@ export const offersCreate = actionClientWithMeta
   })
 
 /**
- * GET /offers/{id}/
+ * ViewSet for Offer model.
  * @generated from GET /offers/{id}/
  * Features: React cache, input validation, error handling
  */
@@ -274,7 +274,7 @@ export const offersRead = cache(
 )
 
 /**
- * PUT /offers/{id}/
+ * ViewSet for Offer model.
  * @generated from PUT /offers/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -357,7 +357,7 @@ body: validatedBody,
   })
 
 /**
- * PATCH /offers/{id}/
+ * ViewSet for Offer model.
  * @generated from PATCH /offers/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -440,7 +440,7 @@ body: validatedBody,
   })
 
 /**
- * DELETE /offers/{id}/
+ * ViewSet for Offer model.
  * @generated from DELETE /offers/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -514,18 +514,18 @@ export const offersDelete = actionClientWithMeta
   })
 
 /**
- * Apply an offer to a given price and quantity.
+ * ViewSet for Offer model.
  * @generated from POST /offers/{id}/apply/
  * Features: Input validation, revalidation, error handling
  */
-export const offersApply = actionClientWithMeta
+export const offersApplyOffer = actionClientWithMeta
   .metadata({
-    name: "offers-apply",
+    name: "offers-apply-offer",
     requiresAuth: false
   })
   .schema(z.object({
-        body: OffersApplyRequestSchema,
-        params: OffersApplyParamsSchema
+        body: OffersApplyOfferRequestSchema,
+        params: OffersApplyOfferParamsSchema
       }))
   .action(async ({ parsedInput, ctx }) => {
     const startTime = Date.now()
@@ -533,20 +533,20 @@ export const offersApply = actionClientWithMeta
     try {
     // Validate and sanitize input
     const { body, params } = await validateAndSanitizeInput(z.object({
-        body: OffersApplyRequestSchema,
-        params: OffersApplyParamsSchema
+        body: OffersApplyOfferRequestSchema,
+        params: OffersApplyOfferParamsSchema
       }), parsedInput)
     const validatedBody = body
     const validatedParams = params
 
       // Execute API call with enhanced configuration
-      const response = await apiClient.offers.offersApply({params: validatedParams,
+      const response = await apiClient.offers.offersApplyOffer({params: validatedParams,
 body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
           validateResponse: false,
-          responseSchema: OffersApplyResponseSchema
+          responseSchema: OffersApplyOfferResponseSchema
         }
       })
         // Handle streaming responses
@@ -567,7 +567,7 @@ body: validatedBody,
       // Background tasks (Next.js 15 feature)
       // Log successful execution
       const duration = Date.now() - startTime
-      await logActionExecution('offersApply', true, duration, {
+      await logActionExecution('offersApplyOffer', true, duration, {
         method: 'POST',
         path: '/offers/{id}/apply/'
       })
@@ -577,7 +577,7 @@ body: validatedBody,
       const duration = Date.now() - startTime
       
       // Enhanced error logging
-      await logActionExecution('offersApply', false, duration, {
+      await logActionExecution('offersApplyOffer', false, duration, {
         method: 'POST',
         path: '/offers/{id}/apply/',
         error: error instanceof Error ? error.message : 'Unknown error'

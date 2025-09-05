@@ -21,9 +21,9 @@ import {
   CouponsPartialUpdateResponseSchema,
   CouponsDeleteParamsSchema,
   CouponsDeleteResponseSchema,
-  CouponsApplyRequestSchema,
-  CouponsApplyParamsSchema,
-  CouponsApplyResponseSchema
+  CouponsApplyCouponRequestSchema,
+  CouponsApplyCouponParamsSchema,
+  CouponsApplyCouponResponseSchema
 } from '@/core/generated/schemas'
 
 
@@ -78,7 +78,7 @@ async function logActionExecution(
 }
 
 /**
- * GET /coupons/
+ * ViewSet for Coupon model.
  * @generated from GET /coupons/
  * Features: React cache, input validation, error handling
  */
@@ -139,7 +139,7 @@ export const couponsList = cache(
 )
 
 /**
- * POST /coupons/
+ * ViewSet for Coupon model.
  * @generated from POST /coupons/
  * Features: Input validation, revalidation, error handling
  */
@@ -213,7 +213,7 @@ export const couponsCreate = actionClientWithMeta
   })
 
 /**
- * GET /coupons/{id}/
+ * ViewSet for Coupon model.
  * @generated from GET /coupons/{id}/
  * Features: React cache, input validation, error handling
  */
@@ -274,7 +274,7 @@ export const couponsRead = cache(
 )
 
 /**
- * PUT /coupons/{id}/
+ * ViewSet for Coupon model.
  * @generated from PUT /coupons/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -357,7 +357,7 @@ body: validatedBody,
   })
 
 /**
- * PATCH /coupons/{id}/
+ * ViewSet for Coupon model.
  * @generated from PATCH /coupons/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -440,7 +440,7 @@ body: validatedBody,
   })
 
 /**
- * DELETE /coupons/{id}/
+ * ViewSet for Coupon model.
  * @generated from DELETE /coupons/{id}/
  * Features: Input validation, revalidation, error handling
  */
@@ -514,18 +514,18 @@ export const couponsDelete = actionClientWithMeta
   })
 
 /**
- * Apply a coupon to a given price.
+ * ViewSet for Coupon model.
  * @generated from POST /coupons/{id}/apply/
  * Features: Input validation, revalidation, error handling
  */
-export const couponsApply = actionClientWithMeta
+export const couponsApplyCoupon = actionClientWithMeta
   .metadata({
-    name: "coupons-apply",
+    name: "coupons-apply-coupon",
     requiresAuth: false
   })
   .schema(z.object({
-        body: CouponsApplyRequestSchema,
-        params: CouponsApplyParamsSchema
+        body: CouponsApplyCouponRequestSchema,
+        params: CouponsApplyCouponParamsSchema
       }))
   .action(async ({ parsedInput, ctx }) => {
     const startTime = Date.now()
@@ -533,20 +533,20 @@ export const couponsApply = actionClientWithMeta
     try {
     // Validate and sanitize input
     const { body, params } = await validateAndSanitizeInput(z.object({
-        body: CouponsApplyRequestSchema,
-        params: CouponsApplyParamsSchema
+        body: CouponsApplyCouponRequestSchema,
+        params: CouponsApplyCouponParamsSchema
       }), parsedInput)
     const validatedBody = body
     const validatedParams = params
 
       // Execute API call with enhanced configuration
-      const response = await apiClient.coupons.couponsApply({params: validatedParams,
+      const response = await apiClient.coupons.couponsApplyCoupon({params: validatedParams,
 body: validatedBody,
         config: {
           timeout: 30000,
           retries: 3,
           validateResponse: false,
-          responseSchema: CouponsApplyResponseSchema
+          responseSchema: CouponsApplyCouponResponseSchema
         }
       })
         // Handle streaming responses
@@ -567,7 +567,7 @@ body: validatedBody,
       // Background tasks (Next.js 15 feature)
       // Log successful execution
       const duration = Date.now() - startTime
-      await logActionExecution('couponsApply', true, duration, {
+      await logActionExecution('couponsApplyCoupon', true, duration, {
         method: 'POST',
         path: '/coupons/{id}/apply/'
       })
@@ -577,7 +577,7 @@ body: validatedBody,
       const duration = Date.now() - startTime
       
       // Enhanced error logging
-      await logActionExecution('couponsApply', false, duration, {
+      await logActionExecution('couponsApplyCoupon', false, duration, {
         method: 'POST',
         path: '/coupons/{id}/apply/',
         error: error instanceof Error ? error.message : 'Unknown error'

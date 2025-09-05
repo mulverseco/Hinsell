@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useSuspenseQuery, useMutation } from '@tansta
 import { useOptimistic, useTransition } from 'react'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { toast } from 'sonner'
-import { itemsList, itemsRead, itemsItemRecommendations, itemsSimilarItems, itemsCreate, itemsUpdate, itemsPartialUpdate, itemsDelete } from '@/core/generated/actions/items'
+import { itemsList, itemsRead, itemsItemRecommendations, itemsGetReviews, itemsSimilarItems, itemsCreate, itemsUpdate, itemsPartialUpdate, itemsDelete } from '@/core/generated/actions/items'
 import {
   ItemsListResponseSchema,
   ItemsListParamsSchema,
@@ -11,6 +11,8 @@ import {
   ItemsReadParamsSchema,
   ItemsItemRecommendationsResponseSchema,
   ItemsItemRecommendationsParamsSchema,
+  ItemsGetReviewsResponseSchema,
+  ItemsGetReviewsParamsSchema,
   ItemsSimilarItemsResponseSchema,
   ItemsSimilarItemsParamsSchema,
   ItemsCreateResponseSchema,
@@ -187,6 +189,57 @@ export function useSuspenseItemsItemRecommendations(id: string, options?: { enab
     queryKey: ['itemsItemRecommendations', id],
     queryFn: async () => {
       const result = await itemsItemRecommendations({ params: { path: { id } } })
+      return result
+    },
+    staleTime: 180000,
+    initialData: initialData as any,
+    ...restOptions
+  })
+}
+
+/**
+ * Optimized query hook for GET /items/{id}/reviews/
+ * Features: Smart caching, error handling, type safety
+ * @returns useQuery result with data of type z.infer<typeof ItemsGetReviewsResponseSchema>
+ */
+export function useItemsGetReviews(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ItemsGetReviewsResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
+  return useQuery({
+    queryKey: ['itemsGetReviews', id],
+    queryFn: async ({ signal }) => {
+      try {
+        const result = await itemsGetReviews({ params: { path: { id } } })
+        return result
+      } catch (error) {
+        handleActionError(error)
+      }
+    },
+    staleTime: 180000,
+    gcTime: 360000,
+    enabled: !!id && (options?.enabled ?? true),
+    refetchOnWindowFocus: false,
+    refetchInterval: options?.refetchInterval,
+    retry: (failureCount, error) => {
+      if (error instanceof Error && error.message.includes('4')) return false
+      return failureCount < 3
+    },
+    initialData: initialData as any,
+    ...restOptions
+  })
+}
+
+/**
+ * Suspense version for /items/{id}/reviews/
+ * @returns useSuspenseQuery result with data of type z.infer<typeof ItemsGetReviewsResponseSchema>
+ */
+export function useSuspenseItemsGetReviews(id: string, options?: { enabled?: boolean; suspense?: boolean; refetchInterval?: number; initialData?: z.infer<typeof ItemsGetReviewsResponseSchema> }) {
+  const { initialData, ...restOptions } = options ?? {}
+
+  return useSuspenseQuery({
+    queryKey: ['itemsGetReviews', id],
+    queryFn: async () => {
+      const result = await itemsGetReviews({ params: { path: { id } } })
       return result
     },
     staleTime: 180000,
