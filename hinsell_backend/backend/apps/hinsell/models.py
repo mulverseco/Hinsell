@@ -165,7 +165,7 @@ class Offer(AuditableModel):
     slug = models.SlugField(
         max_length=120,
         unique=True,
-        blank=True,  # Made slug optional
+        blank=True,
         verbose_name=_("Slug")
     )
     offer_type = models.CharField(
@@ -321,7 +321,7 @@ class Offer(AuditableModel):
     def save(self, *args, **kwargs):
         """Override save to auto-generate code/slug and validate M2M relationships."""
         if not self.slug:
-            self.slug = generate_unique_slug(self.__class__, 'slug', self.name)
+            self.slug = generate_unique_slug(self.name, self.__class__, max_length=120)
         
         # Save first to get an ID for M2M relationships
         is_new = self.pk is None
@@ -674,7 +674,7 @@ class Campaign(AuditableModel):
     slug = models.SlugField(
         max_length=120,
         unique=True,
-        blank=True,  # Made slug optional
+        blank=True,
         verbose_name=_("Slug")
     )
     campaign_type = models.CharField(
@@ -789,7 +789,7 @@ class Campaign(AuditableModel):
     def save(self, *args, **kwargs):
         """Override save to auto-generate code and slug.""" 
         if not self.slug:
-            self.slug = generate_unique_slug(self.__class__, 'slug', self.name)
+            self.slug = generate_unique_slug(self.name, self.__class__, max_length=120)
         
         super().save(*args, **kwargs)
 
