@@ -392,6 +392,7 @@ class UserProfile(AuditableModel):
             models.Index(fields=['push_token']),
         ]
 
+
     def clean(self):
         super().clean()
         if self.date_of_birth and self.date_of_birth > timezone.now().date():
