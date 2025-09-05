@@ -8,9 +8,9 @@ import { useECommerceStore } from '@/core/store';
 
 interface AddToCartButtonProps {
   variant: ItemVariant;
-  quantity?: number; // Default to 1
-  unit: ItemUnit; // Selected unit
-  className?: string; // For custom styling
+  quantity?: number;
+  unit: ItemUnit;
+  className?: string;
   disabled?: boolean;
 }
 

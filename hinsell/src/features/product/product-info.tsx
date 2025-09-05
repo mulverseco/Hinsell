@@ -5,13 +5,14 @@ import type React from "react"
 import { useState } from "react"
 import { Heart, Minus, Plus, ShoppingCart, Star, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { CTAButton } from "@/components/shared/cta-button"
 
 import { cn } from "@/lib/utils"
-import { ItemVariant } from "@/core/generated/schemas"
+import { ItemVariant, ItemUnit } from "@/core/generated/schemas"
 import { ProductOffers } from "./product-offers"
 import AddToCartButton from "@/components/AddToCartButton"
 
@@ -65,6 +66,9 @@ export function ProductInfo({
   const [isWishlisted, setIsWishlisted] = useState(false)
 
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
+
+  const selectedVariant = colors.find(c => c.id === selectedColor) || sizes.find(s => s.id === selectedSize) || undefined
+  const selectedUnit = selectedVariant?.units?.find(u => u.is_default) || selectedVariant?.units?.[0] || undefined
 
   return (
     <div className="space-y-6">
@@ -168,18 +172,46 @@ export function ProductInfo({
       )}
 
       <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <Input
+            type="number"
+            value={quantity}
+            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+            className="w-16 text-center"
+            min={1}
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setQuantity(quantity + 1)}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
         <div className="flex gap-3">
-          <CTAButton className="flex-1 font-bold" icon={<ShoppingCart className="h-4 w-4" />} disabled={!inStock}>
-            {inStock ? "ADD TO CART" : "OUT OF STOCK"}
-          </CTAButton>
-          {/* <AddToCartButton
-            variant={selectedVariant}
-            unit={selectedUnit}
-            quantity={1}
-            className={cn(
-              "gap-2 font-medium tracking-wide bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 py-2.5 shadow-lg border-0",
-            )}
-          /> */}
+          {selectedVariant && selectedUnit ? (
+            <AddToCartButton
+              variant={selectedVariant}
+              unit={selectedUnit}
+              quantity={quantity}
+              disabled={!inStock}
+              className="flex-1 font-bold"
+            />
+          ) : (
+            <Button
+              className="flex-1"
+              disabled
+            >
+              OUT OF STOCK
+            </Button>
+          )}
           <Button
             variant={"outline"}
             size={"icon"}

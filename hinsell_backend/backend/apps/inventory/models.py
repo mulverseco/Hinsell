@@ -18,6 +18,7 @@ class StoreGroup(AuditableModel):
         FIFO = 'fifo', _('First In, First Out')
         LIFO = 'lifo', _('Last In, First Out')
         STANDARD = 'standard', _('Standard Cost')
+
     branch = models.ForeignKey(
         Branch,
         on_delete=models.CASCADE,
@@ -69,6 +70,7 @@ class StoreGroup(AuditableModel):
         related_name='cost_store_groups',
         verbose_name=_("Cost of Sales Account")
     )
+
     class Meta:
         verbose_name = _("Store Group")
         verbose_name_plural = _("Store Groups")
@@ -76,10 +78,12 @@ class StoreGroup(AuditableModel):
             models.Index(fields=['branch', 'code']),
             models.Index(fields=['slug']),
         ]
+
     def clean(self):
         super().clean()
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
+
     def __str__(self):
         return f"{self.code} - {self.name} ({self.branch.branch_name})"
 
@@ -89,6 +93,7 @@ class ItemGroup(AuditableModel):
         PRODUCT = 'product', _('Product')
         SERVICE = 'service', _('Service')
         BOTH = 'both', _('Product & Service')
+
     branch = models.ForeignKey(
         Branch,
         on_delete=models.CASCADE,
@@ -164,6 +169,7 @@ class ItemGroup(AuditableModel):
         default='public',
         verbose_name=_("Visibility")
     )
+
     class Meta:
         verbose_name = _("Item Group")
         verbose_name_plural = _("Item Groups")
@@ -171,16 +177,27 @@ class ItemGroup(AuditableModel):
             models.Index(fields=['branch', 'store_group', 'code']),
             models.Index(fields=['slug', 'is_featured', 'visibility']),
         ]
+
     def clean(self):
         super().clean()
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if self.parent and self.parent.store_group != self.store_group:
             raise ValidationError({'parent': _('Parent group must belong to the same store group.')})
+        # Prevent cycles in hierarchy
+        parent = self.parent
+        seen = set()
+        while parent:
+            if parent.id in seen:
+                raise ValidationError({'parent': _('Cycle detected in group hierarchy.')})
+            seen.add(parent.id)
+            parent = parent.parent
+
     def get_full_code(self) -> str:
         if self.parent:
             return f"{self.parent.get_full_code()}.{self.code}"
         return f"{self.store_group.code}.{self.code}"
+
     def get_level(self) -> int:
         level = 0
         current = self.parent
@@ -188,15 +205,17 @@ class ItemGroup(AuditableModel):
             level += 1
             current = current.parent
         return level
+
     def __str__(self):
         return f"{self.store_group.code} - {self.code} - {self.name}"
 
 class Item(AuditableModel):
-    """Base item (parent product) with shared e-commerce and inventory features."""
+    """Base item with shared e-commerce and inventory features."""
     class ItemType(models.TextChoices):
         PRODUCT = 'product', _('Product')
         SERVICE = 'service', _('Service')
         KIT = 'kit', _('Kit/Bundle')
+
     branch = models.ForeignKey(
         Branch,
         on_delete=models.CASCADE,
@@ -231,13 +250,11 @@ class Item(AuditableModel):
     manufacturer = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
         verbose_name=_("Manufacturer")
     )
     brand = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
         verbose_name=_("Brand")
     )
     media = models.ManyToManyField(
@@ -286,16 +303,12 @@ class Item(AuditableModel):
         default='public',
         verbose_name=_("Visibility")
     )
-    is_service_item = models.BooleanField(
-        default=False,
-        verbose_name=_("Service Item")
-    )
     track_expiry = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name=_("Track Expiry")
     )
     track_batches = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name=_("Track Batches")
     )
     allow_discount = models.BooleanField(
@@ -390,61 +403,33 @@ class Item(AuditableModel):
                 name='valid_average_rating'
             )
         ]
+
     def clean(self):
         super().clean()
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
         if not self.base_unit.strip():
             raise ValidationError({'base_unit': _('Base unit cannot be empty.')})
+        if self.item_type == ItemType.SERVICE:
+            self.track_expiry = False
+            self.track_batches = False
 
     def get_variants(self):
         return self.variants.all()
 
     def get_current_stock(self) -> Decimal:
-        total = Decimal('0.0000')
-        for variant in self.variants.all():
-            total += variant.get_current_stock()
-        return total
+        from django.db.models import Sum
+        return self.variants.aggregate(
+            total=Sum('inventory_balances__available_quantity')
+        )['total'] or Decimal('0.0000')
 
     def is_low_stock(self) -> bool:
-        logger = Logger(__name__, branch_id=self.branch.id)
-        for variant in self.variants.all():
-            if variant.is_low_stock():
-                logger.info(f"Low stock detected for variant of item {self.name}",
-                           extra={'item_id': self.id})
-                return True
-        return False
-
-    def notify_low_stock(self, variant_stock: Decimal, variant_code: str):
-        """Send notification for low stock on a variant."""
-        from apps.core_apps.services.messaging_service import MessagingService
-        logger = Logger(__name__, branch_id=self.branch.id)
-        try:
-            service = MessagingService(self.branch)
-            service.send_notification(
-                recipient=None,
-                notification_type='low_stock',
-                context_data={
-                    'item_name': self.name,
-                    'variant_code': variant_code,
-                    'current_stock': str(variant_stock),
-                    'reorder_level': str(self.variants.first().reorder_level if self.variants.exists() else '0'),
-                    'email': self.branch.email
-                },
-                channel='email',
-                priority='high'
-            )
-            logger.info(f"Low stock notification sent for item {self.name}",
-                       extra={'item_id': self.id, 'notification_type': 'low_stock'})
-        except Exception as e:
-            logger.error(f"Error sending low stock notification for item {self.name}: {str(e)}",
-                        extra={'item_id': self.id, 'notification_type': 'low_stock'}, exc_info=True)
+        return any(variant.is_low_stock() for variant in self.variants.all())
 
     def get_display_name(self) -> str:
         return self.name
 
     def update_rating(self, new_rating: Decimal) -> None:
-        logger = Logger(__name__, branch_id=self.branch.id)
         if not (0 <= new_rating <= 5):
             raise ValidationError(_('Rating must be between 0 and 5.'))
         total_ratings = self.review_count + 1
@@ -453,14 +438,12 @@ class Item(AuditableModel):
         self.average_rating = round(new_average, 2)
         self.review_count = total_ratings
         self.save(update_fields=['average_rating', 'review_count'])
-        logger.info(f"Updated rating for item {self.name}",
-                   extra={'item_id': self.id, 'new_rating': str(new_rating), 'average_rating': str(self.average_rating)})
 
     def __str__(self):
         return f"{self.item_group.store_group.code} - {self.name}"
 
 class ItemVariant(AuditableModel):
-    """Variant-specific data for items (e.g., size/color combos)."""
+    """Variant-specific data for items."""
     item = models.ForeignKey(
         Item,
         on_delete=models.CASCADE,
@@ -473,20 +456,14 @@ class ItemVariant(AuditableModel):
         blank=True,
         verbose_name=_("Variant Code/SKU")
     )
-    size = models.CharField(
-        max_length=50,
+    attributes = models.JSONField(
+        default=dict,
         blank=True,
-        verbose_name=_("Size")
-    )
-    color = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name=_("Color")
+        verbose_name=_("Attributes")  # e.g., {"size": "M", "color": "Red"}
     )
     shelf_location = models.CharField(
         max_length=50,
         blank=True,
-        null=True,
         verbose_name=_("Shelf Location")
     )
     weight = models.DecimalField(
@@ -561,11 +538,6 @@ class ItemVariant(AuditableModel):
         validators=[MinValueValidator(Decimal('0.0001'))],
         verbose_name=_("Minimum Order Quantity")
     )
-    extra_attributes = models.JSONField(
-        default=dict,
-        blank=True,
-        verbose_name=_("Extra Attributes")
-    )
 
     class Meta:
         verbose_name = _("Item Variant")
@@ -573,9 +545,7 @@ class ItemVariant(AuditableModel):
         unique_together = [['item', 'code']]
         indexes = [
             models.Index(fields=['item', 'code']),
-            models.Index(fields=['size', 'color']),
             models.Index(fields=['sales_price']),
-            models.Index(fields=['item', 'size', 'color']),
         ]
         constraints = [
             models.CheckConstraint(
@@ -590,8 +560,8 @@ class ItemVariant(AuditableModel):
 
     def clean(self):
         super().clean()
-        if self.item.item_type == 'service' and (self.size or self.color):
-            raise ValidationError({'size': _('Services typically do not have physical variants.')})
+        if self.item.item_type == Item.ItemType.SERVICE and self.attributes:
+            raise ValidationError(_('Services typically do not have variants.'))
         if self.minimum_price > 0 and self.maximum_price > 0 and self.minimum_price >= self.maximum_price:
             raise ValidationError({'maximum_price': _('Maximum price must be greater than minimum price.')})
         if self.sales_price > 0:
@@ -615,26 +585,20 @@ class ItemVariant(AuditableModel):
         return self.sales_price
 
     def get_current_stock(self) -> Decimal:
-        balance = InventoryBalance.objects.filter(
-            variant=self
-        ).aggregate(
-            total=models.Sum('available_quantity')
-        )['total']
-        return balance or Decimal('0.0000')
+        from django.db.models import Sum
+        return self.inventory_balances.aggregate(
+            total=Sum('available_quantity')
+        )['total'] or Decimal('0.0000')
 
     def is_low_stock(self) -> bool:
-        logger = Logger(__name__, branch_id=self.item.branch.id)
         if self.reorder_level > 0:
             current_stock = self.get_current_stock()
-            if current_stock <= self.reorder_level:
-                self.item.notify_low_stock(current_stock, self.code)
-                logger.info(f"Low stock detected for variant {self.code}",
-                           extra={'variant_id': self.id, 'current_stock': str(current_stock)})
-                return True
+            return current_stock <= self.reorder_level
         return False
 
     def __str__(self):
-        return f"{self.item.item_group.store_group.code} - {self.item.name} ({self.size or ''} {self.color or ''})"
+        attr_str = " ".join([f"{k}:{v}" for k, v in self.attributes.items()]) if self.attributes else ""
+        return f"{self.item.item_group.store_group.code} - {self.item.name} ({attr_str})".strip()
 
 class ItemUnit(AuditableModel):
     """Multiple units of measure for item variants."""
@@ -686,6 +650,7 @@ class ItemUnit(AuditableModel):
         default=True,
         verbose_name=_("Sales Unit")
     )
+
     class Meta:
         verbose_name = _("Item Unit")
         verbose_name_plural = _("Item Units")
@@ -700,14 +665,23 @@ class ItemUnit(AuditableModel):
                 name='positive_conversion_factor'
             )
         ]
+
     def clean(self):
         super().clean()
         if not self.name.strip():
             raise ValidationError({'name': _('Name cannot be empty.')})
+        if self.is_default:
+            # Ensure only one default per variant
+            existing_defaults = ItemUnit.objects.filter(variant=self.variant, is_default=True).exclude(pk=self.pk)
+            if existing_defaults.exists():
+                raise ValidationError({'is_default': _('Only one default unit allowed per variant.')})
+
     def convert_to_base_units(self, quantity: Decimal) -> Decimal:
         return quantity * self.conversion_factor
+
     def convert_from_base_units(self, base_quantity: Decimal) -> Decimal:
         return base_quantity / self.conversion_factor
+
     def __str__(self):
         return f"{self.variant.code} - {self.code}"
 
@@ -749,6 +723,7 @@ class ItemBarcode(AuditableModel):
         default=False,
         verbose_name=_("Primary Barcode")
     )
+
     class Meta:
         verbose_name = _("Item Barcode")
         verbose_name_plural = _("Item Barcodes")
@@ -757,14 +732,131 @@ class ItemBarcode(AuditableModel):
             models.Index(fields=['variant', 'barcode']),
             models.Index(fields=['is_primary']),
         ]
+
     def clean(self):
         super().clean()
         if not self.barcode.strip():
             raise ValidationError({'barcode': _('Barcode cannot be empty.')})
         if self.unit and self.unit.variant != self.variant:
             raise ValidationError({'unit': _('Unit must belong to the same variant.')})
+        if self.is_primary:
+            # Ensure only one primary per variant
+            existing_primaries = ItemBarcode.objects.filter(variant=self.variant, is_primary=True).exclude(pk=self.pk)
+            if existing_primaries.exists():
+                raise ValidationError({'is_primary': _('Only one primary barcode allowed per variant.')})
+
     def __str__(self):
         return f"{self.variant.code} - {self.barcode}"
+
+
+class ItemReview(AuditableModel):
+    class FitChoices(models.TextChoices):
+        TOO_SMALL = 'too_small', _('Too Small')
+        FITS_WELL = 'fits_well', _('Fits Well')
+        TOO_BIG = 'too_big', _('Too Big')
+
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name=_("Item")
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='item_reviews',
+        verbose_name=_("User")
+    )
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        verbose_name=_("Rating")
+    )
+    comment = models.TextField(
+        blank=True,
+        verbose_name=_("Comment")
+    )
+    images = models.ManyToManyField(
+        Media,
+        blank=True,
+        related_name='item_review_images',
+        verbose_name=_("Images")
+    )
+    is_verified_purchase = models.BooleanField(
+        default=False,
+        verbose_name=_("Verified Purchase")
+    )
+    helpful_votes = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Helpful Votes")
+    )
+    fit = models.CharField(
+        max_length=20,
+        choices=FitChoices.choices,
+        blank=True,
+        verbose_name=_("Fit")
+    )
+    reviewer_height = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name=_("Reviewer Height")
+    )
+    reviewer_weight = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name=_("Reviewer Weight")
+    )
+    is_anonymous = models.BooleanField(
+        default=False,
+        verbose_name=_("Anonymous Review")
+    )
+
+    class Meta:
+        verbose_name = _("Item Review")
+        verbose_name_plural = _("Item Reviews")
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['item', 'created_at']),
+            models.Index(fields=['user', 'item']),
+            models.Index(fields=['rating', 'helpful_votes']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(rating__gte=1) & models.Q(rating__lte=5),
+                name='valid_review_rating'
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.rating < 1 or self.rating > 5:
+            raise ValidationError({'rating': _('Rating must be between 1 and 5.')})
+        if self.images.exists() and any(media.media_type != 'image' for media in self.images.all()):
+            raise ValidationError({'images': _('Only image media types are allowed for reviews.')})
+
+    def save(self, *args, **kwargs):
+        from apps.core_apps.utils import Logger
+        logger = Logger(__name__, user=self.user, branch_id=self.item.branch.id if self.item else None)
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        if is_new:
+            try:
+                self.item.update_rating(Decimal(str(self.rating)))
+                logger.info(f"New review added for item {self.item.name}",
+                           extra={'review_id': self.id, 'item_id': self.item.id, 'rating': self.rating})
+            except Exception as e:
+                logger.error(f"Error updating item rating after review save: {str(e)}",
+                            extra={'review_id': self.id, 'item_id': self.item.id}, exc_info=True)
+
+    def vote_helpful(self):
+        """Increment helpful votes."""
+        self.helpful_votes += 1
+        self.save(update_fields=['helpful_votes'])
+
+    def __str__(self):
+        return f"Review for {self.item.name} by {self.user.get_full_name() if self.user and not self.is_anonymous else 'Anonymous'} - Rating: {self.rating}"
 
 class InventoryBalance(AuditableModel):
     """Current inventory balances by item variant, location, batch, and expiry."""
@@ -783,13 +875,11 @@ class InventoryBalance(AuditableModel):
     location = models.CharField(
         max_length=50,
         blank=True,
-        null=True,
         verbose_name=_("Location")
     )
     batch_number = models.CharField(
         max_length=50,
         blank=True,
-        null=True,
         verbose_name=_("Batch Number")
     )
     expiry_date = models.DateField(
@@ -821,6 +911,7 @@ class InventoryBalance(AuditableModel):
         auto_now=True,
         verbose_name=_("Last Movement Date")
     )
+
     class Meta:
         verbose_name = _("Inventory Balance")
         verbose_name_plural = _("Inventory Balances")
@@ -837,84 +928,28 @@ class InventoryBalance(AuditableModel):
                 name='non_negative_reserved_quantity'
             )
         ]
+
     def clean(self):
         super().clean()
         if self.variant.item.track_expiry and not self.expiry_date:
             raise ValidationError({'expiry_date': _('Expiry date is required for items that track expiry.')})
         if self.variant.item.track_batches and not self.batch_number:
             raise ValidationError({'batch_number': _('Batch number is required for items that track batches.')})
+
     def is_expired(self) -> bool:
-        logger = Logger(__name__, branch_id=self.branch.id)
         if self.expiry_date:
-            is_expired = self.expiry_date < timezone.now().date()
-            if is_expired:
-                self.notify_expiry()
-                logger.info(f"Expired stock detected for batch {self.batch_number}",
-                           extra={'variant_id': self.variant.id, 'batch_number': self.batch_number})
-            return is_expired
+            return self.expiry_date < timezone.now().date()
         return False
+
     def is_near_expiry(self) -> bool:
-        logger = Logger(__name__, branch_id=self.branch.id)
         if self.expiry_date:
             warning_date = timezone.now().date() + timezone.timedelta(days=self.variant.item.expiry_warning_days)
-            is_near = self.expiry_date <= warning_date
-            if is_near and not self.is_expired():
-                self.notify_near_expiry()
-                logger.info(f"Near-expiry stock detected for batch {self.batch_number}",
-                           extra={'variant_id': self.variant.id, 'batch_number': self.batch_number})
-            return is_near
+            return self.expiry_date <= warning_date and not self.is_expired()
         return False
-    def notify_expiry(self):
-        """Send notification for expired stock."""
-        from apps.core_apps.services.messaging_service import MessagingService
-        logger = Logger(__name__, branch_id=self.branch.id)
-        try:
-            service = MessagingService(self.branch)
-            service.send_notification(
-                recipient=None,
-                notification_type='expired_stock',
-                context_data={
-                    'item_code': self.variant.code,
-                    'batch_number': self.batch_number,
-                    'expiry_date': str(self.expiry_date),
-                    'available_quantity': str(self.available_quantity),
-                    'email': self.branch.email
-                },
-                channel='email',
-                priority='urgent'
-            )
-            logger.info(f"Expiry notification sent for batch {self.batch_number} of variant {self.variant.code}",
-                       extra={'variant_id': self.variant.id, 'notification_type': 'expired_stock'})
-        except Exception as e:
-            logger.error(f"Error sending expiry notification for batch {self.batch_number}: {str(e)}",
-                        extra={'variant_id': self.variant.id, 'notification_type': 'expired_stock'}, exc_info=True)
-    def notify_near_expiry(self):
-        """Send notification for near-expiry stock."""
-        from apps.core_apps.services.messaging_service import MessagingService
-        logger = Logger(__name__, branch_id=self.branch.id)
-        try:
-            service = MessagingService(self.branch)
-            service.send_notification(
-                recipient=None,
-                notification_type='near_expiry_stock',
-                context_data={
-                    'item_code': self.variant.code,
-                    'batch_number': self.batch_number,
-                    'expiry_date': str(self.expiry_date),
-                    'available_quantity': str(self.available_quantity),
-                    'warning_days': self.variant.item.expiry_warning_days,
-                    'email': self.branch.email
-                },
-                channel='email',
-                priority='high'
-            )
-            logger.info(f"Near-expiry notification sent for batch {self.batch_number} of variant {self.variant.code}",
-                       extra={'variant_id': self.variant.id, 'notification_type': 'near_expiry_stock'})
-        except Exception as e:
-            logger.error(f"Error sending near-expiry notification for batch {self.batch_number}: {str(e)}",
-                        extra={'variant_id': self.variant.id, 'notification_type': 'near_expiry_stock'}, exc_info=True)
+
     def get_total_quantity(self) -> Decimal:
         return self.available_quantity + self.reserved_quantity
+
     def __str__(self):
         parts = [f"{self.variant.item.item_group.store_group.code} - {self.variant.code}"]
         if self.batch_number:
@@ -922,61 +957,3 @@ class InventoryBalance(AuditableModel):
         if self.expiry_date:
             parts.append(f"Exp: {self.expiry_date}")
         return " - ".join(parts)
-
-class Attribute(AuditableModel):
-    """Dynamic attribute (e.g., 'Color', 'Size')."""
-    name = models.CharField(
-        max_length=50,
-        unique=True,
-        verbose_name=_("Attribute Name")
-    )
-
-    class Meta:
-        verbose_name = _("Attribute")
-        verbose_name_plural = _("Attributes")
-
-    def __str__(self):
-        return self.name
-
-class AttributeValue(AuditableModel):
-    """Possible values (e.g., 'Red' for Color)."""
-    attribute = models.ForeignKey(
-        Attribute,
-        on_delete=models.CASCADE,
-        related_name='values',
-        verbose_name=_("Attribute")
-    )
-    value = models.CharField(
-        max_length=50,
-        verbose_name=_("Value")
-    )
-
-    class Meta:
-        verbose_name = _("Attribute Value")
-        verbose_name_plural = _("Attribute Values")
-        unique_together = [['attribute', 'value']]
-
-    def __str__(self):
-        return f"{self.attribute.name}: {self.value}"
-
-class VariantAttributeValue(AuditableModel):
-    """Assign values to variants (EAV junction)."""
-    variant = models.ForeignKey(
-        ItemVariant,
-        on_delete=models.CASCADE,
-        related_name='attribute_values',
-        verbose_name=_("Variant")
-    )
-    attribute_value = models.ForeignKey(
-        AttributeValue,
-        on_delete=models.CASCADE,
-        verbose_name=_("Attribute Value")
-    )
-
-    class Meta:
-        verbose_name = _("Variant Attribute Value")
-        verbose_name_plural = _("Variant Attribute Values")
-        unique_together = [['variant', 'attribute_value']]
-
-    def __str__(self):
-        return f"{self.variant.code} - {self.attribute_value}"

@@ -2,7 +2,6 @@ import uuid
 from django.utils.text import slugify
 import logging
 from typing import Optional, Dict, Any
-# from django.contrib.auth.models import User
 from django.http import HttpRequest
 
 def generate_unique_code(prefix: str, length: int = 8) -> str:

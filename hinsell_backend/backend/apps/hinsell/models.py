@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
@@ -17,7 +16,7 @@ from apps.core_apps.services.messaging_service import MessagingService
 from apps.transactions.models import TransactionHeader
 from django.db.utils import IntegrityError
 
-logger = logging.getLogger(__name__)
+logger = Logger(__name__)
 
 class Offer(AuditableModel):
     """Model for managing promotional offers with flexible targeting."""
@@ -220,7 +219,7 @@ class Offer(AuditableModel):
         if not is_new and self.target_type != self.TargetType.ALL:
             has_targets = any([
                 self.target_users.exists(),
-                bool(self.target_countries),  # Check if list is not empty
+                bool(self.target_countries),
                 self.target_items.exists(),
                 self.target_item_groups.exists(),
                 self.target_store_groups.exists()

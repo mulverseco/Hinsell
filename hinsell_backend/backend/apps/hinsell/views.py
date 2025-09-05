@@ -1,94 +1,98 @@
-from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from django.core.cache import cache
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from apps.core_apps.general import BaseViewSet
+from apps.core_apps.permissions import HasRolePermission
 from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
 from apps.hinsell.serializers import OfferSerializer, CouponSerializer, UserCouponSerializer, CampaignSerializer
-from apps.core_apps.utils import Logger
 
 class OfferViewSet(BaseViewSet):
-    queryset = Offer.objects.all()
+    """ViewSet for Offer model."""
+    queryset = Offer.objects.all().select_related('branch').prefetch_related(
+        'target_users', 'target_items', 'target_item_groups', 'target_store_groups', 'media'
+    )
     serializer_class = OfferSerializer
-    filterset_fields = ['offer_type', 'target_type', 'is_active']
-    search_fields = ['name', 'code', 'description']
-    ordering_fields = ['start_date', 'end_date', 'current_uses']
+    logger_name = 'inventory.offer'
+    
+    filterset_fields = ['branch', 'code', 'offer_type', 'target_type', 'is_active']
+    search_fields = ['code', 'name', 'slug', 'description']
+    ordering_fields = ['code', 'name', 'start_date', 'end_date']
+    ordering = ['-start_date']
+    
     permission_classes_by_action = {
-        'create': [IsAdminUser],
-        'update': [IsAdminUser],
-        'partial_update': [IsAdminUser],
-        'destroy': [IsAdminUser],
         'list': [],
         'retrieve': [],
-        'apply': [],
+        'create': [IsAuthenticated, HasRolePermission],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
     }
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        if not self.request.user.is_staff:
-            queryset = queryset.filter(is_active=True)
-        return queryset
-
-    @action(detail=True, methods=['post'])
-    def apply(self, request, pk=None):
-        """Apply an offer to a given price and quantity."""
+    @action(detail=True, methods=['post'], url_path='apply')
+    def apply_offer(self, request, pk=None):
         offer = self.get_object()
-        price = request.data.get('price')
-        quantity = request.data.get('quantity', 1)
-        try:
-            price = Decimal(price)
-            quantity = int(quantity)
-            result = offer.apply(price, quantity, user=request.user)
-            cache.delete(f"active_offers_{offer.branch.id}")
-            return Response(result, status=status.HTTP_200_OK)
-        except (ValueError, TypeError) as e:
-            logger.error(f"Error applying offer {offer.code}: {str(e)}", extra={'offer_id': offer.id, 'user_id': request.user.id})
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        price = Decimal(request.data.get('price', '0'))
+        quantity = int(request.data.get('quantity', 1))
+        item_id = request.data.get('item_id')
+        country = request.data.get('country')
+        
+        item = None
+        if item_id:
+            item = get_object_or_404(Item, id=item_id)
+        
+        result = offer.apply(price=price, quantity=quantity, user=request.user, country=country, item=item)
+        return Response(result)
 
 class CouponViewSet(BaseViewSet):
-    queryset = Coupon.objects.all()
+    """ViewSet for Coupon model."""
+    queryset = Coupon.objects.all().select_related('branch').prefetch_related(
+        'target_users', 'target_items', 'media'
+    )
     serializer_class = CouponSerializer
-    filterset_fields = ['coupon_type', 'is_active']
-    search_fields = ['name', 'code', 'description']
-    ordering_fields = ['start_date', 'end_date', 'current_uses']
+    logger_name = 'inventory.coupon'
+    
+    filterset_fields = ['branch', 'code', 'coupon_type', 'is_active']
+    search_fields = ['code', 'name', 'description']
+    ordering_fields = ['code', 'name', 'start_date', 'end_date']
+    ordering = ['-start_date']
+    
     permission_classes_by_action = {
-        'create': [IsAdminUser],
-        'update': [IsAdminUser],
-        'partial_update': [IsAdminUser],
-        'destroy': [IsAdminUser],
         'list': [],
         'retrieve': [],
-        'apply': [],
+        'create': [IsAuthenticated, HasRolePermission],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
     }
 
-    @action(detail=True, methods=['post'])
-    def apply(self, request, pk=None):
-        """Apply a coupon to a given price."""
+    @action(detail=True, methods=['post'], url_path='apply')
+    def apply_coupon(self, request, pk=None):
         coupon = self.get_object()
-        price = request.data.get('price')
-        try:
-            price = Decimal(price)
-            discounted_price = coupon.apply(price, user=request.user)
-            UserCoupon.objects.create(
-                user=request.user,
-                coupon=coupon,
-                branch=coupon.branch
-            )
-            return Response({'discounted_price': discounted_price}, status=status.HTTP_200_OK)
-        except (ValueError, TypeError) as e:
-            logger.error(f"Error applying coupon {coupon.code}: {str(e)}", extra={'coupon_id': coupon.id, 'user_id': request.user.id})
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        price = Decimal(request.data.get('price', '0'))
+        
+        discounted_price = coupon.apply(price=price, user=request.user)
+        return Response({'discounted_price': discounted_price})
 
 class UserCouponViewSet(BaseViewSet):
-    queryset = UserCoupon.objects.all()
+    """ViewSet for UserCoupon model."""
+    queryset = UserCoupon.objects.all().select_related('user', 'coupon', 'branch', 'order')
     serializer_class = UserCouponSerializer
-    filterset_fields = ['is_used', 'coupon']
-    search_fields = ['coupon__code', 'user__email']
+    logger_name = 'inventory.user_coupon'
+    
+    filterset_fields = ['user', 'coupon', 'is_used']
+    search_fields = ['coupon__code']
+    ordering_fields = ['redemption_date']
+    ordering = ['-redemption_date']
+    
     permission_classes_by_action = {
-        'create': [IsAdminUser],
-        'list': [],
-        'retrieve': [],
+        'list': [IsAuthenticated],
+        'retrieve': [IsAuthenticated],
+        'create': [IsAuthenticated],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
     }
 
     def get_queryset(self):
@@ -98,40 +102,41 @@ class UserCouponViewSet(BaseViewSet):
         return queryset
 
 class CampaignViewSet(BaseViewSet):
-    queryset = Campaign.objects.all()
+    """ViewSet for Campaign model."""
+    queryset = Campaign.objects.all().select_related('branch', 'offer', 'coupon').prefetch_related(
+        'target_users', 'media'
+    )
     serializer_class = CampaignSerializer
-    filterset_fields = ['campaign_type', 'is_active']
-    search_fields = ['name', 'code', 'content']
-    ordering_fields = ['start_date', 'end_date', 'impressions', 'clicks', 'conversions']
+    logger_name = 'inventory.campaign'
+    
+    filterset_fields = ['branch', 'code', 'campaign_type', 'is_active']
+    search_fields = ['code', 'name', 'slug', 'content']
+    ordering_fields = ['code', 'name', 'start_date', 'end_date']
+    ordering = ['-start_date']
+    
     permission_classes_by_action = {
-        'create': [IsAdminUser],
-        'update': [IsAdminUser],
-        'partial_update': [IsAdminUser],
-        'destroy': [],
         'list': [],
         'retrieve': [],
-        'track_impression': [],
-        'track_click': [],
-        'track_conversion': [],
+        'create': [IsAuthenticated, HasRolePermission],
+        'update': [IsAuthenticated, HasRolePermission],
+        'partial_update': [IsAuthenticated, HasRolePermission],
+        'destroy': [IsAuthenticated, HasRolePermission],
     }
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path='track-impression')
     def track_impression(self, request, pk=None):
-        """Track a campaign impression."""
         campaign = self.get_object()
         campaign.track_impression()
-        return Response({'status': 'impression tracked'}, status=status.HTTP_200_OK)
+        return Response({'status': 'impression tracked'})
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path='track-click')
     def track_click(self, request, pk=None):
-        """Track a campaign click."""
         campaign = self.get_object()
         campaign.track_click()
-        return Response({'status': 'click tracked'}, status=status.HTTP_200_OK)
+        return Response({'status': 'click tracked'})
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path='track-conversion')
     def track_conversion(self, request, pk=None):
-        """Track a campaign conversion."""
         campaign = self.get_object()
         campaign.track_conversion(user=request.user)
-        return Response({'status': 'conversion tracked'}, status=status.HTTP_200_OK)
+        return Response({'status': 'conversion tracked'})

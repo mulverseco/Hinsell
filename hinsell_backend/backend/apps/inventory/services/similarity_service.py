@@ -1,286 +1,165 @@
+# apps/inventory/services/similarity_service.py
 from decimal import Decimal
-from typing import List, Dict, Any, Optional
-from django.db.models import Q, F, Case, When, Value, IntegerField
+from django.db.models import Q, Case, When, Value, FloatField, F, Avg
 from django.db.models.functions import Abs
-from apps.inventory.models import Item, ItemGroup
+from apps.inventory.models import Item
 from apps.core_apps.utils import Logger
 
+logger = Logger(__name__)
 
 class ItemSimilarityService:
-    """Service for finding similar items using multiple algorithms."""
-    
-    def __init__(self, branch_id: int):
+    """
+    Service for finding similar items based on various criteria.
+    Implements rule-based similarity using categories, tags, prices, and ratings.
+    Designed for efficiency with query optimizations and annotations.
+    """
+
+    def __init__(self, branch_id):
         self.branch_id = branch_id
-        self.logger = Logger(__name__, branch_id=branch_id)
-    
-    def find_similar_items(
-        self, 
-        item: Item, 
-        limit: int = 10,
-        exclude_out_of_stock: bool = True,
-        similarity_factors: Optional[Dict[str, float]] = None
-    ) -> List[Dict[str, Any]]:
+
+    def _get_candidates(self, item, scope='group'):
         """
-        Find similar items using weighted similarity scoring.
-        
-        Args:
-            item: The reference item to find similarities for
-            limit: Maximum number of similar items to return
-            exclude_out_of_stock: Whether to exclude items with zero stock
-            similarity_factors: Custom weights for similarity factors
-        
-        Returns:
-            List of similar items with similarity scores
+        Get candidate items for similarity calculations.
+        Scope can be 'group' (same item_group), 'store' (same store_group), or 'branch' (entire branch).
         """
-        if similarity_factors is None:
-            similarity_factors = {
-                'category': 0.3,      # Same item group/category
-                'brand': 0.2,         # Same brand/manufacturer
-                'price': 0.2,         # Similar price range
-                'rating': 0.1,        # Similar ratings
-                'attributes': 0.1,    # Similar size/color/attributes
-                'tags': 0.1          # Similar tags
-            }
+        queryset = Item.objects.filter(branch_id=self.branch_id).exclude(id=item.id)
         
-        try:
-            # Base queryset - exclude the item itself and hidden items
-            queryset = Item.objects.filter(
-                branch_id=self.branch_id,
-                visibility__in=['public', 'registered']
-            ).exclude(id=item.id)
+        if scope == 'group':
+            queryset = queryset.filter(item_group=item.item_group)
+        elif scope == 'store':
+            queryset = queryset.filter(item_group__store_group=item.item_group.store_group)
+        
+        # Optimize by selecting only necessary fields
+        queryset = queryset.only(
+            'id', 'name', 'slug', 'tags', 'average_rating', 'review_count',
+            'item_group_id', 'item_group__store_group_id'
+        ).annotate(
+            min_price=Avg('variants__sales_price')
+        )
+        
+        return queryset
+
+    def _calculate_similarity_score(self, item, candidates):
+        """
+        Annotate candidates with similarity score.
+        Score based on:
+        - Category match: 0.4 if same group, 0.2 if same store group
+        - Tag overlap: 0.4 * (intersection / union)
+        - Price proximity: 0.2 * (1 - normalized price diff)
+        """
+        item_tags = set(item.tags.split(',') if item.tags else [])
+        item_price = item.variants.aggregate(avg_price=Avg('sales_price'))['avg_price'] or Decimal('0')
+        
+        # To avoid looping, we'll use annotations where possible
+        # But tag overlap requires some processing; limit candidates first
+        if len(candidates) > 100:
+            candidates = candidates.order_by('-average_rating')[:100]
+        
+        annotated = []
+        for cand in candidates:
+            cand_tags = set(cand.tags.split(',') if cand.tags else [])
+            intersection = len(item_tags & cand_tags)
+            union = len(item_tags | cand_tags)
+            tag_sim = intersection / union if union else 0.0
             
-            # Exclude out of stock items if requested
+            cat_sim = 0.4 if cand.item_group_id == item.item_group_id else \
+                      0.2 if cand.item_group.store_group_id == item.item_group.store_group_id else 0.0
+            
+            cand_price = cand.min_price or Decimal('0')
+            price_diff = abs(cand_price - item_price)
+            max_price = max(cand_price, item_price) or Decimal('1')
+            price_sim = 1 - (price_diff / max_price)
+            price_sim = max(0, min(1, price_sim)) * 0.2
+            
+            score = cat_sim + (tag_sim * 0.4) + price_sim
+            cand.similarity_score = score
+            annotated.append(cand)
+        
+        return sorted(annotated, key=lambda x: x.similarity_score, reverse=True)
+
+    def find_similar_items(self, item, limit=10, exclude_out_of_stock=True):
+        """
+        Find similar items based on category, tags, and price proximity.
+        """
+        try:
+            candidates = self._get_candidates(item, scope='store')
+            
             if exclude_out_of_stock:
-                queryset = queryset.filter(
-                    inventory_balances__available_quantity__gt=0
+                candidates = candidates.filter(
+                    variants__inventory_balances__available_quantity__gt=0
                 ).distinct()
             
-            # Calculate similarity scores using database annotations
-            queryset = self._annotate_similarity_scores(queryset, item, similarity_factors)
-            
-            # Order by total similarity score and limit results
-            similar_items = queryset.order_by('-total_similarity_score')[:limit]
-            
-            # Convert to list with additional metadata
-            results = []
-            for similar_item in similar_items:
-                similarity_data = {
-                    'item': similar_item,
-                    'similarity_score': float(similar_item.total_similarity_score),
-                    'similarity_reasons': self._get_similarity_reasons(item, similar_item),
-                    'price_difference': abs(similar_item.sales_price - item.sales_price),
-                    'rating_difference': abs(similar_item.average_rating - item.average_rating)
-                }
-                results.append(similarity_data)
-            
-            self.logger.info(
-                f"Found {len(results)} similar items for {item.code}",
-                extra={'item_id': item.id, 'similar_count': len(results)}
-            )
-            
-            return results
-            
+            similar = self._calculate_similarity_score(item, candidates)
+            return similar[:limit]
+        
         except Exception as e:
-            self.logger.error(
-                f"Error finding similar items for {item.code}: {str(e)}",
+            logger.error(
+                f"Error finding similar items for item {item.id}: {str(e)}",
                 extra={'item_id': item.id},
                 exc_info=True
             )
             return []
-    
-    def _annotate_similarity_scores(
-        self, 
-        queryset, 
-        reference_item: Item, 
-        weights: Dict[str, float]
-    ):
-        """Annotate queryset with similarity scores using database functions."""
-        
-        # Category similarity (same item group or parent group)
-        category_score = Case(
-            When(item_group=reference_item.item_group, then=Value(100)),
-            When(item_group__parent=reference_item.item_group.parent, then=Value(80)),
-            When(item_group__store_group=reference_item.item_group.store_group, then=Value(60)),
-            default=Value(0),
-            output_field=IntegerField()
-        )
-        
-        # Brand similarity
-        brand_score = Case(
-            When(brand=reference_item.brand, then=Value(100)),
-            When(manufacturer=reference_item.manufacturer, then=Value(80)),
-            default=Value(0),
-            output_field=IntegerField()
-        )
-        
-        # Price similarity (closer prices get higher scores)
-        price_diff = Abs(F('sales_price') - reference_item.sales_price)
-        max_price = max(reference_item.sales_price, Decimal('1.00'))
-        price_score = Case(
-            When(sales_price=reference_item.sales_price, then=Value(100)),
-            default=100 - (price_diff / max_price * 100),
-            output_field=IntegerField()
-        )
-        
-        # Rating similarity
-        rating_diff = Abs(F('average_rating') - reference_item.average_rating)
-        rating_score = Case(
-            When(average_rating=reference_item.average_rating, then=Value(100)),
-            default=100 - (rating_diff * 20),  # 5-point scale, so max diff is 5
-            output_field=IntegerField()
-        )
-        
-        # Attribute similarity (size, color)
-        attribute_score = Case(
-            When(
-                Q(size=reference_item.size) & Q(color=reference_item.color),
-                then=Value(100)
-            ),
-            When(size=reference_item.size, then=Value(70)),
-            When(color=reference_item.color, then=Value(70)),
-            default=Value(0),
-            output_field=IntegerField()
-        )
-        
-        # Calculate weighted total similarity score
-        total_score = (
-            category_score * weights['category'] +
-            brand_score * weights['brand'] +
-            price_score * weights['price'] +
-            rating_score * weights['rating'] +
-            attribute_score * weights['attributes']
-        )
-        
-        return queryset.annotate(
-            category_similarity=category_score,
-            brand_similarity=brand_score,
-            price_similarity=price_score,
-            rating_similarity=rating_score,
-            attribute_similarity=attribute_score,
-            total_similarity_score=total_score
-        )
-    
-    def _get_similarity_reasons(self, reference_item: Item, similar_item: Item) -> List[str]:
-        """Get human-readable reasons why items are similar."""
-        reasons = []
-        
-        if similar_item.item_group == reference_item.item_group:
-            reasons.append("Same category")
-        elif similar_item.item_group.parent == reference_item.item_group.parent:
-            reasons.append("Related category")
-        elif similar_item.item_group.store_group == reference_item.item_group.store_group:
-            reasons.append("Same store group")
-        
-        if similar_item.brand == reference_item.brand:
-            reasons.append("Same brand")
-        elif similar_item.manufacturer == reference_item.manufacturer:
-            reasons.append("Same manufacturer")
-        
-        price_diff = abs(similar_item.sales_price - reference_item.sales_price)
-        if price_diff <= reference_item.sales_price * Decimal('0.1'):  # Within 10%
-            reasons.append("Similar price")
-        
-        rating_diff = abs(similar_item.average_rating - reference_item.average_rating)
-        if rating_diff <= Decimal('0.5'):
-            reasons.append("Similar rating")
-        
-        if similar_item.size == reference_item.size:
-            reasons.append("Same size")
-        
-        if similar_item.color == reference_item.color:
-            reasons.append("Same color")
-        
-        # Check for common tags
-        if reference_item.tags and similar_item.tags:
-            ref_tags = set(reference_item.tags.lower().split(','))
-            sim_tags = set(similar_item.tags.lower().split(','))
-            common_tags = ref_tags.intersection(sim_tags)
-            if common_tags:
-                reasons.append("Similar features")
-        
-        return reasons
-    
-    def find_trending_similar_items(
-        self, 
-        item: Item, 
-        limit: int = 5
-    ) -> List[Dict[str, Any]]:
-        """Find similar items that are currently trending (high ratings, featured)."""
+
+    def find_trending_similar_items(self, item, limit=10):
+        """
+        Find trending similar items: high review count and recent activity.
+        Assuming trending based on review_count and average_rating.
+        """
         try:
-            similar_items = self.find_similar_items(
-                item, 
-                limit=limit * 2,  # Get more to filter for trending
-                exclude_out_of_stock=True
-            )
+            candidates = self._get_candidates(item, scope='store')
             
-            # Filter for trending items (featured, high ratings, recent)
-            trending_items = []
-            for item_data in similar_items:
-                similar_item = item_data['item']
-                if (similar_item.is_featured or 
-                    similar_item.average_rating >= Decimal('4.0') or
-                    similar_item.review_count >= 10):
-                    trending_items.append(item_data)
-                    
-                if len(trending_items) >= limit:
-                    break
+            # Annotate with trend_score = review_count * average_rating
+            candidates = candidates.annotate(
+                trend_score=F('review_count') * F('average_rating'),
+                sim_score=Case(
+                    When(item_group_id=item.item_group_id, then=Value(1.0)),
+                    default=Value(0.5),
+                    output_field=FloatField()
+                )
+            ).order_by('-trend_score', '-sim_score')
             
-            return trending_items
-            
+            return candidates[:limit]
+        
         except Exception as e:
-            self.logger.error(
-                f"Error finding trending similar items: {str(e)}",
+            logger.error(
+                f"Error finding trending similar items for item {item.id}: {str(e)}",
                 extra={'item_id': item.id},
                 exc_info=True
             )
             return []
-    
-    def find_price_alternative_items(
-        self, 
-        item: Item, 
-        price_range: str = 'lower',
-        limit: int = 5
-    ) -> List[Dict[str, Any]]:
-        """Find similar items in different price ranges."""
+
+    def find_price_alternative_items(self, item, price_range='budget', limit=10):
+        """
+        Find price alternatives: similar items cheaper (budget) or more expensive (premium).
+        """
         try:
-            # Base similarity search
-            similar_items = self.find_similar_items(
-                item,
-                limit=limit * 3,  # Get more to filter by price
-                exclude_out_of_stock=True,
-                similarity_factors={
-                    'category': 0.4,  # Emphasize category over price
-                    'brand': 0.3,
-                    'price': 0.1,    # De-emphasize price
-                    'rating': 0.1,
-                    'attributes': 0.1,
-                    'tags': 0.0
-                }
+            item_price = item.variants.aggregate(avg_price=Avg('sales_price'))['avg_price'] or Decimal('0')
+            
+            candidates = self._get_candidates(item, scope='group')
+            
+            price_filter = Q(variants__sales_price__lt=item_price) if price_range == 'budget' else \
+                           Q(variants__sales_price__gt=item_price)
+            
+            candidates = candidates.filter(price_filter).distinct().annotate(
+                price_diff=Abs(Avg('variants__sales_price') - item_price),
+                sim_score=Case(
+                    When(tags__icontains=item.tags, then=Value(0.5)),
+                    default=Value(0.0),
+                    output_field=FloatField()
+                )
             )
             
-            # Filter by price range
-            price_filtered = []
-            for item_data in similar_items:
-                similar_item = item_data['item']
-                
-                if price_range == 'lower' and similar_item.sales_price < item.sales_price:
-                    price_filtered.append(item_data)
-                elif price_range == 'higher' and similar_item.sales_price > item.sales_price:
-                    price_filtered.append(item_data)
-                elif price_range == 'budget' and similar_item.sales_price <= item.sales_price * Decimal('0.7'):
-                    price_filtered.append(item_data)
-                elif price_range == 'premium' and similar_item.sales_price >= item.sales_price * Decimal('1.3'):
-                    price_filtered.append(item_data)
-                
-                if len(price_filtered) >= limit:
-                    break
+            if price_range == 'budget':
+                candidates = candidates.order_by('price_diff', '-average_rating')
+            else:
+                candidates = candidates.order_by('-price_diff', '-average_rating')
             
-            return price_filtered
-            
+            return candidates[:limit]
+        
         except Exception as e:
-            self.logger.error(
-                f"Error finding price alternative items: {str(e)}",
-                extra={'item_id': item.id},
+            logger.error(
+                f"Error finding price alternatives for item {item.id}: {str(e)}",
+                extra={'item_id': item.id, 'price_range': price_range},
                 exc_info=True
             )
             return []

@@ -1,5 +1,5 @@
 from celery import shared_task
-from apps.inventory.models import Item, InventoryBalance,ItemGroup, ItemUnit, ItemBarcode
+from apps.inventory.models import Item, InventoryBalance
 from apps.core_apps.utils import Logger
 
 @shared_task
@@ -25,7 +25,7 @@ def check_inventory_balance(balance_id: int):
         balance = InventoryBalance.objects.get(id=balance_id)
         balance.is_near_expiry()
         balance.is_expired()
-        logger.info(f"Expiry check completed for balance {balance.item.name}", 
+        logger.info(f"Expiry check completed for balance {balance.variant.item.name}", 
                    extra={'balance_id': balance_id, 'action': 'check_expiry'})
     except InventoryBalance.DoesNotExist:
         logger.error(f"Inventory balance {balance_id} not found", 
@@ -34,6 +34,14 @@ def check_inventory_balance(balance_id: int):
         logger.error(f"Error checking expiry for balance {balance_id}: {str(e)}", 
                     extra={'balance_id': balance_id, 'action': 'check_expiry'}, exc_info=True)
 
+
+@shared_task
+def check_expiries():
+    """Periodic task to check and notify near/expired stock."""
+    balances = InventoryBalance.objects.filter(expiry_date__isnull=False)
+    for balance in balances:
+        if balance.is_expired() or balance.is_near_expiry():
+            logger.info(f"Expiry check for balance {balance.id}", extra={'balance_id': balance.id})
 
 # @shared_task
 # def update_algolia_index(app_label, model_name, instance_pk):
