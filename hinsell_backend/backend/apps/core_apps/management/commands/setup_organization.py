@@ -649,7 +649,6 @@ class Command(BaseCommand):
                 'code': 'WELCOME_EMAIL',
                 'name': 'Welcome Email',
                 'description': 'Welcome email for new users',
-                'template_type': NotificationTemplate.TemplateType.EMAIL,
                 'subject': 'Welcome to {{company_name}}!',
                 'content': '''
                 <h1>Welcome {{user_name}}!</h1>
@@ -663,7 +662,6 @@ class Command(BaseCommand):
                 'code': 'ORDER_CONFIRMATION',
                 'name': 'Order Confirmation',
                 'description': 'Order confirmation email',
-                'template_type': NotificationTemplate.TemplateType.EMAIL,
                 'subject': 'Order Confirmation - {{order_number}}',
                 'content': '''
                 <h1>Order Confirmation</h1>
@@ -679,7 +677,6 @@ class Command(BaseCommand):
                 'code': 'PASSWORD_RESET',
                 'name': 'Password Reset',
                 'description': 'Password reset email template',
-                'template_type': NotificationTemplate.TemplateType.EMAIL,
                 'subject': 'Reset Your Password',
                 'content': '''
                 <h1>Password Reset Request</h1>
@@ -695,7 +692,6 @@ class Command(BaseCommand):
                 'code': 'PROMOTION_SMS',
                 'name': 'Promotion SMS',
                 'description': 'SMS template for promotions',
-                'template_type': NotificationTemplate.TemplateType.SMS,
                 'subject': '',
                 'content': 'Hi {{user_name}}! Get {{discount}}% off your next order with code {{coupon_code}}. Valid until {{expiry_date}}. Shop now!',
                 'is_active': True,
@@ -704,7 +700,6 @@ class Command(BaseCommand):
                 'code': 'LOW_STOCK_ALERT',
                 'name': 'Low Stock Alert',
                 'description': 'Internal notification for low stock',
-                'template_type': NotificationTemplate.TemplateType.INTERNAL,
                 'subject': 'Low Stock Alert - {{item_name}}',
                 'content': 'Item {{item_name}} ({{item_code}}) is running low. Current stock: {{current_stock}}. Minimum threshold: {{min_threshold}}.',
                 'is_active': True,
