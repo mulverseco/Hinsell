@@ -826,7 +826,7 @@ class Command(BaseCommand):
                 code="MEN",
                 defaults={
                     'name': "Men's Clothing",
-                    'slug': "mens-clothing",  # Add slug
+                    'slug': "mens-clothing", 
                     'group_type': ItemGroup.GroupType.PRODUCT,
                 }
             )
@@ -836,7 +836,7 @@ class Command(BaseCommand):
                 code="WOMEN",
                 defaults={
                     'name': "Women's Clothing",
-                    'slug': "womens-clothing",  # Add slug
+                    'slug': "womens-clothing",
                     'group_type': ItemGroup.GroupType.PRODUCT,
                 }
             )
@@ -846,7 +846,7 @@ class Command(BaseCommand):
                 code="PHONE",
                 defaults={
                     'name': "Smartphones",
-                    'slug': "smartphones",  # Add slug
+                    'slug': "smartphones", 
                     'group_type': ItemGroup.GroupType.PRODUCT,
                 }
             )    
@@ -863,6 +863,8 @@ class Command(BaseCommand):
         """Create sample coupons, offers, campaigns, and reviews"""
         try:
             now = timezone.now()
+            end = now + timezone.timedelta(days=60)
+            print(f"now type: {type(now)}, End type: {type(end)}")
             # Create sample offers
             percentage_offer, _ = Offer.objects.get_or_create(
                 branch=branch,
@@ -987,6 +989,7 @@ class Command(BaseCommand):
                 item_group=item_group,
                 defaults={
                     'name': "Men's T-Shirt",
+                    'slug': "mens-t-shirt-2025", 
                     'item_type': Item.ItemType.PRODUCT,
                     'base_unit': 'PCS',
                     'description': "Comfortable cotton T-shirt",
@@ -1051,6 +1054,7 @@ class Command(BaseCommand):
                 item_group=item_group,
                 defaults={
                     'name': "Women's Dress",
+                    'slug': "women-s-dress",
                     'item_type': Item.ItemType.PRODUCT,
                     'base_unit': 'PCS',
                     'description': "Stylish silk dress",
@@ -1115,6 +1119,7 @@ class Command(BaseCommand):
                 item_group=item_group,
                 defaults={
                     'name': "Smartphone",
+                    'slug': "smartphone",
                     'item_type': Item.ItemType.PRODUCT,
                     'base_unit': 'PCS',
                     'description': "Latest model smartphone",
