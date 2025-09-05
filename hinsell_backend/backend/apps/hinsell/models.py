@@ -18,6 +18,117 @@ from django.db.utils import IntegrityError
 
 logger = Logger(__name__)
 
+
+class ItemReview(AuditableModel):
+    class FitChoices(models.TextChoices):
+        TOO_SMALL = 'too_small', _('Too Small')
+        FITS_WELL = 'fits_well', _('Fits Well')
+        TOO_BIG = 'too_big', _('Too Big')
+
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name=_("Item")
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='item_reviews',
+        verbose_name=_("User")
+    )
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        verbose_name=_("Rating")
+    )
+    comment = models.TextField(
+        blank=True,
+        verbose_name=_("Comment")
+    )
+    images = models.ManyToManyField(
+        Media,
+        blank=True,
+        related_name='item_review_images',
+        verbose_name=_("Images")
+    )
+    is_verified_purchase = models.BooleanField(
+        default=False,
+        verbose_name=_("Verified Purchase")
+    )
+    helpful_votes = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Helpful Votes")
+    )
+    fit = models.CharField(
+        max_length=20,
+        choices=FitChoices.choices,
+        blank=True,
+        verbose_name=_("Fit")
+    )
+    reviewer_height = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name=_("Reviewer Height")
+    )
+    reviewer_weight = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name=_("Reviewer Weight")
+    )
+    is_anonymous = models.BooleanField(
+        default=False,
+        verbose_name=_("Anonymous Review")
+    )
+
+    class Meta:
+        verbose_name = _("Item Review")
+        verbose_name_plural = _("Item Reviews")
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['item', 'created_at']),
+            models.Index(fields=['user', 'item']),
+            models.Index(fields=['rating', 'helpful_votes']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(rating__gte=1) & models.Q(rating__lte=5),
+                name='valid_review_rating'
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.rating < 1 or self.rating > 5:
+            raise ValidationError({'rating': _('Rating must be between 1 and 5.')})
+        if self.images.exists() and any(media.media_type != 'image' for media in self.images.all()):
+            raise ValidationError({'images': _('Only image media types are allowed for reviews.')})
+
+    def save(self, *args, **kwargs):
+        from apps.core_apps.utils import Logger
+        logger = Logger(__name__, user=self.user, branch_id=self.item.branch.id if self.item else None)
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        if is_new:
+            try:
+                self.item.update_rating(Decimal(str(self.rating)))
+                logger.info(f"New review added for item {self.item.name}",
+                           extra={'review_id': self.id, 'item_id': self.item.id, 'rating': self.rating})
+            except Exception as e:
+                logger.error(f"Error updating item rating after review save: {str(e)}",
+                            extra={'review_id': self.id, 'item_id': self.item.id}, exc_info=True)
+
+    def vote_helpful(self):
+        """Increment helpful votes."""
+        self.helpful_votes += 1
+        self.save(update_fields=['helpful_votes'])
+
+    def __str__(self):
+        return f"Review for {self.item.name} by {self.user.get_full_name() if self.user and not self.is_anonymous else 'Anonymous'} - Rating: {self.rating}"
+
+
 class Offer(AuditableModel):
     """Model for managing promotional offers with flexible targeting."""
     class OfferType(models.TextChoices):

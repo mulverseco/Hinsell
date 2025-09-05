@@ -15,8 +15,13 @@ from apps.transactions.models import TransactionType
 from apps.core_apps.utils import Logger
 from apps.inventory.models import (
     StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit,
-    ItemBarcode, InventoryBalance, Attribute, AttributeValue,
-    VariantAttributeValue
+    ItemBarcode, InventoryBalance, ItemReview
+)
+from apps.hinsell.models import (
+    Offer, Coupon, UserCoupon, Campaign
+)
+from apps.notifications.models import (
+    NotificationTemplate, Notification
 )
 
 User = get_user_model()
@@ -78,14 +83,16 @@ class Command(BaseCommand):
             admin_user = self.create_admin_user(options['admin_email'], options['admin_password'], branch)
             self.stdout.write(f'Created/found admin user: {admin_user.email}')
 
-            # E-commerce tables (attributes)
-            self.setup_ecommerce_tables(branch)
-            self.stdout.write('Setup additional e-commerce tables')
+            # Notification templates
+            notification_templates = self.create_notification_templates(branch)
+            self.stdout.write(f'Created/found {len(notification_templates)} notification templates')
 
             # Sample data
             if options['create_sample_data']:
                 self.create_sample_data(branch, currencies[0])
-                self.stdout.write('Created sample products and categories')
+                self.create_sample_coupons_and_reviews(branch, admin_user)
+                self.create_sample_notifications(branch, admin_user, notification_templates)
+                self.stdout.write('Created sample products, categories, coupons, reviews, and notifications')
 
             self.stdout.write(self.style.SUCCESS('Organization setup completed successfully!'))
 
@@ -519,7 +526,7 @@ class Command(BaseCommand):
 
             # الأصول الثابتة
             {'code': '1200', 'name': 'الأصول الثابتة', 'type': 'الأصول الثابتة', 'parent': '1000', 'is_header': True},
-            {'code': '1210', 'name': 'العقارات والمعدات', 'type': 'الأصول الثابتة', 'parent': '1200', 'nature': 'fixed_asset'},
+            {'code': '1210', 'name': 'العقارات والمعدات', 'type': 'الأصول الثابتة', 'parent': '1200', 'is_header': True},
             {'code': '1211', 'name': 'الأراضي', 'type': 'الأصول الثابتة', 'parent': '1210', 'nature': 'fixed_asset'},
             {'code': '1212', 'name': 'المباني', 'type': 'الأصول الثابتة', 'parent': '1210', 'nature': 'fixed_asset'},
             {'code': '1213', 'name': 'المعدات', 'type': 'الأصول الثابتة', 'parent': '1210', 'nature': 'fixed_asset'},
@@ -630,31 +637,147 @@ class Command(BaseCommand):
             # Return existing user if possible
             return User.objects.filter(email=email).first()
 
-    def setup_ecommerce_tables(self, branch):
-        """Setup additional e-commerce specific configurations"""
-        self.create_sample_attributes(branch)
-
-    def create_sample_attributes(self, branch):
-        """Create sample attributes and values (idempotent)"""
-        try:
-            color_attr, _ = Attribute.objects.get_or_create(name="Color")
-            size_attr, _ = Attribute.objects.get_or_create(name="Size")
-            material_attr, _ = Attribute.objects.get_or_create(name="Material")
-
-            for color in ["Red", "Blue", "Green", "Black", "White"]:
-                AttributeValue.objects.get_or_create(attribute=color_attr, value=color)
-
-            for size in ["Small", "Medium", "Large", "XL", "XXL"]:
-                AttributeValue.objects.get_or_create(attribute=size_attr, value=size)
-
-            for material in ["Cotton", "Polyester", "Wool", "Silk", "Leather"]:
-                AttributeValue.objects.get_or_create(attribute=material_attr, value=material)
-        except Exception as e:
-            logger.error(f"Error creating sample attributes: {str(e)}")
 
     # -----------------------
     # Sample data
     # -----------------------
+
+    def create_notification_templates(self, branch):
+        """Create standard notification templates for the e-commerce system"""
+        templates_data = [
+            {
+                'code': 'WELCOME_EMAIL',
+                'name': 'Welcome Email',
+                'description': 'Welcome email for new users',
+                'template_type': NotificationTemplate.TemplateType.EMAIL,
+                'subject': 'Welcome to {{company_name}}!',
+                'content': '''
+                <h1>Welcome {{user_name}}!</h1>
+                <p>Thank you for joining {{company_name}}. We're excited to have you as part of our community.</p>
+                <p>Your account has been successfully created and you can now start shopping with us.</p>
+                <p>Best regards,<br>The {{company_name}} Team</p>
+                ''',
+                'is_active': True,
+            },
+            {
+                'code': 'ORDER_CONFIRMATION',
+                'name': 'Order Confirmation',
+                'description': 'Order confirmation email',
+                'template_type': NotificationTemplate.TemplateType.EMAIL,
+                'subject': 'Order Confirmation - {{order_number}}',
+                'content': '''
+                <h1>Order Confirmation</h1>
+                <p>Dear {{user_name}},</p>
+                <p>Thank you for your order! Your order #{{order_number}} has been confirmed.</p>
+                <p>Order Total: {{order_total}}</p>
+                <p>We'll send you another email when your order ships.</p>
+                <p>Best regards,<br>{{company_name}}</p>
+                ''',
+                'is_active': True,
+            },
+            {
+                'code': 'PASSWORD_RESET',
+                'name': 'Password Reset',
+                'description': 'Password reset email template',
+                'template_type': NotificationTemplate.TemplateType.EMAIL,
+                'subject': 'Reset Your Password',
+                'content': '''
+                <h1>Password Reset Request</h1>
+                <p>Dear {{user_name}},</p>
+                <p>You requested to reset your password. Click the link below to reset it:</p>
+                <p><a href="{{reset_link}}">Reset Password</a></p>
+                <p>If you didn't request this, please ignore this email.</p>
+                <p>Best regards,<br>{{company_name}}</p>
+                ''',
+                'is_active': True,
+            },
+            {
+                'code': 'PROMOTION_SMS',
+                'name': 'Promotion SMS',
+                'description': 'SMS template for promotions',
+                'template_type': NotificationTemplate.TemplateType.SMS,
+                'subject': '',
+                'content': 'Hi {{user_name}}! Get {{discount}}% off your next order with code {{coupon_code}}. Valid until {{expiry_date}}. Shop now!',
+                'is_active': True,
+            },
+            {
+                'code': 'LOW_STOCK_ALERT',
+                'name': 'Low Stock Alert',
+                'description': 'Internal notification for low stock',
+                'template_type': NotificationTemplate.TemplateType.INTERNAL,
+                'subject': 'Low Stock Alert - {{item_name}}',
+                'content': 'Item {{item_name}} ({{item_code}}) is running low. Current stock: {{current_stock}}. Minimum threshold: {{min_threshold}}.',
+                'is_active': True,
+            },
+        ]
+
+        templates = []
+        for data in templates_data:
+            try:
+                template, created = NotificationTemplate.objects.get_or_create(
+                    branch=branch,
+                    code=data['code'],
+                    defaults=data
+                )
+                templates.append(template)
+            except Exception as e:
+                logger.error(f"Error creating notification template {data['code']}: {str(e)}")
+                continue
+
+        return templates
+
+    def create_sample_notifications(self, branch, admin_user, notification_templates):
+        """Create sample notifications for testing"""
+        try:
+            # Find templates
+            welcome_template = next((t for t in notification_templates if t.code == 'WELCOME_EMAIL'), None)
+            order_template = next((t for t in notification_templates if t.code == 'ORDER_CONFIRMATION'), None)
+            
+            if welcome_template:
+                # Create welcome notification
+                Notification.objects.get_or_create(
+                    branch=branch,
+                    template=welcome_template,
+                    recipient_user=admin_user,
+                    defaults={
+                        'subject': 'Welcome to Our E-commerce Platform!',
+                        'content': f'''
+                        <h1>Welcome {admin_user.first_name}!</h1>
+                        <p>Thank you for joining our platform. We're excited to have you as part of our community.</p>
+                        <p>Your admin account has been successfully created and you can now manage the system.</p>
+                        <p>Best regards,<br>The Platform Team</p>
+                        ''',
+                        'channel': Notification.Channel.EMAIL,
+                        'priority': Notification.Priority.NORMAL,
+                        'status': Notification.Status.SENT,
+                        'sent_at': timezone.now(),
+                    }
+                )
+
+            if order_template:
+                # Create sample order confirmation
+                Notification.objects.get_or_create(
+                    branch=branch,
+                    template=order_template,
+                    recipient_user=admin_user,
+                    defaults={
+                        'subject': 'Order Confirmation - #ORD-001',
+                        'content': f'''
+                        <h1>Order Confirmation</h1>
+                        <p>Dear {admin_user.first_name},</p>
+                        <p>Thank you for your order! Your order #ORD-001 has been confirmed.</p>
+                        <p>Order Total: $150.00</p>
+                        <p>We'll send you another email when your order ships.</p>
+                        <p>Best regards,<br>Our E-commerce Platform</p>
+                        ''',
+                        'channel': Notification.Channel.EMAIL,
+                        'priority': Notification.Priority.HIGH,
+                        'status': Notification.Status.PENDING,
+                    }
+                )
+
+        except Exception as e:
+            logger.error(f"Error creating sample notifications: {str(e)}")
 
     def create_sample_data(self, branch, currency):
         """Create sample store groups, item groups, and products"""
@@ -720,296 +843,293 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error(f"Error creating sample data: {str(e)}")
 
-    def _size_code_to_value(self, size_code: str) -> str:
-        """Normalize S/M/L codes to attribute values"""
-        mapping = {'S': 'Small', 'M': 'Medium', 'L': 'Large'}
-        return mapping.get(size_code, size_code)
+    def create_sample_coupons_and_reviews(self, self, branch, admin_user):
+        """Create sample coupons, offers, campaigns, and reviews"""
+        try:
+            # Create sample offers
+            percentage_offer, _ = Offer.objects.get_or_create(
+                branch=branch,
+                code="SUMMER20",
+                defaults={
+                    'name': "Summer Sale 20% Off",
+                    'offer_type': Offer.OfferType.PERCENTAGE_DISCOUNT,
+                    'discount_percentage': Decimal('20.00'),
+                    'start_date': timezone.now(),
+                    'end_date': timezone.now() + timezone.timedelta(days=30),
+                    'is_active': True,
+                    'max_uses': 1000,
+                    'current_uses': 0,
+                    'min_order_amount': Decimal('50.00'),
+                    'max_discount_amount': Decimal('100.00'),
+                }
+            )
+
+            fixed_offer, _ = Offer.objects.get_or_create(
+                branch=branch,
+                code="WELCOME10",
+                defaults={
+                    'name': "Welcome $10 Off",
+                    'offer_type': Offer.OfferType.FIXED_DISCOUNT,
+                    'discount_amount': Decimal('10.00'),
+                    'start_date': timezone.now(),
+                    'end_date': timezone.now() + timezone.timedelta(days=90),
+                    'is_active': True,
+                    'max_uses': 500,
+                    'current_uses': 0,
+                    'min_order_amount': Decimal('25.00'),
+                }
+            )
+
+            # Create sample coupons
+            summer_coupon, _ = Coupon.objects.get_or_create(
+                offer=percentage_offer,
+                code="SUMMER2024",
+                defaults={
+                    'is_active': True,
+                    'usage_limit': 100,
+                    'used_count': 0,
+                    'expires_at': timezone.now() + timezone.timedelta(days=30),
+                }
+            )
+
+            welcome_coupon, _ = Coupon.objects.get_or_create(
+                offer=fixed_offer,
+                code="WELCOME2024",
+                defaults={
+                    'is_active': True,
+                    'usage_limit': 50,
+                    'used_count': 0,
+                    'expires_at': timezone.now() + timezone.timedelta(days=90),
+                }
+            )
+
+            # Create sample campaign
+            summer_campaign, _ = Campaign.objects.get_or_create(
+                branch=branch,
+                code="SUMMER_CAMPAIGN",
+                defaults={
+                    'name': "Summer 2024 Campaign",
+                    'description': "Summer promotional campaign with discounts and special offers",
+                    'start_date': timezone.now(),
+                    'end_date': timezone.now() + timezone.timedelta(days=60),
+                    'is_active': True,
+                    'budget': Decimal('10000.00'),
+                    'target_audience': Campaign.TargetAudience.ALL_CUSTOMERS,
+                    'content': "Get ready for summer with our amazing deals! Use code SUMMER2024 for 20% off your order.",
+                }
+            )
+
+            # Add offers to campaign
+            summer_campaign.offers.add(percentage_offer, fixed_offer)
+
+            # Create sample reviews for products
+            items = Item.objects.filter(branch=branch)
+            if items.exists():
+                sample_reviews = [
+                    {
+                        'rating': 5,
+                        'comment': "Great product, exactly as described. Fast shipping and excellent customer service.",
+                        'is_verified_purchase': True,
+                    },
+                    {
+                        'rating': 4,
+                        'comment': "Nice product overall. Good quality and fits well. Would recommend to others.",
+                        'is_verified_purchase': True,
+                    },
+                    {
+                        'rating': 5,
+                        'comment': "Perfect fit and great material. Will definitely buy again.",
+                        'is_verified_purchase': False,
+                    },
+                ]
+
+                for item in items[:3]:  # Add reviews to first 3 items
+                    for i, review_data in enumerate(sample_reviews):
+                        ItemReview.objects.get_or_create(
+                            item=item,
+                            user=admin_user,
+                            rating=review_data['rating'],
+                            defaults={
+                                'comment': review_data['comment'],
+                                'is_verified_purchase': review_data['is_verified_purchase'],
+                                'is_approved': True,
+                            }
+                        )
+
+        except Exception as e:
+            logger.error(f"Error creating sample coupons and reviews: {str(e)}")
 
     def create_sample_t_shirt(self, branch, item_group, currency):
-        """Create a sample t-shirt product with variants"""
+        """Create a sample T-shirt product"""
         try:
             t_shirt, _ = Item.objects.get_or_create(
                 branch=branch,
                 item_group=item_group,
-                name="Men's Cotton T-Shirt",
+                code="TSHIRT",
                 defaults={
-                    'item_type': Item.ItemType.PRODUCT,
-                    'base_unit': "Piece",
-                    'manufacturer': "FashionCo",
-                    'brand': "FashionCo",
-                    'markup_percentage': Decimal('50.00'),
-                    'vat_percentage': Decimal('15.00'),
-                    'track_expiry': False,
-                    'track_batches': False,
-                    'allow_discount': True,
-                    'allow_bonus': True,
+                    'name': "Men's T-Shirt",
+                    'description': "Comfortable cotton T-shirt",
+                    'price': Decimal('20.00'),
+                    'currency': currency,
                 }
             )
-
-            cotton, _ = AttributeValue.objects.get_or_create(
-                attribute=Attribute.objects.get_or_create(name="Material")[0],
-                value="Cotton"
+            ItemVariant.objects.get_or_create(
+                item=t_shirt,
+                code="TSHIRT-S",
+                defaults={
+                    'name': "Small",
+                    'price': Decimal('20.00'),
+                }
             )
-
-            variants_data = [
-                {'size': 'S', 'color': 'Red',  'cost': 10.00, 'price': 19.99},
-                {'size': 'M', 'color': 'Red',  'cost': 10.50, 'price': 20.99},
-                {'size': 'L', 'color': 'Red',  'cost': 11.00, 'price': 21.99},
-                {'size': 'S', 'color': 'Blue', 'cost': 10.00, 'price': 19.99},
-                {'size': 'M', 'color': 'Blue', 'cost': 10.50, 'price': 20.99},
-                {'size': 'L', 'color': 'Blue', 'cost': 11.00, 'price': 21.99},
-            ]
-
-            for i, data in enumerate(variants_data, 1):
-                size_value = self._size_code_to_value(data['size'])
-                variant, _ = ItemVariant.objects.get_or_create(
-                    item=t_shirt,
-                    code=f"TSHIRT-{data['size']}-{data['color']}",
-                    defaults={
-                        'size': data['size'],
-                        'color': data['color'],
-                        'standard_cost': Decimal(str(data['cost'])),
-                        'sales_price': Decimal(str(data['price'])),
-                        'reorder_level': Decimal('50.0000'),
-                        'maximum_stock': Decimal('500.0000'),
-                    }
-                )
-
-                color_attr_val, _ = AttributeValue.objects.get_or_create(
-                    attribute=Attribute.objects.get_or_create(name="Color")[0],
-                    value=data['color']
-                )
-                size_attr_val, _ = AttributeValue.objects.get_or_create(
-                    attribute=Attribute.objects.get_or_create(name="Size")[0],
-                    value=size_value
-                )
-
-                VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=color_attr_val)
-                VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=size_attr_val)
-                VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=cotton)
-
-                unit, _ = ItemUnit.objects.get_or_create(
-                    variant=variant,
-                    code="PCS",
-                    defaults={
-                        'name': "Piece",
-                        'conversion_factor': Decimal('1.00000000'),
-                        'unit_price': Decimal(str(data['price'])),
-                        'unit_cost': Decimal(str(data['cost'])),
-                        'is_default': True,
-                        'is_purchase_unit': True,
-                        'is_sales_unit': True,
-                    }
-                )
-
-                ItemBarcode.objects.get_or_create(
-                    variant=variant,
-                    barcode=f"123456789012{i}",
-                    defaults={
-                        'barcode_type': "ean13",
-                        'unit': unit,
-                        'is_primary': True,
-                    }
-                )
-
-                InventoryBalance.objects.get_or_create(
-                    branch=branch,
-                    variant=variant,
-                    location="A-01",
-                    defaults={
-                        'available_quantity': Decimal('100.00000000'),
-                        'reserved_quantity': Decimal('0.00000000'),
-                        'average_cost': Decimal(str(data['cost'])),
-                    }
-                )
+            ItemVariant.objects.get_or_create(
+                item=t_shirt,
+                code="TSHIRT-M",
+                defaults={
+                    'name': "Medium",
+                    'price': Decimal('20.00'),
+                }
+            )
+            ItemVariant.objects.get_or_create(
+                item=t_shirt,
+                code="TSHIRT-L",
+                defaults={
+                    'name': "Large",
+                    'price': Decimal('20.00'),
+                }
+            )
+            ItemUnit.objects.get_or_create(
+                item=t_shirt,
+                code="PCS",
+                defaults={
+                    'name': "Pieces",
+                }
+            )
+            ItemBarcode.objects.get_or_create(
+                item=t_shirt,
+                code="1234567890123",
+                defaults={
+                    'barcode_type': ItemBarcode.BarcodeType.EAN_13,
+                }
+            )
+            InventoryBalance.objects.get_or_create(
+                item=t_shirt,
+                defaults={
+                    'quantity': 100,
+                }
+            )
         except Exception as e:
-            logger.error(f"Error creating sample t-shirt: {str(e)}")
+            logger.error(f"Error creating sample T-shirt: {str(e)}")
 
     def create_sample_dress(self, branch, item_group, currency):
-        """Create a sample dress product with variants"""
+        """Create a sample dress product"""
         try:
             dress, _ = Item.objects.get_or_create(
                 branch=branch,
                 item_group=item_group,
-                name="Women's Summer Dress",
+                code="DRESS",
                 defaults={
-                    'item_type': Item.ItemType.PRODUCT,
-                    'base_unit': "Piece",
-                    'manufacturer': "FashionCo",
-                    'brand': "FashionCo",
-                    'markup_percentage': Decimal('60.00'),
-                    'vat_percentage': Decimal('15.00'),
-                    'track_expiry': False,
-                    'track_batches': False,
-                    'allow_discount': True,
-                    'allow_bonus': True,
+                    'name': "Women's Dress",
+                    'description': "Stylish silk dress",
+                    'price': Decimal('50.00'),
+                    'currency': currency,
                 }
             )
-
-            cotton, _ = AttributeValue.objects.get_or_create(
-                attribute=Attribute.objects.get_or_create(name="Material")[0],
-                value="Cotton"
+            ItemVariant.objects.get_or_create(
+                item=dress,
+                code="DRESS-S",
+                defaults={
+                    'name': "Small",
+                    'price': Decimal('50.00'),
+                }
             )
-
-            variants_data = [
-                {'size': 'S', 'color': 'Black', 'cost': 25.00, 'price': 49.99},
-                {'size': 'M', 'color': 'Black', 'cost': 26.00, 'price': 51.99},
-                {'size': 'L', 'color': 'Black', 'cost': 27.00, 'price': 53.99},
-                {'size': 'S', 'color': 'White', 'cost': 25.00, 'price': 49.99},
-                {'size': 'M', 'color': 'White', 'cost': 26.00, 'price': 51.99},
-                {'size': 'L', 'color': 'White', 'cost': 27.00, 'price': 53.99},
-            ]
-
-            for i, data in enumerate(variants_data, 1):
-                size_value = self._size_code_to_value(data['size'])
-                variant, _ = ItemVariant.objects.get_or_create(
-                    item=dress,
-                    code=f"DRESS-{data['size']}-{data['color']}",
-                    defaults={
-                        'size': data['size'],
-                        'color': data['color'],
-                        'standard_cost': Decimal(str(data['cost'])),
-                        'sales_price': Decimal(str(data['price'])),
-                        'reorder_level': Decimal('30.0000'),
-                        'maximum_stock': Decimal('300.0000'),
-                    }
-                )
-
-                color_attr_val, _ = AttributeValue.objects.get_or_create(
-                    attribute=Attribute.objects.get_or_create(name="Color")[0],
-                    value=data['color']
-                )
-                size_attr_val, _ = AttributeValue.objects.get_or_create(
-                    attribute=Attribute.objects.get_or_create(name="Size")[0],
-                    value=size_value
-                )
-
-                VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=color_attr_val)
-                VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=size_attr_val)
-                VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=cotton)
-
-                unit, _ = ItemUnit.objects.get_or_create(
-                    variant=variant,
-                    code="PCS",
-                    defaults={
-                        'name': "Piece",
-                        'conversion_factor': Decimal('1.00000000'),
-                        'unit_price': Decimal(str(data['price'])),
-                        'unit_cost': Decimal(str(data['cost'])),
-                        'is_default': True,
-                        'is_purchase_unit': True,
-                        'is_sales_unit': True,
-                    }
-                )
-
-                ItemBarcode.objects.get_or_create(
-                    variant=variant,
-                    barcode=f"223456789012{i}",
-                    defaults={
-                        'barcode_type': "ean13",
-                        'unit': unit,
-                        'is_primary': True,
-                    }
-                )
-
-                InventoryBalance.objects.get_or_create(
-                    branch=branch,
-                    variant=variant,
-                    location="B-01",
-                    defaults={
-                        'available_quantity': Decimal('75.00000000'),
-                        'reserved_quantity': Decimal('0.00000000'),
-                        'average_cost': Decimal(str(data['cost'])),
-                    }
-                )
+            ItemVariant.objects.get_or_create(
+                item=dress,
+                code="DRESS-M",
+                defaults={
+                    'name': "Medium",
+                    'price': Decimal('50.00'),
+                }
+            )
+            ItemVariant.objects.get_or_create(
+                item=dress,
+                code="DRESS-L",
+                defaults={
+                    'name': "Large",
+                    'price': Decimal('50.00'),
+                }
+            )
+            ItemUnit.objects.get_or_create(
+                item=dress,
+                code="PCS",
+                defaults={
+                    'name': "Pieces",
+                }
+            )
+            ItemBarcode.objects.get_or_create(
+                item=dress,
+                code="4567890123456",
+                defaults={
+                    'barcode_type': ItemBarcode.BarcodeType.EAN_13,
+                }
+            )
+            InventoryBalance.objects.get_or_create(
+                item=dress,
+                defaults={
+                    'quantity': 50,
+                }
+            )
         except Exception as e:
             logger.error(f"Error creating sample dress: {str(e)}")
 
     def create_sample_smartphone(self, branch, item_group, currency):
-        """Create a sample smartphone product with variants"""
+        """Create a sample smartphone product"""
         try:
             smartphone, _ = Item.objects.get_or_create(
                 branch=branch,
                 item_group=item_group,
-                name="Premium Smartphone",
+                code="SMARTPHONE",
                 defaults={
-                    'item_type': Item.ItemType.PRODUCT,
-                    'base_unit': "Piece",
-                    'manufacturer': "TechCorp",
-                    'brand': "TechCorp",
-                    'markup_percentage': Decimal('30.00'),
-                    'vat_percentage': Decimal('15.00'),
-                    'track_expiry': False,
-                    'track_batches': True,
-                    'allow_discount': True,
-                    'allow_bonus': False,
+                    'name': "Smartphone",
+                    'description': "Latest model smartphone",
+                    'price': Decimal('300.00'),
+                    'currency': currency,
                 }
             )
-
-            variants_data = [
-                {'storage': '128GB', 'color': 'Black', 'cost': 400.00, 'price': 599.99},
-                {'storage': '256GB', 'color': 'Black', 'cost': 450.00, 'price': 649.99},
-                {'storage': '512GB', 'color': 'Black', 'cost': 500.00, 'price': 699.99},
-                {'storage': '128GB', 'color': 'White', 'cost': 400.00, 'price': 599.99},
-                {'storage': '256GB', 'color': 'White', 'cost': 450.00, 'price': 649.99},
-                {'storage': '512GB', 'color': 'White', 'cost': 500.00, 'price': 699.99},
-            ]
-
-            for i, data in enumerate(variants_data, 1):
-                variant, _ = ItemVariant.objects.get_or_create(
-                    item=smartphone,
-                    code=f"PHONE-{data['storage']}-{data['color']}",
-                    defaults={
-                        'color': data['color'],
-                        'standard_cost': Decimal(str(data['cost'])),
-                        'sales_price': Decimal(str(data['price'])),
-                        'reorder_level': Decimal('20.0000'),
-                        'maximum_stock': Decimal('200.0000'),
-                        'extra_attributes': {'storage': data['storage']},
-                    }
-                )
-
-                color_attr_val, _ = AttributeValue.objects.get_or_create(
-                    attribute=Attribute.objects.get_or_create(name="Color")[0],
-                    value=data['color']
-                )
-                VariantAttributeValue.objects.get_or_create(variant=variant, attribute_value=color_attr_val)
-
-                unit, _ = ItemUnit.objects.get_or_create(
-                    variant=variant,
-                    code="PCS",
-                    defaults={
-                        'name': "Piece",
-                        'conversion_factor': Decimal('1.00000000'),
-                        'unit_price': Decimal(str(data['price'])),
-                        'unit_cost': Decimal(str(data['cost'])),
-                        'is_default': True,
-                        'is_purchase_unit': True,
-                        'is_sales_unit': True,
-                    }
-                )
-
-                ItemBarcode.objects.get_or_create(
-                    variant=variant,
-                    barcode=f"323456789012{i}",
-                    defaults={
-                        'barcode_type': "ean13",
-                        'unit': unit,
-                        'is_primary': True,
-                    }
-                )
-
-                batch_number = f"BATCH-{date.today().strftime('%Y%m%d')}-{i:03d}"
-                InventoryBalance.objects.get_or_create(
-                    branch=branch,
-                    variant=variant,
-                    batch_number=batch_number,
-                    location="C-01",
-                    defaults={
-                        'available_quantity': Decimal('50.00000000'),
-                        'reserved_quantity': Decimal('0.00000000'),
-                        'average_cost': Decimal(str(data['cost'])),
-                    }
-                )
+            ItemVariant.objects.get_or_create(
+                item=smartphone,
+                code="SMARTPHONE-128GB",
+                defaults={
+                    'name': "128GB Storage",
+                    'price': Decimal('300.00'),
+                }
+            )
+            ItemVariant.objects.get_or_create(
+                item=smartphone,
+                code="SMARTPHONE-256GB",
+                defaults={
+                    'name': "256GB Storage",
+                    'price': Decimal('350.00'),
+                }
+            )
+            ItemUnit.objects.get_or_create(
+                item=smartphone,
+                code="PCS",
+                defaults={
+                    'name': "Pieces",
+                }
+            )
+            ItemBarcode.objects.get_or_create(
+                item=smartphone,
+                code="7890123456789",
+                defaults={
+                    'barcode_type': ItemBarcode.BarcodeType.EAN_13,
+                }
+            )
+            InventoryBalance.objects.get_or_create(
+                item=smartphone,
+                defaults={
+                    'quantity': 30,
+                }
+            )
         except Exception as e:
             logger.error(f"Error creating sample smartphone: {str(e)}")
