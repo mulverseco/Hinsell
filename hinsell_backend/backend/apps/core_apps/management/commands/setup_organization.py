@@ -15,10 +15,10 @@ from apps.transactions.models import TransactionType
 from apps.core_apps.utils import Logger
 from apps.inventory.models import (
     StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit,
-    ItemBarcode, InventoryBalance, ItemReview
+    ItemBarcode, InventoryBalance
 )
 from apps.hinsell.models import (
-    Offer, Coupon, UserCoupon, Campaign
+    Offer, Coupon, UserCoupon, Campaign,ItemReview
 )
 from apps.notifications.models import (
     NotificationTemplate, Notification
