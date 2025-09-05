@@ -1,8 +1,7 @@
 from datetime import date
-from django.core.management.base import BaseCommand
+from decimal import Decimal
 from django.db import transaction
 from django.contrib.auth import get_user_model
-from decimal import Decimal
 from django.utils import timezone
 
 from apps.organization.models import Company, Branch
@@ -18,7 +17,7 @@ from apps.inventory.models import (
     ItemBarcode, InventoryBalance
 )
 from apps.hinsell.models import (
-    Offer, Coupon, UserCoupon, Campaign,ItemReview
+    Offer, Coupon, UserCoupon, Campaign, ItemReview
 )
 from apps.notifications.models import (
     NotificationTemplate, Notification
@@ -80,7 +79,7 @@ class Command(BaseCommand):
             self.stdout.write(f'Created/found {len(payment_methods)} payment methods')
 
             # Admin user
-            admin_user = self.create_admin_user(options['admin_email'], options['admin_password'], branch)
+            admin_user = self.create_admin_user(options['admin_email'], options['admin-password'], branch)
             self.stdout.write(f'Created/found admin user: {admin_user.email}')
 
             # Notification templates
@@ -88,7 +87,7 @@ class Command(BaseCommand):
             self.stdout.write(f'Created/found {len(notification_templates)} notification templates')
 
             # Sample data
-            if options['create_sample_data']:
+            if options['create-sample-data']:
                 self.create_sample_data(branch, currencies[0])
                 self.create_sample_coupons_and_reviews(branch, admin_user)
                 self.create_sample_notifications(branch, admin_user, notification_templates)
@@ -648,7 +647,8 @@ class Command(BaseCommand):
             {
                 'code': 'WELCOME_EMAIL',
                 'name': 'Welcome Email',
-                'description': 'Welcome email for new users',
+                'notification_type': NotificationTemplate.NotificationType.WELCOME,
+                'channel': NotificationTemplate.Channel.EMAIL,
                 'subject': 'Welcome to {{company_name}}!',
                 'content': '''
                 <h1>Welcome {{user_name}}!</h1>
@@ -656,12 +656,12 @@ class Command(BaseCommand):
                 <p>Your account has been successfully created and you can now start shopping with us.</p>
                 <p>Best regards,<br>The {{company_name}} Team</p>
                 ''',
-                'is_active': True,
             },
             {
                 'code': 'ORDER_CONFIRMATION',
                 'name': 'Order Confirmation',
-                'description': 'Order confirmation email',
+                'notification_type': NotificationTemplate.NotificationType.TRANSACTION_APPROVED,
+                'channel': NotificationTemplate.Channel.EMAIL,
                 'subject': 'Order Confirmation - {{order_number}}',
                 'content': '''
                 <h1>Order Confirmation</h1>
@@ -671,12 +671,12 @@ class Command(BaseCommand):
                 <p>We'll send you another email when your order ships.</p>
                 <p>Best regards,<br>{{company_name}}</p>
                 ''',
-                'is_active': True,
             },
             {
                 'code': 'PASSWORD_RESET',
                 'name': 'Password Reset',
-                'description': 'Password reset email template',
+                'notification_type': NotificationTemplate.NotificationType.PASSWORD_RESET,
+                'channel': NotificationTemplate.Channel.EMAIL,
                 'subject': 'Reset Your Password',
                 'content': '''
                 <h1>Password Reset Request</h1>
@@ -686,23 +686,22 @@ class Command(BaseCommand):
                 <p>If you didn't request this, please ignore this email.</p>
                 <p>Best regards,<br>{{company_name}}</p>
                 ''',
-                'is_active': True,
             },
             {
                 'code': 'PROMOTION_SMS',
                 'name': 'Promotion SMS',
-                'description': 'SMS template for promotions',
+                'notification_type': NotificationTemplate.NotificationType.CUSTOM,
+                'channel': NotificationTemplate.Channel.SMS,
                 'subject': '',
                 'content': 'Hi {{user_name}}! Get {{discount}}% off your next order with code {{coupon_code}}. Valid until {{expiry_date}}. Shop now!',
-                'is_active': True,
             },
             {
                 'code': 'LOW_STOCK_ALERT',
                 'name': 'Low Stock Alert',
-                'description': 'Internal notification for low stock',
+                'notification_type': NotificationTemplate.NotificationType.INVENTORY_LOW,
+                'channel': NotificationTemplate.Channel.EMAIL,
                 'subject': 'Low Stock Alert - {{item_name}}',
                 'content': 'Item {{item_name}} ({{item_code}}) is running low. Current stock: {{current_stock}}. Minimum threshold: {{min_threshold}}.',
-                'is_active': True,
             },
         ]
 
@@ -733,8 +732,11 @@ class Command(BaseCommand):
                 Notification.objects.get_or_create(
                     branch=branch,
                     template=welcome_template,
-                    recipient_user=admin_user,
+                    recipient=admin_user,
                     defaults={
+                        'notification_type': NotificationTemplate.NotificationType.WELCOME,
+                        'channel': Notification.Channel.EMAIL,
+                        'priority': Notification.Priority.NORMAL,
                         'subject': 'Welcome to Our E-commerce Platform!',
                         'content': f'''
                         <h1>Welcome {admin_user.first_name}!</h1>
@@ -742,8 +744,6 @@ class Command(BaseCommand):
                         <p>Your admin account has been successfully created and you can now manage the system.</p>
                         <p>Best regards,<br>The Platform Team</p>
                         ''',
-                        'channel': Notification.Channel.EMAIL,
-                        'priority': Notification.Priority.NORMAL,
                         'status': Notification.Status.SENT,
                         'sent_at': timezone.now(),
                     }
@@ -754,8 +754,11 @@ class Command(BaseCommand):
                 Notification.objects.get_or_create(
                     branch=branch,
                     template=order_template,
-                    recipient_user=admin_user,
+                    recipient=admin_user,
                     defaults={
+                        'notification_type': NotificationTemplate.NotificationType.TRANSACTION_APPROVED,
+                        'channel': Notification.Channel.EMAIL,
+                        'priority': Notification.Priority.HIGH,
                         'subject': 'Order Confirmation - #ORD-001',
                         'content': f'''
                         <h1>Order Confirmation</h1>
@@ -765,8 +768,6 @@ class Command(BaseCommand):
                         <p>We'll send you another email when your order ships.</p>
                         <p>Best regards,<br>Our E-commerce Platform</p>
                         ''',
-                        'channel': Notification.Channel.EMAIL,
-                        'priority': Notification.Priority.HIGH,
                         'status': Notification.Status.PENDING,
                     }
                 )
@@ -847,15 +848,13 @@ class Command(BaseCommand):
                 code="SUMMER20",
                 defaults={
                     'name': "Summer Sale 20% Off",
-                    'offer_type': Offer.OfferType.PERCENTAGE_DISCOUNT,
+                    'offer_type': Offer.OfferType.DISCOUNT,
                     'discount_percentage': Decimal('20.00'),
                     'start_date': timezone.now(),
                     'end_date': timezone.now() + timezone.timedelta(days=30),
                     'is_active': True,
                     'max_uses': 1000,
                     'current_uses': 0,
-                    'min_order_amount': Decimal('50.00'),
-                    'max_discount_amount': Decimal('100.00'),
                 }
             )
 
@@ -864,37 +863,46 @@ class Command(BaseCommand):
                 code="WELCOME10",
                 defaults={
                     'name': "Welcome $10 Off",
-                    'offer_type': Offer.OfferType.FIXED_DISCOUNT,
+                    'offer_type': Offer.OfferType.DISCOUNT,
                     'discount_amount': Decimal('10.00'),
                     'start_date': timezone.now(),
                     'end_date': timezone.now() + timezone.timedelta(days=90),
                     'is_active': True,
                     'max_uses': 500,
                     'current_uses': 0,
-                    'min_order_amount': Decimal('25.00'),
                 }
             )
 
             # Create sample coupons
             summer_coupon, _ = Coupon.objects.get_or_create(
-                offer=percentage_offer,
+                branch=branch,
                 code="SUMMER2024",
                 defaults={
+                    'name': "Summer Coupon 20%",
+                    'coupon_type': Coupon.CouponType.PERCENTAGE,
+                    'value': Decimal('20.00'),
+                    'start_date': timezone.now(),
+                    'end_date': timezone.now() + timezone.timedelta(days=30),
                     'is_active': True,
-                    'usage_limit': 100,
-                    'used_count': 0,
-                    'expires_at': timezone.now() + timezone.timedelta(days=30),
+                    'max_uses': 100,
+                    'current_uses': 0,
+                    'min_order_amount': Decimal('50.00'),
                 }
             )
 
             welcome_coupon, _ = Coupon.objects.get_or_create(
-                offer=fixed_offer,
+                branch=branch,
                 code="WELCOME2024",
                 defaults={
+                    'name': "Welcome Coupon $10",
+                    'coupon_type': Coupon.CouponType.FIXED,
+                    'value': Decimal('10.00'),
+                    'start_date': timezone.now(),
+                    'end_date': timezone.now() + timezone.timedelta(days=90),
                     'is_active': True,
-                    'usage_limit': 50,
-                    'used_count': 0,
-                    'expires_at': timezone.now() + timezone.timedelta(days=90),
+                    'max_uses': 50,
+                    'current_uses': 0,
+                    'min_order_amount': Decimal('25.00'),
                 }
             )
 
@@ -904,18 +912,15 @@ class Command(BaseCommand):
                 code="SUMMER_CAMPAIGN",
                 defaults={
                     'name': "Summer 2024 Campaign",
-                    'description': "Summer promotional campaign with discounts and special offers",
+                    'campaign_type': Campaign.CampaignType.EMAIL,
+                    'offer': percentage_offer,
+                    'coupon': summer_coupon,
                     'start_date': timezone.now(),
                     'end_date': timezone.now() + timezone.timedelta(days=60),
                     'is_active': True,
-                    'budget': Decimal('10000.00'),
-                    'target_audience': Campaign.TargetAudience.ALL_CUSTOMERS,
                     'content': "Get ready for summer with our amazing deals! Use code SUMMER2024 for 20% off your order.",
                 }
             )
-
-            # Add offers to campaign
-            summer_campaign.offers.add(percentage_offer, fixed_offer)
 
             # Create sample reviews for products
             items = Item.objects.filter(branch=branch)
@@ -947,7 +952,6 @@ class Command(BaseCommand):
                             defaults={
                                 'comment': review_data['comment'],
                                 'is_verified_purchase': review_data['is_verified_purchase'],
-                                'is_approved': True,
                             }
                         )
 
@@ -960,56 +964,59 @@ class Command(BaseCommand):
             t_shirt, _ = Item.objects.get_or_create(
                 branch=branch,
                 item_group=item_group,
-                code="TSHIRT",
                 defaults={
                     'name': "Men's T-Shirt",
+                    'item_type': Item.ItemType.PRODUCT,
+                    'base_unit': 'PCS',
                     'description': "Comfortable cotton T-shirt",
-                    'price': Decimal('20.00'),
-                    'currency': currency,
                 }
             )
-            ItemVariant.objects.get_or_create(
+            small_variant, _ = ItemVariant.objects.get_or_create(
                 item=t_shirt,
                 code="TSHIRT-S",
                 defaults={
-                    'name': "Small",
-                    'price': Decimal('20.00'),
+                    'attributes': {"size": "S"},
+                    'sales_price': Decimal('20.00'),
                 }
             )
-            ItemVariant.objects.get_or_create(
+            medium_variant, _ = ItemVariant.objects.get_or_create(
                 item=t_shirt,
                 code="TSHIRT-M",
                 defaults={
-                    'name': "Medium",
-                    'price': Decimal('20.00'),
+                    'attributes': {"size": "M"},
+                    'sales_price': Decimal('20.00'),
                 }
             )
-            ItemVariant.objects.get_or_create(
+            large_variant, _ = ItemVariant.objects.get_or_create(
                 item=t_shirt,
                 code="TSHIRT-L",
                 defaults={
-                    'name': "Large",
-                    'price': Decimal('20.00'),
+                    'attributes': {"size": "L"},
+                    'sales_price': Decimal('20.00'),
                 }
             )
             ItemUnit.objects.get_or_create(
-                item=t_shirt,
+                variant=small_variant,
                 code="PCS",
                 defaults={
                     'name': "Pieces",
+                    'conversion_factor': Decimal('1.00000000'),
+                    'is_default': True,
+                    'is_sales_unit': True,
                 }
             )
             ItemBarcode.objects.get_or_create(
-                item=t_shirt,
-                code="1234567890123",
+                variant=small_variant,
+                barcode="1234567890123",
                 defaults={
-                    'barcode_type': ItemBarcode.BarcodeType.EAN_13,
+                    'barcode_type': 'ean13',
                 }
             )
             InventoryBalance.objects.get_or_create(
-                item=t_shirt,
+                branch=branch,
+                variant=small_variant,
                 defaults={
-                    'quantity': 100,
+                    'available_quantity': Decimal('100.00000000'),
                 }
             )
         except Exception as e:
@@ -1021,56 +1028,59 @@ class Command(BaseCommand):
             dress, _ = Item.objects.get_or_create(
                 branch=branch,
                 item_group=item_group,
-                code="DRESS",
                 defaults={
                     'name': "Women's Dress",
+                    'item_type': Item.ItemType.PRODUCT,
+                    'base_unit': 'PCS',
                     'description': "Stylish silk dress",
-                    'price': Decimal('50.00'),
-                    'currency': currency,
                 }
             )
-            ItemVariant.objects.get_or_create(
+            small_variant, _ = ItemVariant.objects.get_or_create(
                 item=dress,
                 code="DRESS-S",
                 defaults={
-                    'name': "Small",
-                    'price': Decimal('50.00'),
+                    'attributes': {"size": "S"},
+                    'sales_price': Decimal('50.00'),
                 }
             )
-            ItemVariant.objects.get_or_create(
+            medium_variant, _ = ItemVariant.objects.get_or_create(
                 item=dress,
                 code="DRESS-M",
                 defaults={
-                    'name': "Medium",
-                    'price': Decimal('50.00'),
+                    'attributes': {"size": "M"},
+                    'sales_price': Decimal('50.00'),
                 }
             )
-            ItemVariant.objects.get_or_create(
+            large_variant, _ = ItemVariant.objects.get_or_create(
                 item=dress,
                 code="DRESS-L",
                 defaults={
-                    'name': "Large",
-                    'price': Decimal('50.00'),
+                    'attributes': {"size": "L"},
+                    'sales_price': Decimal('50.00'),
                 }
             )
             ItemUnit.objects.get_or_create(
-                item=dress,
+                variant=small_variant,
                 code="PCS",
                 defaults={
                     'name': "Pieces",
+                    'conversion_factor': Decimal('1.00000000'),
+                    'is_default': True,
+                    'is_sales_unit': True,
                 }
             )
             ItemBarcode.objects.get_or_create(
-                item=dress,
-                code="4567890123456",
+                variant=small_variant,
+                barcode="4567890123456",
                 defaults={
-                    'barcode_type': ItemBarcode.BarcodeType.EAN_13,
+                    'barcode_type': 'ean13',
                 }
             )
             InventoryBalance.objects.get_or_create(
-                item=dress,
+                branch=branch,
+                variant=small_variant,
                 defaults={
-                    'quantity': 50,
+                    'available_quantity': Decimal('50.00000000'),
                 }
             )
         except Exception as e:
@@ -1082,48 +1092,51 @@ class Command(BaseCommand):
             smartphone, _ = Item.objects.get_or_create(
                 branch=branch,
                 item_group=item_group,
-                code="SMARTPHONE",
                 defaults={
                     'name': "Smartphone",
+                    'item_type': Item.ItemType.PRODUCT,
+                    'base_unit': 'PCS',
                     'description': "Latest model smartphone",
-                    'price': Decimal('300.00'),
-                    'currency': currency,
                 }
             )
-            ItemVariant.objects.get_or_create(
+            variant_128gb, _ = ItemVariant.objects.get_or_create(
                 item=smartphone,
                 code="SMARTPHONE-128GB",
                 defaults={
-                    'name': "128GB Storage",
-                    'price': Decimal('300.00'),
+                    'attributes': {"storage": "128GB"},
+                    'sales_price': Decimal('300.00'),
                 }
             )
-            ItemVariant.objects.get_or_create(
+            variant_256gb, _ = ItemVariant.objects.get_or_create(
                 item=smartphone,
                 code="SMARTPHONE-256GB",
                 defaults={
-                    'name': "256GB Storage",
-                    'price': Decimal('350.00'),
+                    'attributes': {"storage": "256GB"},
+                    'sales_price': Decimal('350.00'),
                 }
             )
             ItemUnit.objects.get_or_create(
-                item=smartphone,
+                variant=variant_128gb,
                 code="PCS",
                 defaults={
                     'name': "Pieces",
+                    'conversion_factor': Decimal('1.00000000'),
+                    'is_default': True,
+                    'is_sales_unit': True,
                 }
             )
             ItemBarcode.objects.get_or_create(
-                item=smartphone,
-                code="7890123456789",
+                variant=variant_128gb,
+                barcode="7890123456789",
                 defaults={
-                    'barcode_type': ItemBarcode.BarcodeType.EAN_13,
+                    'barcode_type': 'ean13',
                 }
             )
             InventoryBalance.objects.get_or_create(
-                item=smartphone,
+                branch=branch,
+                variant=variant_128gb,
                 defaults={
-                    'quantity': 30,
+                    'available_quantity': Decimal('30.00000000'),
                 }
             )
         except Exception as e:

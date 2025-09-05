@@ -13,7 +13,7 @@ class CodeGenerationMixin(models.Model):
         abstract = True
 
     CODE_PREFIX = 'GEN'
-    CODE_LENGTH = 12
+    CODE_LENGTH = 9
     MAX_RETRIES = 3
     
     def get_code_prefix(self) -> str:
@@ -22,7 +22,7 @@ class CodeGenerationMixin(models.Model):
     
     def get_code_length(self) -> int:
         """Override this method to provide dynamic lengths."""
-        return getattr(self, 'CODE_LENGTH', 12)
+        return getattr(self, 'CODE_LENGTH', 9)
     
     def generate_code(self) -> str:
         """Generate a unique code for this model."""
