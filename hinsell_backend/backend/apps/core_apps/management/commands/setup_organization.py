@@ -745,8 +745,8 @@ class Command(BaseCommand):
                     recipient=admin_user,
                     defaults={
                         'notification_type': NotificationTemplate.NotificationType.WELCOME,
-                        'channel': Notification.Channel.EMAIL,
-                        'priority': Notification.Priority.NORMAL,
+                        'channel': 'email',
+                        'priority': 'normal',
                         'subject': 'Welcome to Our E-commerce Platform!',
                         'content': f'''
                         <h1>Welcome {admin_user.first_name}!</h1>
@@ -754,7 +754,7 @@ class Command(BaseCommand):
                         <p>Your admin account has been successfully created and you can now manage the system.</p>
                         <p>Best regards,<br>The Platform Team</p>
                         ''',
-                        'status': Notification.Status.SENT,
+                        'status': 'sent',
                         'sent_at': timezone.now(),
                     }
                 )
@@ -797,6 +797,7 @@ class Command(BaseCommand):
                 code="APP",
                 defaults={
                     'name': "Apparel",
+                    'slug': "apparel",
                     'cost_method': StoreGroup.CostMethod.AVERAGE,
                     'stock_account': stock_account,
                     'sales_account': sales_account,
@@ -807,7 +808,8 @@ class Command(BaseCommand):
                 branch=branch,
                 code="ELEC",
                 defaults={
-                    'name': "Electronics",
+                    'name': "The Prophet's birthday",
+                    'slug': "the-propthat-birthday",
                     'cost_method': StoreGroup.CostMethod.AVERAGE,
                     'stock_account': stock_account,
                     'sales_account': sales_account,
@@ -861,7 +863,7 @@ class Command(BaseCommand):
                     'offer_type': Offer.OfferType.DISCOUNT,
                     'discount_percentage': Decimal('20.00'),
                     'start_date': timezone.now(),
-                    'end_date': timezone.now() + timezone.timedelta(days=30),
+                    'end_date': timezone.now() + timezone.timedelta(days=30), 
                     'is_active': True,
                     'max_uses': 1000,
                     'current_uses': 0,
