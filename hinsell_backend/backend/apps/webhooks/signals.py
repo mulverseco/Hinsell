@@ -59,8 +59,7 @@ def item_webhook_events(sender, instance, created, **kwargs):
     try:
         event_data = {
             'item_id': str(instance.id),
-            'item_code': instance.item_code,
-            'item_name': instance.item_name,
+            'item_name': instance.name,
             'item_type': instance.item_type,
             'is_active': instance.is_active,
             'branch_id': instance.branch_id,
@@ -95,8 +94,7 @@ def inventory_balance_webhook_events(sender, instance, created, **kwargs):
         if instance.item.reorder_level > 0 and instance.available_quantity <= instance.item.reorder_level:
             event_data = {
                 'item_id': str(instance.item.id),
-                'item_code': instance.item.item_code,
-                'item_name': instance.item.item_name,
+                'item_name': instance.item.name,
                 'current_quantity': float(instance.available_quantity),
                 'reorder_level': float(instance.item.reorder_level),
                 'branch_id': instance.branch_id,
@@ -116,8 +114,7 @@ def inventory_balance_webhook_events(sender, instance, created, **kwargs):
         if instance.is_expired():
             event_data = {
                 'item_id': str(instance.item.id),
-                'item_code': instance.item.item_code,
-                'item_name': instance.item.item_name,
+                'item_name': instance.item.name,
                 'quantity': float(instance.available_quantity),
                 'branch_id': instance.branch_id,
                 'location': instance.location,
@@ -146,7 +143,7 @@ def transaction_webhook_events(sender, instance, created, **kwargs):
             'transaction_type': instance.transaction_type.type_name,
             'status': instance.status,
             'total_amount': float(instance.total_amount),
-            'currency': instance.currency.currency_code,
+            'currency': instance.currency.code,
             'transaction_date': instance.transaction_date.isoformat(),
             'branch_id': instance.branch_id,
         }

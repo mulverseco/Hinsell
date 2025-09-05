@@ -865,6 +865,7 @@ class Command(BaseCommand):
             now = timezone.now()
             end = now + timezone.timedelta(days=60)
             print(f"now type: {type(now)}, End type: {type(end)}")
+            
             # Create sample offers
             percentage_offer, _ = Offer.objects.get_or_create(
                 branch=branch,
@@ -880,7 +881,7 @@ class Command(BaseCommand):
                     'current_uses': 0,
                 }
             )
-
+            
             fixed_offer, _ = Offer.objects.get_or_create(
                 branch=branch,
                 code="WELCOME10",
@@ -895,7 +896,7 @@ class Command(BaseCommand):
                     'current_uses': 0,
                 }
             )
-
+            
             # Create sample coupons
             summer_coupon, _ = Coupon.objects.get_or_create(
                 branch=branch,
@@ -912,7 +913,7 @@ class Command(BaseCommand):
                     'min_order_amount': Decimal('50.00'),
                 }
             )
-
+            
             welcome_coupon, _ = Coupon.objects.get_or_create(
                 branch=branch,
                 code="WELCOME2024",
@@ -928,7 +929,7 @@ class Command(BaseCommand):
                     'min_order_amount': Decimal('25.00'),
                 }
             )
-
+            
             # Create sample campaign
             summer_campaign, _ = Campaign.objects.get_or_create(
                 branch=branch,
@@ -944,7 +945,7 @@ class Command(BaseCommand):
                     'content': "Get ready for summer with our amazing deals! Use code SUMMER2024 for 20% off your order.",
                 }
             )
-
+            
             # Create sample reviews for products
             items = Item.objects.filter(branch=branch)
             if items.exists():
@@ -965,21 +966,25 @@ class Command(BaseCommand):
                         'is_verified_purchase': False,
                     },
                 ]
-
                 for item in items[:3]:  # Add reviews to first 3 items
                     for i, review_data in enumerate(sample_reviews):
-                        ItemReview.objects.get_or_create(
-                            item=item,
-                            user=admin_user,
-                            rating=review_data['rating'],
-                            defaults={
-                                'comment': review_data['comment'],
-                                'is_verified_purchase': review_data['is_verified_purchase'],
-                            }
-                        )
-
+                        try:
+                            ItemReview.objects.get_or_create(
+                                item=item,
+                                user=admin_user,
+                                rating=review_data['rating'],
+                                defaults={
+                                    'comment': review_data['comment'],
+                                    'is_verified_purchase': review_data['is_verified_purchase'],
+                                }
+                            )
+                        except Exception as e:
+                            logger.warning(f"Could not create review for item {item.id}: {str(e)}")
+                            continue
+                            
         except Exception as e:
             logger.error(f"Error creating sample coupons and reviews: {str(e)}")
+            logger.error(f"Error details: {traceback.format_exc()}")
 
     def create_sample_t_shirt(self, branch, item_group, currency):
         """Create a sample T-shirt product"""
