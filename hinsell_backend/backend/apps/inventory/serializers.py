@@ -3,10 +3,11 @@ from django.utils import timezone
 from django.db.models import Avg, Count, Window, F, RowNumber
 from django.db.models.functions import DenseRank
 from apps.inventory.models import (
-    StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, ItemBarcode, ItemReview,
+    StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, ItemBarcode,
     InventoryBalance
 )
 from apps.shared.serializers import MediaSerializer
+from apps.hinsell.serializers import ItemReviewSerializer
 
 class StoreGroupSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,11 +52,6 @@ class InventoryBalanceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InventoryBalance
-        fields = '__all__'
-
-class ItemReviewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ItemReview
         fields = '__all__'
 
 class SimilarItemResponseSerializer(serializers.ModelSerializer):

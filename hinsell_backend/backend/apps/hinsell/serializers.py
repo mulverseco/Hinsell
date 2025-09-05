@@ -1,6 +1,12 @@
 from rest_framework import serializers
-from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
+from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign,ItemReview
 from apps.shared.serializers import MediaSerializer
+
+
+class ItemReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ItemReview
+        fields = '__all__'
 
 class OfferSerializer(serializers.ModelSerializer):
     media = MediaSerializer(many=True, read_only=True)

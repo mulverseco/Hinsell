@@ -1,6 +1,7 @@
 from django.contrib import admin
+from apps.hinsell.models import ItemReview
 from apps.inventory.models import (
-    StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, ItemBarcode, ItemReview,
+    StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, ItemBarcode,
     InventoryBalance
 )
 

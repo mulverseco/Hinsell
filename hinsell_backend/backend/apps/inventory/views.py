@@ -7,18 +7,16 @@ from apps.core_apps.general import BaseViewSet
 from apps.core_apps.permissions import HasRolePermission
 from apps.inventory.services.similarity_service import ItemSimilarityService
 from apps.inventory.models import (
-    StoreGroup, ItemGroup, Item, ItemUnit, ItemVariant, ItemBarcode, InventoryBalance,
-    ItemReview
+    StoreGroup, ItemGroup, Item, ItemUnit, ItemVariant, ItemBarcode, InventoryBalance
 )
-from apps.hinsell.models import Offer, Coupon, UserCoupon, Campaign
+from apps.hinsell.models import ItemReview, Offer, Coupon, UserCoupon, Campaign
 from apps.hinsell.serializers import (
-    OfferSerializer, CouponSerializer, UserCouponSerializer, CampaignSerializer
+    OfferSerializer, CouponSerializer, UserCouponSerializer, CampaignSerializer,ItemReviewSerializer
 )
 from apps.inventory.serializers import (
     StoreGroupSerializer, ItemGroupSerializer, ItemSerializer,
     ItemUnitSerializer, ItemBarcodeSerializer, InventoryBalanceSerializer,
-    SimilarItemResponseSerializer, ItemVariantSerializer,
-    ItemReviewSerializer
+    SimilarItemResponseSerializer, ItemVariantSerializer
 )
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
