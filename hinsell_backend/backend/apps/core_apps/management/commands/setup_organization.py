@@ -35,8 +35,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--company-name', type=str, required=True, help='Company name')
-        parser.add_argument('--admin-email', type=str, required=True, help='Admin user email')
-        parser.add_argument('--admin-password', type=str, required=True, help='Admin user password (simple passwords allowed)')
+        parser.add_argument('--admin_email', type=str, required=True, help='Admin user email')
+        parser.add_argument('--admin_password', type=str, required=True, help='Admin user password (simple passwords allowed)')
         parser.add_argument('--country-code', type=str, default='US', help='Country code for currency')
         parser.add_argument('--fiscal-year', type=int, default=date.today().year, help='Current fiscal year')
         parser.add_argument('--create-sample-data', action='store_true', help='Create sample products and categories')
@@ -73,7 +73,7 @@ class Command(BaseCommand):
             payment_methods = self.create_payment_methods(branch, accounts)
             self.stdout.write(f'Created/found {len(payment_methods)} payment methods')
 
-            admin_user = self.create_admin_user(options['admin_email'], options['admin-password'], branch)
+            admin_user = self.create_admin_user(options['admin_email'], options['admin_password'], branch)
             self.stdout.write(f'Created/found admin user: {admin_user.email}')
 
             notification_templates = self.create_notification_templates(branch)
