@@ -39,7 +39,7 @@ class Command(BaseCommand):
         parser.add_argument('--admin_password', type=str, required=True, help='Admin user password (simple passwords allowed)')
         parser.add_argument('--country-code', type=str, default='US', help='Country code for currency')
         parser.add_argument('--fiscal-year', type=int, default=date.today().year, help='Current fiscal year')
-        parser.add_argument('--create-sample-data', action='store_true', help='Create sample products and categories')
+        parser.add_argument('--create_sample_data', action='store_true', help='Create sample products and categories')
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -79,7 +79,7 @@ class Command(BaseCommand):
             notification_templates = self.create_notification_templates(branch)
             self.stdout.write(f'Created/found {len(notification_templates)} notification templates')
 
-            if options['create-sample-data']:
+            if options['create_sample_data']:
                 self.create_sample_data(branch, currencies[0])
                 self.create_sample_coupons_and_reviews(branch, admin_user)
                 self.create_sample_notifications(branch, admin_user, notification_templates)
