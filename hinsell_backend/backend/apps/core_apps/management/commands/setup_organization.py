@@ -843,7 +843,7 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error(f"Error creating sample data: {str(e)}")
 
-    def create_sample_coupons_and_reviews(self, self, branch, admin_user):
+    def create_sample_coupons_and_reviews(self, branch, admin_user):
         """Create sample coupons, offers, campaigns, and reviews"""
         try:
             # Create sample offers
