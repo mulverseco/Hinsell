@@ -6,6 +6,7 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.contrib.auth.hashers import make_password
 
 from apps.organization.models import Company, Branch
 from apps.accounting.models import (
@@ -35,7 +36,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--company-name', type=str, required=True, help='Company name')
         parser.add_argument('--admin-email', type=str, required=True, help='Admin user email')
-        parser.add_argument('--admin-password', type=str, required=True, help='Admin user password')
+        parser.add_argument('--admin-password', type=str, required=True, help='Admin user password (simple passwords allowed)')
         parser.add_argument('--country-code', type=str, default='US', help='Country code for currency')
         parser.add_argument('--fiscal-year', type=int, default=date.today().year, help='Current fiscal year')
         parser.add_argument('--create-sample-data', action='store_true', help='Create sample products and categories')
@@ -373,7 +374,6 @@ class Command(BaseCommand):
                     'use_expire_date': True,
                     'use_batch_no': True,
                     'use_barcode': True,
-                    'use_multi_currency': True,
                     'city': 'Main City',
                     'country': 'United States',
                 }
@@ -597,7 +597,7 @@ class Command(BaseCommand):
         return accounts
 
     def create_admin_user(self, email, password, branch):
-        """Create or fetch the admin user for the organization"""
+        """Create or fetch the admin user for the organization, bypassing password complexity validation"""
         try:
             user, created = User.objects.get_or_create(
                 email=email,
@@ -613,12 +613,10 @@ class Command(BaseCommand):
             )
             if created:
                 try:
-                    user.set_password(password)
+                    # Directly set the password hash to bypass validation
+                    user.password = make_password(password)
                     user.save()
                     self.stdout.write(f"Created new admin user: {email}")
-                except ValidationError as ve:
-                    logger.error(f"Password validation failed for admin user {email}: {str(ve)}")
-                    raise ValueError(f"Password validation failed: {str(ve)}")
                 except Exception as e:
                     logger.error(f"Error setting password for new admin user {email}: {str(e)}\n{traceback.format_exc()}")
                     raise ValueError(f"Failed to set password for new admin user: {str(e)}")
@@ -648,7 +646,6 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error(f"Error in create_admin_user for {email}: {str(e)}\n{traceback.format_exc()}")
             raise ValueError(f"Failed to create or update admin user {email}: {str(e)}")
-
 
     # -----------------------
     # Sample data
