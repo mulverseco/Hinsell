@@ -862,6 +862,7 @@ class Command(BaseCommand):
     def create_sample_coupons_and_reviews(self, branch, admin_user):
         """Create sample coupons, offers, campaigns, and reviews"""
         try:
+            now = timezone.now()
             # Create sample offers
             percentage_offer, _ = Offer.objects.get_or_create(
                 branch=branch,
@@ -870,8 +871,8 @@ class Command(BaseCommand):
                     'name': "Summer Sale 20% Off",
                     'offer_type': Offer.OfferType.DISCOUNT,
                     'discount_percentage': Decimal('20.00'),
-                    'start_date': timezone.now(),
-                    'end_date': timezone.now() + timezone.timedelta(days=30), 
+                    'start_date': now,
+                    'end_date': now + timezone.timedelta(days=30),
                     'is_active': True,
                     'max_uses': 1000,
                     'current_uses': 0,
@@ -885,8 +886,8 @@ class Command(BaseCommand):
                     'name': "Welcome $10 Off",
                     'offer_type': Offer.OfferType.DISCOUNT,
                     'discount_amount': Decimal('10.00'),
-                    'start_date': timezone.now(),
-                    'end_date': timezone.now() + timezone.timedelta(days=90),
+                    'start_date': now,
+                    'end_date': now + timezone.timedelta(days=90),
                     'is_active': True,
                     'max_uses': 500,
                     'current_uses': 0,
@@ -901,8 +902,8 @@ class Command(BaseCommand):
                     'name': "Summer Coupon 20%",
                     'coupon_type': Coupon.CouponType.PERCENTAGE,
                     'value': Decimal('20.00'),
-                    'start_date': timezone.now(),
-                    'end_date': timezone.now() + timezone.timedelta(days=30),
+                    'start_date': now,
+                    'end_date': now + timezone.timedelta(days=30),
                     'is_active': True,
                     'max_uses': 100,
                     'current_uses': 0,
@@ -917,8 +918,8 @@ class Command(BaseCommand):
                     'name': "Welcome Coupon $10",
                     'coupon_type': Coupon.CouponType.FIXED,
                     'value': Decimal('10.00'),
-                    'start_date': timezone.now(),
-                    'end_date': timezone.now() + timezone.timedelta(days=90),
+                    'start_date': now,
+                    'end_date': now + timezone.timedelta(days=90),
                     'is_active': True,
                     'max_uses': 50,
                     'current_uses': 0,
