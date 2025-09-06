@@ -1,11 +1,9 @@
-import logging
 from decimal import Decimal
 from django.db import models, transaction
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from django.db.utils import IntegrityError
 from apps.core_apps.general import AuditableModel
 from apps.core_apps.validators import validate_positive_decimal
 from apps.inventory.models import Item, ItemUnit, Media
@@ -13,9 +11,9 @@ from apps.accounting.models import Account, Currency, CostCenter
 from apps.authentication.models import User
 from apps.organization.models import Branch
 from apps.core_apps.services.messaging_service import MessagingService
-from apps.core_apps.utils import generate_unique_code
+from apps.core_apps.utils import Logger
 
-logger = logging.getLogger(__name__)
+logger = Logger(__name__)
 
 class TransactionType(AuditableModel):
     """Define different types of transactions in the system."""
