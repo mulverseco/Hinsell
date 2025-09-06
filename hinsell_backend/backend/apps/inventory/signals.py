@@ -1,4 +1,3 @@
-from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from apps.hinsell.models import ItemReview
@@ -11,19 +10,14 @@ logger = Logger(__name__)
 @receiver(post_save, sender=ItemReview)
 def update_item_rating(sender, instance, created, **kwargs):
     if created:
-        try:
-            with transaction.atomic():
-                item = instance.item
-                total_ratings = item.review_count + 1
-                current_total = item.average_rating * item.review_count
-                new_average = (current_total + Decimal(str(instance.rating))) / total_ratings
-                item.average_rating = round(new_average, 2)
-                item.review_count = total_ratings
-                item.save(update_fields=['average_rating', 'review_count'])
-                logger.info(f"Updated rating for item {item.name}", extra={'item_id': item.id})
-        except Exception as e:
-            logger.error(f"Error updating rating for item {instance.item.id}: {str(e)}", 
-                        extra={'item_id': instance.item.id}, exc_info=True)
+        item = instance.item
+        total_ratings = item.review_count + 1
+        current_total = item.average_rating * item.review_count
+        new_average = (current_total + Decimal(str(instance.rating))) / total_ratings
+        item.average_rating = round(new_average, 2)
+        item.review_count = total_ratings
+        item.save(update_fields=['average_rating', 'review_count'])
+        logger.info(f"Updated rating for item {item.name}", extra={'item_id': item.id})
 
 @receiver(post_save, sender=InventoryBalance)
 def check_inventory_balance(sender, instance, **kwargs):

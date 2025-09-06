@@ -385,9 +385,9 @@ class Item(AuditableModel):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(markup_percentage__gte=0) & models.Q(markup_percentage__lte=1000),
-                name='item_valid_markup_percentage'
-            ),
+                    check=models.Q(markup_percentage__gte=0) & models.Q(markup_percentage__lte=1000),
+                    name='item_valid_markup_percentage'
+                ),
             models.CheckConstraint(
                 check=models.Q(discount_percentage__gte=0) & models.Q(discount_percentage__lte=100),
                 name='item_valid_discount_percentage'
