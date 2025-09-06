@@ -1,7 +1,8 @@
 """
 Django signals for triggering webhook events.
 """
-import logging
+
+from django.db import transaction
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
@@ -9,8 +10,9 @@ from apps.authentication.models import User
 from apps.inventory.models import Item, InventoryBalance
 from apps.transactions.models import TransactionHeader
 from apps.webhooks.services import trigger_webhook_event
+from apps.core_apps.utils import Logger
 
-logger = logging.getLogger(__name__)
+logger = Logger(__name__)
 
 
 @receiver(post_save, sender=User)
@@ -55,33 +57,37 @@ def user_webhook_events(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Item)
 def item_webhook_events(sender, instance, created, **kwargs):
-    try:
-        event_data = {
-            'item_id': str(instance.id),
-            'item_name': instance.name,
-            'item_type': instance.item_type,
-            'is_active': instance.is_active,
-            'branch_id': instance.branch_id,
-        }
-        
-        if created:
-            event_data['created_at'] = instance.created_at.isoformat() if instance.created_at else None
-            trigger_webhook_event(
-                event_type='inventory.item.created',
-                event_data=event_data,
-                branch_id=instance.branch_id,
-                source_object=instance
-            )
-        else:
-            event_data['updated_at'] = instance.updated_at.isoformat() if instance.updated_at else None
-            trigger_webhook_event(
-                event_type='inventory.item.updated',
-                event_data=event_data,
-                branch_id=instance.branch_id,
-                source_object=instance
-            )
-    except Exception as e:
-        logger.error(f"Error triggering item webhook event: {e}")
+    def dispatch_webhook():
+        try:
+            event_data = {
+                'item_id': str(instance.id),
+                'item_name': instance.name,
+                'item_type': instance.item_type,
+                'is_active': instance.is_active,
+                'branch_id': instance.branch_id,
+            }
+            
+            if created:
+                event_data['created_at'] = instance.created_at.isoformat() if instance.created_at else None
+                trigger_webhook_event(
+                    event_type='inventory.item.created',
+                    event_data=event_data,
+                    branch_id=instance.branch_id,
+                    source_object=instance
+                )
+            else:
+                event_data['updated_at'] = instance.updated_at.isoformat() if instance.updated_at else None
+                trigger_webhook_event(
+                    event_type='inventory.item.updated',
+                    event_data=event_data,
+                    branch_id=instance.branch_id,
+                    source_object=instance
+                )
+        except Exception as e:
+            logger.error(f"Error triggering item webhook event: {e}")
+
+    # Defer webhook dispatch until transaction is committed
+    transaction.on_commit(dispatch_webhook)
 
 
 @receiver(post_save, sender=InventoryBalance)

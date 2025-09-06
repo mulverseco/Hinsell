@@ -1,5 +1,6 @@
 from django.contrib import admin
 from apps.hinsell.models import ItemReview
+from django.core.exceptions import ValidationError
 from apps.inventory.models import (
     StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, ItemBarcode,
     InventoryBalance
@@ -17,58 +18,14 @@ class ItemGroupAdmin(admin.ModelAdmin):
     list_filter = ('group_type', 'is_featured', 'visibility')
     readonly_fields = ('slug',)
 
-from django import forms
-from django.contrib import admin
-from apps.inventory.models import Item
-
-class ItemAdminForm(forms.ModelForm):
-    class Meta:
-        model = Item
-        fields = '__all__'
-
-    def clean_name(self):
-        name = self.cleaned_data.get('name')
-        if not name or not name.strip():
-            raise forms.ValidationError("Name cannot be empty.")
-        return name
-
-    def clean_base_unit(self):
-        base_unit = self.cleaned_data.get('base_unit')
-        if not base_unit or not base_unit.strip():
-            raise forms.ValidationError("Base unit cannot be empty.")
-        return base_unit
-
-    def clean_markup_percentage(self):
-        markup = self.cleaned_data.get('markup_percentage')
-        if markup is not None and (markup < 0 or markup > 1000):
-            raise forms.ValidationError("Markup percentage must be between 0 and 1000.")
-        return markup
-
-    def clean_discount_percentage(self):
-        discount = self.cleaned_data.get('discount_percentage')
-        if discount is not None and (discount < 0 or discount > 100):
-            raise forms.ValidationError("Discount percentage must be between 0 and 100.")
-        return discount
-
-    def clean_commission_percentage(self):
-        commission = self.cleaned_data.get('commission_percentage')
-        if commission is not None and (commission < 0 or commission > 100):
-            raise forms.ValidationError("Commission percentage must be between 0 and 100.")
-        return commission
-
-    def clean_vat_percentage(self):
-        vat = self.cleaned_data.get('vat_percentage')
-        if vat is not None and (vat < 0 or vat > 100):
-            raise forms.ValidationError("VAT percentage must be between 0 and 100.")
-        return vat
-
 class ItemAdmin(admin.ModelAdmin):
-    form = ItemAdminForm
-    list_display = ('name', 'item_group', 'item_type', 'average_rating', 'is_featured')
-    search_fields = ('name', 'manufacturer', 'brand')
-    list_filter = ('item_type', 'is_featured', 'visibility')
-    readonly_fields = ('slug', 'average_rating', 'review_count')
-    
+    def save_model(self, request, obj, form, change):
+        try:
+            obj.full_clean()
+            super().save_model(request, obj, form, change)
+        except ValidationError as e:
+            self.message_user(request, f"Validation error: {e}", level='error')
+
 class ItemVariantAdmin(admin.ModelAdmin):
     list_display = ('code', 'item', 'sales_price', 'standard_cost')
     search_fields = ('code',)

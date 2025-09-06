@@ -11,13 +11,13 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import F
-
+from apps.core_apps.utils import logging
 from apps.webhooks.models import (
     WebhookEvent, WebhookEndpoint, WebhookDelivery, 
     WebhookEventLog
 )
 
-logger = logging.getLogger(__name__)
+logger = logging(__name__)
 
 
 class WebhookEventDispatcher:

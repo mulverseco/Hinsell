@@ -9,6 +9,9 @@ from apps.core_apps.validators import validate_positive_decimal, validate_percen
 from apps.organization.models import Branch
 from apps.accounting.models import Account
 from apps.shared.models import Media
+from apps.core_apps.utils import logging
+
+logger = logging(__name__)
 
 class StoreGroup(AuditableModel):
     """Store group for inventory categorization."""
@@ -408,13 +411,17 @@ class Item(AuditableModel):
 
     def clean(self):
         super().clean()
-        if not self.name.strip():
-            raise ValidationError({'name': _('Name cannot be empty.')})
-        if not self.base_unit.strip():
-            raise ValidationError({'base_unit': _('Base unit cannot be empty.')})
-        if self.item_type == Item.ItemType.SERVICE:
-            self.track_expiry = False
-            self.track_batches = False
+        try:
+            if not self.name.strip():
+                raise ValidationError({'name': _('Name cannot be empty.')})
+            if not self.base_unit.strip():
+                raise ValidationError({'base_unit': _('Base unit cannot be empty.')})
+            if self.item_type == Item.ItemType.SERVICE:
+                self.track_expiry = False
+                self.track_batches = False
+        except ValidationError as e:
+            logger.error(f"Validation error for Item {self.id}: {e}")
+            raise
 
     def get_variants(self):
         return self.variants.all()
