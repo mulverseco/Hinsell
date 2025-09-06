@@ -100,14 +100,13 @@ class ItemViewSet(BaseViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == 'list':
-            # Optimize for list view - use select_related for foreign keys
-            # and only() for specific fields without conflicting with select_related
             queryset = queryset.select_related(
-                'branch', 'item_group'
+                'branch', 'item_group', 'item_group__store_group'  # Include item_group__store_group
             ).only(
                 'id', 'name', 'slug', 'item_group_id', 'item_type', 'average_rating',
                 'review_count', 'is_featured', 'visibility', 'branch__branch_name',
-                'item_group__name', 'item_group__code'
+                'item_group__name', 'item_group__code', 'item_group__store_group__id',  # Add store_group fields
+                'item_group__store_group__name', 'item_group__store_group__code'  # Adjust based on fields needed
             ).prefetch_related(
                 Prefetch('variants', queryset=ItemVariant.objects.only(
                     'id', 'sales_price', 'item_id'
