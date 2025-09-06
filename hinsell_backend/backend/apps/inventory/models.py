@@ -9,9 +9,6 @@ from apps.core_apps.validators import validate_positive_decimal, validate_percen
 from apps.organization.models import Branch
 from apps.accounting.models import Account
 from apps.shared.models import Media
-from apps.core_apps.utils import logging
-
-logger = logging(__name__)
 
 class StoreGroup(AuditableModel):
     """Store group for inventory categorization."""
@@ -420,7 +417,6 @@ class Item(AuditableModel):
                 self.track_expiry = False
                 self.track_batches = False
         except ValidationError as e:
-            logger.error(f"Validation error for Item {self.id}: {e}")
             raise
 
     def get_variants(self):
