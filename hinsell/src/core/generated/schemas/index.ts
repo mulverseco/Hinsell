@@ -619,6 +619,7 @@ export type ItemReview = z.infer<typeof ItemReviewSchema>
 export const ItemSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
   media: z.array(MediaSchema).optional(),
+  item_group_name: z.string().min(1, "Minimum length is 1").optional(),
   variants: z.array(ItemVariantSchema).optional(),
   reviews: z.array(ItemReviewSchema).optional(),
   has_active_offers: z.string().optional(),

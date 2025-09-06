@@ -1,9 +1,8 @@
 import type React from "react"
 
 import { Crown, Gift, Users } from "lucide-react"
-import { Item, ItemVariant, Media } from "@/core/generated/schemas"
 import { ProductGallery } from "@/features/product/product-images"
-import { ProductInfo, type ProductInfoProps } from "@/features/product/product-info"
+import { ProductInfo } from "@/features/product/product-info"
 import { ProductReviews } from "@/features/product/product-reviews"
 import { itemsRead } from "@/core/generated/actions"
 import { Breadcrumbs } from "@/components/breadcrumbs"
@@ -42,45 +41,8 @@ export default async function ProductPage(props: ProductPageProps) {
     Volume: item?.variants?.[0]?.volume || 'N/A',
   }
 
-  const offers: ProductInfoProps['offers'] = []
 
-  if (hasDiscount) {
-    offers.push({
-      id: 'discount',
-      type: 'discount',
-      title: `-${discount}% OFF`,
-      variant: 'destructive',
-    })
-  }
-
-  if (item?.is_featured) {
-    offers.push({
-      id: 'bestseller',
-      type: 'bestseller',
-      title: 'Best Seller',
-      icon: <Crown className="h-4 w-4" />,
-    })
-  }
-
-  if (freeShipping) {
-    offers.push({
-      id: 'shipping',
-      type: 'shipping',
-      title: 'Free Shipping',
-      icon: <Gift className="h-4 w-4" />,
-    })
-  }
-
-  if (item?.allow_bonus) {
-    offers.push({
-      id: 'membership',
-      type: 'membership',
-      title: 'Bonus Eligible',
-      icon: <Users className="h-4 w-4" />,
-    })
-  }
-
-  const mockReviews: any[] = [] // Replace with real reviews fetch if available
+  const mockReviews: any[] = []
 
   return (
     <div className="min-h-screen bg-background">

@@ -33,7 +33,7 @@ export function ItemCard({
 }: ItemCardProps) {
   const [selectedVariant, setSelectedVariant] = useState<ItemVariant | undefined>(item.variants?.[0])
   const [selectedUnit, setSelectedUnit] = useState<ItemUnit | undefined>(
-    selectedVariant?.units?.find((u) => u.is_default) || selectedVariant?.units?.[0]
+    
   )
 
   const price = selectedVariant?.sales_price || selectedVariant?.standard_cost

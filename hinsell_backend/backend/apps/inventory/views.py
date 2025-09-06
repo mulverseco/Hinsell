@@ -104,16 +104,22 @@ class ItemViewSet(BaseViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == 'list':
-            # Optimize for list view
-            queryset = queryset.only(
-                'id', 'name', 'slug', 'item_group', 'item_type', 'average_rating',
-                'review_count', 'is_featured', 'visibility'
+            # Optimize for list view - use select_related for foreign keys
+            # and only() for specific fields without conflicting with select_related
+            queryset = queryset.select_related(
+                'branch', 'item_group'
+            ).only(
+                'id', 'name', 'slug', 'item_group_id', 'item_type', 'average_rating',
+                'review_count', 'is_featured', 'visibility', 'branch__branch_name',
+                'item_group__name', 'item_group__code'
             ).prefetch_related(
-                Prefetch('variants', queryset=ItemVariant.objects.only('id', 'sales_price'), to_attr='cached_variants')
+                Prefetch('variants', queryset=ItemVariant.objects.only(
+                    'id', 'sales_price', 'item_id'
+                ), to_attr='cached_variants')
             )
         return queryset
 
-    @method_decorator(cache_page(60 * 5))  # Cache for 5 minutes, as items may change more frequently
+    @method_decorator(cache_page(60 * 5))
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
