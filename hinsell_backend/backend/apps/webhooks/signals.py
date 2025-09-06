@@ -55,7 +55,6 @@ def user_webhook_events(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Item)
 def item_webhook_events(sender, instance, created, **kwargs):
-    """Trigger webhook events for item changes."""
     try:
         event_data = {
             'item_id': str(instance.id),
@@ -81,7 +80,6 @@ def item_webhook_events(sender, instance, created, **kwargs):
                 branch_id=instance.branch_id,
                 source_object=instance
             )
-            
     except Exception as e:
         logger.error(f"Error triggering item webhook event: {e}")
 

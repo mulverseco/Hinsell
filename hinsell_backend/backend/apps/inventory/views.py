@@ -101,12 +101,12 @@ class ItemViewSet(BaseViewSet):
         queryset = super().get_queryset()
         if self.action == 'list':
             queryset = queryset.select_related(
-                'branch', 'item_group', 'item_group__store_group'  # Include item_group__store_group
+                'branch', 'item_group', 'item_group__store_group'
             ).only(
                 'id', 'name', 'slug', 'item_group_id', 'item_type', 'average_rating',
                 'review_count', 'is_featured', 'visibility', 'branch__branch_name',
-                'item_group__name', 'item_group__code', 'item_group__store_group__id',  # Add store_group fields
-                'item_group__store_group__name', 'item_group__store_group__code'  # Adjust based on fields needed
+                'item_group__name', 'item_group__code', 'item_group__store_group__id',
+                'item_group__store_group__name', 'item_group__store_group__code'
             ).prefetch_related(
                 Prefetch('variants', queryset=ItemVariant.objects.only(
                     'id', 'sales_price', 'item_id'

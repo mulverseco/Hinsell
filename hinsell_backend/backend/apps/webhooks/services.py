@@ -131,9 +131,6 @@ class WebhookEventDispatcher:
         branch_id: int,
         source_object: Any = None
     ) -> WebhookEventLog:
-        """Create event log record."""
-        
-        # Get content type and object ID if source object provided
         source_content_type = None
         source_object_id = None
         
