@@ -73,11 +73,7 @@ class ItemGroupViewSet(BaseViewSet):
 
 class ItemViewSet(BaseViewSet):
     """ViewSet for Item model."""
-    queryset = Item.objects.all().select_related(
-        'branch', 'item_group', 'item_group__store_group'
-    ).prefetch_related(
-        'media', 'variants', 'variants__inventory_balances', 'reviews', 'offers', 'coupons'
-    )
+    queryset = Item.objects.select_related('item_group__store_group')
     serializer_class = ItemSerializer
     logger_name = 'inventory.item'
     
