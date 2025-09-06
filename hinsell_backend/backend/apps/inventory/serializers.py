@@ -89,11 +89,9 @@ class ItemSerializer(serializers.ModelSerializer):
         return obj.review_count > avg_reviews * 1.5
 
     def get_is_best_selling(self, obj):
-        # Placeholder: top 10% by rating * reviews; for efficiency, precompute
-        return obj.average_rating >= 4.0 and obj.review_count > 50  # Adjust based on data
+        return obj.average_rating >= 4.0 and obj.review_count > 50
 
     def get_group_ranking(self, obj):
-        # Efficient ranking using window function
         ranked_items = Item.objects.filter(item_group=obj.item_group).annotate(
             rank=DenseRank().over(
                 Window(
