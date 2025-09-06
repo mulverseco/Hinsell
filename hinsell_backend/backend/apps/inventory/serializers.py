@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.utils import timezone
-from django.db.models import Avg, Count, Window, F
-from django.db.models.functions.window import RowNumber
+from django.db.models import Avg, Window, F
+from django.db.models import Window
 from django.db.models.functions import DenseRank
 from apps.inventory.models import (
     StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, ItemBarcode,
@@ -93,11 +93,9 @@ class ItemSerializer(serializers.ModelSerializer):
 
     def get_group_ranking(self, obj):
         ranked_items = Item.objects.filter(item_group=obj.item_group).annotate(
-            rank=DenseRank().over(
-                Window(
-                    expression=RowNumber(),
-                    order_by=F('average_rating').desc(nulls_last=True)
-                )
+            rank=Window(
+                expression=DenseRank(),
+                order_by=F('average_rating').desc(nulls_last=True)
             )
         ).values('id', 'rank')
         for item in ranked_items:

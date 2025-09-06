@@ -38,6 +38,7 @@ def check_inventory_balance(balance_id: int):
 @shared_task
 def check_expiries():
     """Periodic task to check and notify near/expired stock."""
+    logger = Logger('inventory.tasks')
     balances = InventoryBalance.objects.filter(expiry_date__isnull=False)
     for balance in balances:
         if balance.is_expired() or balance.is_near_expiry():
