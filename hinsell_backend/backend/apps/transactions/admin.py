@@ -130,7 +130,7 @@ class TransactionHeaderAdmin(admin.ModelAdmin):
 class TransactionDetailAdmin(admin.ModelAdmin):
     list_display = ['header', 'line_number', 'item', 'quantity', 'unit_price', 'line_total']
     list_filter = ['header__transaction_type', 'header__branch']
-    search_fields = ['header__code', 'header__transaction_number', 'item__name', 'batch_number']
+    search_fields = ['header__code', 'header__transaction_number', 'item__item_name', 'batch_number']
     list_select_related = ['header', 'item', 'item_unit']
     autocomplete_fields = ['header', 'item', 'item_unit']
     readonly_fields = ['created_at', 'updated_at', 'created_by', 'updated_by', 'line_total']
