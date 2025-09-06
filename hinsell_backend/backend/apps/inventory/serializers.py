@@ -65,12 +65,13 @@ class SimilarItemResponseSerializer(serializers.ModelSerializer):
 
 class ItemSerializer(serializers.ModelSerializer):
     media = MediaSerializer(many=True, read_only=True)
+    item_group_name = serializers.CharField(source='item_group.name', read_only=True)
     variants = ItemVariantSerializer(many=True, read_only=True)
     reviews = ItemReviewSerializer(many=True, read_only=True)
     has_active_offers = serializers.SerializerMethodField()
     has_active_coupons = serializers.SerializerMethodField()
     is_popular = serializers.SerializerMethodField()
-    is_best_selling = serializers.SerializerMethodField()  # Placeholder; assumes based on reviews since no sales data
+    is_best_selling = serializers.SerializerMethodField()
     group_ranking = serializers.SerializerMethodField()
     current_stock = serializers.SerializerMethodField()
     is_low_stock = serializers.SerializerMethodField()
@@ -84,7 +85,6 @@ class ItemSerializer(serializers.ModelSerializer):
         return obj.coupons.filter(is_active=True, start_date__lte=now, end_date__gte=now).exists()
 
     def get_is_popular(self, obj):
-        # Arbitrary threshold; in production, compute via task and store in cache or field
         avg_reviews = Item.objects.aggregate(avg=Avg('review_count'))['avg'] or 0
         return obj.review_count > avg_reviews * 1.5
 

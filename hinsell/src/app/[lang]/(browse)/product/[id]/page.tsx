@@ -24,27 +24,14 @@ export default async function ProductPage(props: ProductPageProps) {
   const hasDiscount = !!originalPrice && originalPrice > price
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
 
-  const hasColor = item?.variants?.some(v => v.color)
-  const hasSize = item?.variants?.some(v => v.size)
+  const hasColor = item?.variants?.some(v => v.attributes)
 
-  const uniqueColorsCount = new Set(item?.variants?.map(v => v.color)).size
-  const uniqueSizesCount = new Set(item?.variants?.map(v => v.size)).size
 
-  let colors: ItemVariant[] = []
-  let sizes: ItemVariant[] = []
 
-  if (uniqueColorsCount > 1) {
-    colors = item?.variants || []
-  } else if (uniqueSizesCount > 1) {
-    sizes = item?.variants || []
-  } else {
-    // Default to variants for colors if no variation detected
-    colors = item?.variants || []
-  }
 
-  const inStock = !!item?.variants?.length // Assume in stock if variants exist
+  const inStock = !!item?.variants?.length
 
-  const freeShipping = true // Or derive from item if possible
+  const freeShipping = true
 
   const specifications = {
     Brand: item?.brand || 'N/A',
@@ -98,7 +85,7 @@ export default async function ProductPage(props: ProductPageProps) {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8 overflow-hidden">
-        <Breadcrumbs className="mb-8" items={makeBreadcrumbs(item)} />
+        <Breadcrumbs className="mb-8" items={makeBreadcrumbs(item?.item_group_name, item?.item_group, item?.name)} />
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -151,14 +138,13 @@ export default async function ProductPage(props: ProductPageProps) {
   )
 }
 
-function makeBreadcrumbs(item?: Item) {
-  const itemGroup = item?.item_group
+function makeBreadcrumbs(item_group_name?: string,item_group_id?: string,item_name?: string) {
 
   return {
     Home: "/",
-    [itemGroup?.name || "Products"]: itemGroup?.slug
-      ? `/category/${itemGroup?.id}`
+    [item_group_name || "Products"]: item_group_name
+      ? `/category/${item_group_id}`
       : "/search",
-    [item?.name || ""]: "",
+    [item_name || ""]: "",
   }
 }
