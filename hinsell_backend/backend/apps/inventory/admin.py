@@ -1,6 +1,5 @@
 from django.contrib import admin
 from apps.hinsell.models import ItemReview
-from django.core.exceptions import ValidationError
 from apps.inventory.models import (
     StoreGroup, ItemGroup, Item, ItemVariant, ItemUnit, ItemBarcode,
     InventoryBalance
@@ -19,16 +18,10 @@ class ItemGroupAdmin(admin.ModelAdmin):
     readonly_fields = ('slug',)
 
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ['item_name', 'code']
-    search_fields = ['item_name', 'code']
-    list_filter = ['item_name']
-    readonly_fields = ['created_at', 'updated_at', 'created_by', 'updated_by']
-    def save_model(self, request, obj, form, change):
-        try:
-            obj.full_clean()
-            super().save_model(request, obj, form, change)
-        except ValidationError as e:
-            self.message_user(request, f"Validation error: {e}", level='error')
+    list_display = ('name', 'item_group', 'item_type', 'average_rating', 'is_featured')
+    search_fields = ('name', 'manufacturer', 'brand')
+    list_filter = ('item_type', 'is_featured', 'visibility')
+    readonly_fields = ('slug', 'average_rating', 'review_count')
 
 class ItemVariantAdmin(admin.ModelAdmin):
     list_display = ('code', 'item', 'sales_price', 'standard_cost')
