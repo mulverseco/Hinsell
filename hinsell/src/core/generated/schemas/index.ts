@@ -571,6 +571,7 @@ export const ItemUnitSchema = z.object({
 export type ItemUnit = z.infer<typeof ItemUnitSchema>
 export const ItemVariantSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
+  media: z.array(MediaSchema).optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
   is_active: z.boolean().optional(),
@@ -618,28 +619,16 @@ export const ItemReviewSchema = z.object({
 export type ItemReview = z.infer<typeof ItemReviewSchema>
 export const ItemSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
-  media: z.array(MediaSchema).optional(),
+  branch: z.string().uuid("Invalid UUID format"),
+  item_group: z.string().uuid("Invalid UUID format"),
   item_group_name: z.string().min(1, "Minimum length is 1").optional(),
-  variants: z.array(ItemVariantSchema).optional(),
-  reviews: z.array(ItemReviewSchema).optional(),
-  has_active_offers: z.string().optional(),
-  has_active_coupons: z.string().optional(),
-  is_popular: z.string().optional(),
-  is_best_selling: z.string().optional(),
-  group_ranking: z.string().optional(),
-  current_stock: z.string().optional(),
-  is_low_stock: z.string().optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
-  is_active: z.boolean().optional(),
-  is_deleted: z.boolean().optional(),
-  deleted_at: z.string().optional(),
   name: z.string().min(1, "Minimum length is 1").max(200, "Maximum length is 200"),
   slug: z.string().min(1, "Minimum length is 1").regex(/^[-a-zA-Z0-9_]+$/, "Invalid format").optional(),
   item_type: z.enum(["product", "service", "kit"]).optional(),
   base_unit: z.string().min(1, "Minimum length is 1").max(20, "Maximum length is 20"),
   manufacturer: z.string().max(100, "Maximum length is 100").optional(),
   brand: z.string().max(100, "Maximum length is 100").optional(),
+  media: z.array(MediaSchema).optional(),
   meta_title: z.string().max(60, "Maximum length is 60").optional(),
   meta_description: z.string().max(160, "Maximum length is 160").optional(),
   tags: z.string().max(255, "Maximum length is 255").optional(),
@@ -660,10 +649,15 @@ export const ItemSchema = z.object({
   commission_percentage: z.string().optional(),
   vat_percentage: z.string().optional(),
   handling_fee: z.string().optional(),
-  created_by: z.string().uuid("Invalid UUID format").optional(),
-  updated_by: z.string().uuid("Invalid UUID format").optional(),
-  branch: z.string().uuid("Invalid UUID format"),
-  item_group: z.string().uuid("Invalid UUID format")
+  variants: z.array(ItemVariantSchema).optional(),
+  reviews: z.array(ItemReviewSchema).optional(),
+  active_offers: z.string().optional(),
+  active_coupons: z.string().optional(),
+  is_popular: z.string().optional(),
+  is_best_selling: z.string().optional(),
+  group_ranking: z.string().optional(),
+  current_stock: z.string().optional(),
+  is_low_stock: z.string().optional()
 })
 export type Item = z.infer<typeof ItemSchema>
 export const KeyboardShortcutsSchema = z.object({
