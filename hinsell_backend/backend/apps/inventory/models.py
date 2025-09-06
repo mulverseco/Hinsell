@@ -412,7 +412,7 @@ class Item(AuditableModel):
             raise ValidationError({'name': _('Name cannot be empty.')})
         if not self.base_unit.strip():
             raise ValidationError({'base_unit': _('Base unit cannot be empty.')})
-        if self.item_type == ItemType.SERVICE:
+        if self.item_type == Item.ItemType.SERVICE:
             self.track_expiry = False
             self.track_batches = False
 
