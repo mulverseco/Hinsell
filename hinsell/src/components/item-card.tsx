@@ -18,7 +18,7 @@ interface ItemCardProps {
   onAddToCart?: (item: Item, variant?: ItemVariant) => void
   onToggleFavorite?: (item: Item) => void
   isFavorited?: boolean
-  isPopular?: boolean
+  is_best_selling?: string
 }
 
 export function ItemCard({
@@ -29,7 +29,7 @@ export function ItemCard({
   onAddToCart,
   onToggleFavorite,
   isFavorited = false,
-  isPopular = false,
+  is_best_selling = "false",
 }: ItemCardProps) {
   const [selectedVariant, setSelectedVariant] = useState<ItemVariant | undefined>(item.variants?.[0])
   const [selectedUnit, setSelectedUnit] = useState<ItemUnit | undefined>(
@@ -61,7 +61,7 @@ export function ItemCard({
           )}
         >
           <div className="relative aspect-square overflow-hidden rounded-t-2xl">
-            <ItemMedia item={item} />
+            <ItemMedia media={item.media} />
           </div>
 
           <div className="p-4">
@@ -97,9 +97,9 @@ export function ItemCard({
     >
       <Link href={productUrl} className="block">
         <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer">
-          <ItemMedia item={item} />
+          <ItemMedia media={item.media} />
 
-          {isPopular && (
+          {is_best_selling && (
             <div className="absolute top-6 left-6">
               <Badge className="bg-black text-white text-xs font-semibold px-4 py-2 rounded-full border-0 shadow-xl backdrop-blur-sm">
                 Best Seller

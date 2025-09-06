@@ -5,19 +5,19 @@ import { Button } from "@/components/ui/button"
 import { ShoppingCart, Play, Pause } from "lucide-react"
 import Image from "next/image"
 import { useState, useRef } from "react"
-import { Item } from "@/core/generated/schemas"
+import { Media } from "@/core/generated/schemas"
 
 interface ItemMediaProps {
-  item: Item
+  media: Media
   className?: string
 }
 
-export function ItemMedia({ item, className }: ItemMediaProps) {
+export function ItemMedia({ media, className }: ItemMediaProps) {
   const [imageLoading, setImageLoading] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  const primaryMedia = item.media?.[0]
+  const primaryMedia = media?.[0]
   const isVideo =
     primaryMedia?.file?.includes(".mp4") ||
     primaryMedia?.file?.includes(".webm") ||
