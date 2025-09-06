@@ -34,7 +34,6 @@ def check_inventory_balance(balance_id: int):
         logger.error(f"Error checking expiry for balance {balance_id}: {str(e)}", 
                     extra={'balance_id': balance_id, 'action': 'check_expiry'}, exc_info=True)
 
-
 @shared_task
 def check_expiries():
     """Periodic task to check and notify near/expired stock."""

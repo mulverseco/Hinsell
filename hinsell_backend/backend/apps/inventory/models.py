@@ -1,4 +1,4 @@
-from django.db import models, IntegrityError
+from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -474,6 +474,12 @@ class ItemVariant(AuditableModel):
         max_length=50,
         blank=True,
         verbose_name=_("Shelf Location")
+    )
+    media = models.ManyToManyField(
+        Media,
+        blank=True,
+        related_name='item_variant',
+        verbose_name=_("Media")
     )
     weight = models.DecimalField(
         max_digits=10,

@@ -1,4 +1,3 @@
-from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 from django.db import models
@@ -8,13 +7,12 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from apps.core_apps.general import AuditableModel
 from apps.core_apps.validators import validate_percentage
-from apps.core_apps.utils import generate_unique_code, generate_unique_slug, Logger
+from apps.core_apps.utils import generate_unique_slug, Logger
 from apps.authentication.models import User
 from apps.organization.models import Branch
 from apps.inventory.models import Item, ItemGroup, StoreGroup, Media
 from apps.core_apps.services.messaging_service import MessagingService
 from apps.transactions.models import TransactionHeader
-from django.db.utils import IntegrityError
 
 logger = Logger(__name__)
 

@@ -139,10 +139,8 @@ class ItemViewSet(BaseViewSet):
             exclude_out_of_stock = request.query_params.get('exclude_out_of_stock', 'true').lower() == 'true'
             similarity_type = request.query_params.get('type', 'default')
             
-            # Initialize similarity service
             similarity_service = ItemSimilarityService(branch_id=item.branch.id)
             
-            # Get similar items based on type
             if similarity_type == 'trending':
                 similar_items = similarity_service.find_trending_similar_items(
                     item=item,
@@ -160,14 +158,13 @@ class ItemViewSet(BaseViewSet):
                     price_range='premium',
                     limit=limit
                 )
-            else:  # default
+            else:
                 similar_items = similarity_service.find_similar_items(
                     item=item,
                     limit=limit,
                     exclude_out_of_stock=exclude_out_of_stock
                 )
             
-            # Serialize the results
             serializer = SimilarItemResponseSerializer(similar_items, many=True)
             
             result = {
@@ -179,7 +176,7 @@ class ItemViewSet(BaseViewSet):
                 'similar_items': serializer.data,
                 'similarity_type': similarity_type
             }
-            cache.set(cache_key, result, 60 * 10)  # Cache for 10 minutes
+            cache.set(cache_key, result, 60 * 10)
             return Response(result)
             
         except ValueError as e:

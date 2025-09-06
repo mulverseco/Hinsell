@@ -1,4 +1,3 @@
-# apps/inventory/services/similarity_service.py
 from decimal import Decimal
 from django.db.models import Q, Case, When, Value, FloatField, F, Avg
 from django.db.models.functions import Abs
