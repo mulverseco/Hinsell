@@ -1,61 +1,43 @@
-// components/AddToCartButton.tsx
-import * as React from 'react';
-import { Button } from '@/components/ui/button';
-import { ShoppingCart, Loader2 } from 'lucide-react'; 
-import { toast } from 'sonner';
-import { ItemUnit, ItemVariant } from '@/core/generated/schemas';
-import { useECommerceStore } from '@/core/store';
+"use client"
+
+import { ShoppingCart } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { ItemUnit, ItemVariant } from "@/core/generated/schemas"
+import { useECommerceStore } from "@/core/store"
 
 interface AddToCartButtonProps {
-  variant: ItemVariant;
-  quantity?: number;
-  unit: ItemUnit;
-  className?: string;
-  disabled?: boolean;
+  variant: ItemVariant
+  quantity: number
+  selectedUnit?: ItemUnit
+  disabled?: boolean
+  className?: string
 }
 
-const AddToCartButton: React.FC<AddToCartButtonProps> = ({
-  variant,
-  quantity = 1,
-  unit,
-  className,
-  disabled = false,
-}) => {
-  const { addToCart, checkAvailability } = useECommerceStore();
-  const [isLoading, setIsLoading] = React.useState(false);
+export function AddToCartButton({ variant, quantity, selectedUnit, disabled, className }: AddToCartButtonProps) {
+  const { addToCart, checkAvailability } = useECommerceStore()
 
-  const handleAddToCart = async () => {
-    if (disabled) return;
+  const isOutOfStock = !checkAvailability(variant.id!, quantity)
+  const isDisabled = disabled || isOutOfStock || !selectedUnit
 
-    setIsLoading(true);
-    try {
-      if (!checkAvailability(variant.id!, quantity)) {
-        toast.error('Insufficient stock available.');
-        return;
-      }
-      addToCart(variant, quantity, unit);
-      toast.success(`${variant.code || 'Item'} added to cart!`);
-    } catch (error) {
-      toast.error('Failed to add to cart. Please try again.');
-    } finally {
-      setIsLoading(false);
+  const handleAddToCart = () => {
+    if (!selectedUnit || !variant.id) {
+      console.warn("Missing required data for adding to cart")
+      return
     }
-  };
+
+    try {
+      addToCart(variant, quantity, selectedUnit)
+      console.log("Successfully added to cart:", { variant: variant.id, quantity })
+    } catch (error) {
+      console.error("Failed to add to cart:", error)
+    }
+  }
 
   return (
-    <Button
-      onClick={handleAddToCart}
-      disabled={disabled || isLoading}
-      className={`w-full ${className}`}
-    >
-      {isLoading ? (
-        <Loader2 className="h-5 w-5 animate-spin mr-2" />
-      ) : (
-        <ShoppingCart className="h-5 w-5 mr-2" />
-      )}
-      Add to Cart
+    <Button onClick={handleAddToCart} disabled={isDisabled} className={cn("flex items-center gap-2", className)}>
+      <ShoppingCart className="h-4 w-4" />
+      {isOutOfStock ? "Out of Stock" : "Add to Cart"}
     </Button>
-  );
-};
-
-export default AddToCartButton;
+  )
+}

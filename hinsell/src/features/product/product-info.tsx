@@ -1,20 +1,18 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
-import { Heart, Minus, Plus, ShoppingCart, Star, Truck } from "lucide-react"
+import { useState, useMemo } from "react"
+import { Heart, Minus, Plus, Star, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { CTAButton } from "@/components/shared/cta-button"
-
 import { cn } from "@/lib/utils"
-import { ItemVariant, ItemUnit } from "@/core/generated/schemas"
 import { ProductOffers } from "./product-offers"
-import AddToCartButton from "@/components/AddToCartButton"
+import { ItemUnit, ItemVariant } from "@/core/generated/schemas"
+import { useECommerceStore } from "@/core/store"
+import { AddToCartButton } from "@/components/AddToCartButton"
 
 
 interface ProductInfoProps {
@@ -27,6 +25,7 @@ interface ProductInfoProps {
   shortDescription?: string
   colors: ItemVariant[]
   sizes: ItemVariant[]
+  units: ItemUnit[]
   inStock: boolean
   freeShipping?: boolean
   specifications?: Record<string, string>
@@ -53,6 +52,7 @@ export function ProductInfo({
   shortDescription,
   colors,
   sizes,
+  units = [],
   inStock,
   freeShipping = false,
   specifications = {},
@@ -62,38 +62,49 @@ export function ProductInfo({
 }: ProductInfoProps) {
   const [selectedColor, setSelectedColor] = useState(colors[0]?.id || "")
   const [selectedSize, setSelectedSize] = useState(sizes[0]?.id || "")
+  const [selectedUnit, setSelectedUnit] = useState(units[0]?.id || "")
   const [quantity, setQuantity] = useState(1)
   const [isWishlisted, setIsWishlisted] = useState(false)
 
+  const { checkAvailability } = useECommerceStore()
+
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
 
-  const selectedVariant = colors.find(c => c.id === selectedColor) || sizes.find(s => s.id === selectedSize) || undefined
-  const selectedUnit = selectedVariant?.units?.find(u => u.is_default) || selectedVariant?.units?.[0] || undefined
+  const colorVariants = colors.filter((v) => v.attributes?.color)
+  const sizeVariants = sizes.filter((v) => v.attributes?.size)
+
+  const selectedVariant = useMemo(() => {
+    if (selectedColor && selectedSize) {
+      return colors.find((c) => c.id === selectedColor) || sizes.find((s) => s.id === selectedSize)
+    }
+    return colors.find((c) => c.id === selectedColor) || sizes.find((s) => s.id === selectedSize)
+  }, [selectedColor, selectedSize, colors, sizes])
+
+  const selectedUnitObject = units.find((u) => u.id === selectedUnit)
+
+  const isAvailable = selectedVariant ? checkAvailability(selectedVariant.id!, quantity) : false
 
   return (
     <div className="space-y-6">
       {/* Product Title and Rating */}
-      <div className="space-y-3">
-        <p className="text-2xl font-bold leading-tight md:text-2xl text-balance flex items-center gap-2 flex-wrap">
-          {name}
-          <div className="flex items-center gap-1">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    "h-4 w-4",
-                    i < Math.floor(rating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
-                  )}
-                />
-              ))}
-            </div>
-            <span className="text-sm text-muted-foreground">({reviewCount.toLocaleString()})</span>
+      <div className="space-y-3 flex gap-2">
+        <h1 className="text-2xl font-bold leading-tight md:text-2xl text-balance">{name}</h1>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={cn(
+                  "h-4 w-4",
+                  i < Math.floor(rating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
+                )}
+              />
+            ))}
           </div>
-        </p>
-
-        {offers.length > 0 && <ProductOffers offers={offers} />}
+          <span className="text-sm text-muted-foreground">({reviewCount.toLocaleString()})</span>
+        </div>
       </div>
+        {offers.length > 0 && <ProductOffers offers={offers} />}
 
       {/* Price */}
       <div className="space-y-1">
@@ -119,25 +130,27 @@ export function ProductInfo({
       <Separator />
 
       {/* Color Selection */}
-      {colors.length > 0 && (
+      {colorVariants.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-medium">Color:</span>
-            <span className="text-sm text-muted-foreground">{colors.find((c) => c.id === selectedColor)?.color}</span>
+            <span className="text-sm text-muted-foreground">
+              {colorVariants.find((c) => c.id === selectedColor)?.attributes?.color}
+            </span>
           </div>
           <div className="flex gap-2">
-            {colors.map((color) => (
+            {colorVariants.map((variant) => (
               <button
-                key={color.id}
-                onClick={() => setSelectedColor(color.id || "")}
+                key={variant.id}
+                onClick={() => setSelectedColor(variant.id || "")}
                 className={cn(
                   "h-10 w-10 rounded-md border-2 transition-all duration-200 hover:scale-105",
-                  selectedColor === color.id
+                  selectedColor === variant.id
                     ? "border-primary ring-2 ring-primary/20"
                     : "border-muted hover:border-muted-foreground",
                 )}
-                style={{ backgroundColor: color.color || "#000" }}
-                title={color.color}
+                style={{ backgroundColor: variant.attributes?.color || "#000" }}
+                title={variant.attributes?.color}
               />
             ))}
           </div>
@@ -145,71 +158,89 @@ export function ProductInfo({
       )}
 
       {/* Size Selection */}
-      {sizes.length > 0 && (
+      {sizeVariants.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-medium">Size:</span>
             <button className="text-sm text-primary hover:underline font-medium">Size Guide</button>
           </div>
           <div className="grid grid-cols-4 gap-2">
-            {sizes.map((size) => (
+            {sizeVariants.map((variant) => (
               <button
-                key={size.id}
-                onClick={() => setSelectedSize(size.id || "")}
+                key={variant.id}
+                onClick={() => setSelectedSize(variant.id || "")}
                 className={cn(
                   "border rounded-md py-2 px-3 text-sm font-medium transition-all duration-200 hover:scale-105",
-                  selectedSize === size.id
+                  selectedSize === variant.id
                     ? "border-primary bg-primary text-primary-foreground shadow-md"
                     : "border-muted hover:border-muted-foreground hover:bg-muted/50",
                 )}
               >
-                {size.size}
+                {variant.attributes?.size}
               </button>
             ))}
           </div>
-          {!inStock && <p className="text-sm text-destructive font-medium">⚠️ Almost sold out</p>}
+          {!isAvailable && selectedVariant && <p className="text-sm text-destructive font-medium">⚠️ Out of stock</p>}
+        </div>
+      )}
+
+      {/* Unit Selection */}
+      {units.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Unit:</span>
+            <span className="text-sm text-muted-foreground">{selectedUnitObject?.name}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {units.map((unit) => (
+              <button
+                key={unit.id}
+                onClick={() => setSelectedUnit(unit.id || "")}
+                className={cn(
+                  "border rounded-md py-2 px-3 text-sm font-medium transition-all duration-200 hover:scale-105",
+                  selectedUnit === unit.id
+                    ? "border-primary bg-primary text-primary-foreground shadow-md"
+                    : "border-muted hover:border-muted-foreground hover:bg-muted/50",
+                )}
+              >
+                {unit.name}
+                {unit.unit_price && (
+                  <div className="text-xs opacity-75">${Number.parseFloat(unit.unit_price).toFixed(2)}</div>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-          >
+          <Button variant="outline" size="icon" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
             <Minus className="h-4 w-4" />
           </Button>
           <Input
             type="number"
             value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+            onChange={(e) => setQuantity(Math.max(1, Number.parseInt(e.target.value) || 1))}
             className="w-16 text-center"
             min={1}
           />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setQuantity(quantity + 1)}
-          >
+          <Button variant="outline" size="icon" onClick={() => setQuantity(quantity + 1)}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
         <div className="flex gap-3">
-          {selectedVariant && selectedUnit ? (
+          {selectedVariant && selectedUnitObject ? (
             <AddToCartButton
               variant={selectedVariant}
-              unit={selectedUnit}
               quantity={quantity}
-              disabled={!inStock}
+              selectedUnit={selectedUnitObject}
+              disabled={!inStock || !isAvailable}
               className="flex-1 font-bold"
             />
           ) : (
-            <Button
-              className="flex-1"
-              disabled
-            >
-              OUT OF STOCK
+            <Button className="flex-1" disabled>
+              {!selectedVariant ? "SELECT OPTIONS" : !selectedUnitObject ? "SELECT UNIT" : "OUT OF STOCK"}
             </Button>
           )}
           <Button
@@ -222,7 +253,7 @@ export function ProductInfo({
           </Button>
         </div>
 
-        <p className="text-sm text-muted-foreground">Earn up to 10 SHEIN Points calculated at checkout.</p>
+        <p className="text-sm text-muted-foreground">Earn up to 10 points calculated at checkout.</p>
       </div>
 
       <Separator />
@@ -265,7 +296,7 @@ export function ProductInfo({
               <p className="text-sm text-muted-foreground">{returnPolicy}</p>
               <div className="space-y-1 text-sm text-muted-foreground">
                 <p>🔒 Shopping Security</p>
-                <p>📦 Warehouse1 to Puerto Rico</p>
+                <p>📦 Fast Shipping Available</p>
               </div>
             </div>
           </AccordionContent>

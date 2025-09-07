@@ -1,6 +1,6 @@
 import type React from "react"
 
-import { Crown, Gift, Users } from "lucide-react"
+import { Users } from "lucide-react"
 import { ProductGallery } from "@/features/product/product-images"
 import { ProductInfo } from "@/features/product/product-info"
 import { ProductReviews } from "@/features/product/product-reviews"
@@ -17,32 +17,59 @@ export default async function ProductPage(props: ProductPageProps) {
   const { id } = await props.params
   const data = await itemsRead({path:{id:id}})
   const item = data.data
-
-  const price = Number(item?.variants?.[0]?.sales_price || 0)
+  console.log(item)
+const price = Number(item?.variants?.[0]?.sales_price || 0)
   const originalPrice = Number(item?.variants?.[0]?.maximum_price || item?.variants?.[0]?.wholesale_price)
   const hasDiscount = !!originalPrice && originalPrice > price
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
 
-  const hasColor = item?.variants?.some(v => v.attributes)
-
-
-
+  const colors = item?.variants?.filter((v) => v.attributes?.color) || []
+  const sizes = item?.variants?.filter((v) => v.attributes?.size) || []
 
   const inStock = !!item?.variants?.length
-
   const freeShipping = true
 
   const specifications = {
-    Brand: item?.brand || 'N/A',
-    Manufacturer: item?.manufacturer || 'N/A',
-    Type: item?.item_type || 'Product',
-    'Base Unit': item?.base_unit || 'N/A',
-    Weight: item?.variants?.[0]?.weight || 'N/A',
-    Volume: item?.variants?.[0]?.volume || 'N/A',
+    Brand: item?.brand || "N/A",
+    Manufacturer: item?.manufacturer || "N/A",
+    Type: item?.item_type || "Product",
+    "Base Unit": item?.base_unit || "N/A",
+    Weight: item?.variants?.[0]?.weight || "N/A",
+    Volume: item?.variants?.[0]?.volume || "N/A",
   }
 
-
-  const mockReviews: any[] = []
+  const offers = [
+    ...(hasDiscount
+      ? [
+          {
+            id: "discount-1",
+            type: "discount" as const,
+            title: `${discount}% OFF`,
+            description: "Limited time offer",
+          },
+        ]
+      : []),
+    ...(item?.is_featured
+      ? [
+          {
+            id: "featured-1",
+            type: "bestseller" as const,
+            title: "Bestseller",
+            description: "Popular choice",
+          },
+        ]
+      : []),
+    ...(freeShipping
+      ? [
+          {
+            id: "shipping-1",
+            type: "shipping" as const,
+            title: "Free Shipping",
+            description: "On orders over $49",
+          },
+        ]
+      : []),
+  ]
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,8 +96,7 @@ export default async function ProductPage(props: ProductPageProps) {
               inStock={inStock}
               freeShipping={freeShipping}
               specifications={specifications}
-              offers={offers}
-            />
+              offers={offers} units={[]}            />
           </div>
         </div>
 
@@ -78,7 +104,7 @@ export default async function ProductPage(props: ProductPageProps) {
           <ProductReviews
             rating={Number.parseFloat(item?.average_rating || "0")}
             reviewCount={item?.review_count || 0}
-            reviews={mockReviews}
+            reviews={item?.reviews || []}
           />
         </div>
       </div>
@@ -100,13 +126,10 @@ export default async function ProductPage(props: ProductPageProps) {
   )
 }
 
-function makeBreadcrumbs(item_group_name?: string,item_group_id?: string,item_name?: string) {
-
+function makeBreadcrumbs(item_group_name?: string, item_group_id?: string, item_name?: string) {
   return {
     Home: "/",
-    [item_group_name || "Products"]: item_group_name
-      ? `/category/${item_group_id}`
-      : "/search",
+    [item_group_name || "Products"]: item_group_name ? `/category/${item_group_id}` : "/search",
     [item_name || ""]: "",
   }
 }

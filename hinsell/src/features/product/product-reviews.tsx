@@ -1,172 +1,132 @@
 "use client"
 
-import { Star, ThumbsUp } from "lucide-react"
+import { Star, ThumbsUp, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-
-interface Review {
-  id: string
-  author: string
-  rating: number
-  date: string
-  title: string
-  content: string
-  helpful: number
-  verified: boolean
-  size?: string
-  color?: string
-  fit?: "Small" | "True to Size" | "Large"
-}
+import { ItemReview } from "@/core/generated/schemas"
 
 interface ProductReviewsProps {
   rating: number
   reviewCount: number
-  reviews: Review[]
+  reviews: ItemReview[]
 }
 
 export function ProductReviews({ rating, reviewCount, reviews }: ProductReviewsProps) {
-  const ratingDistribution = [
-    { stars: 5, count: 850, percentage: 85 },
-    { stars: 4, count: 100, percentage: 10 },
-    { stars: 3, count: 30, percentage: 3 },
-    { stars: 2, count: 15, percentage: 1.5 },
-    { stars: 1, count: 5, percentage: 0.5 },
-  ]
-
-  const fitData = [
-    { label: "Small", percentage: 4 },
-    { label: "True to Size", percentage: 90 },
-    { label: "Large", percentage: 6 },
-  ]
+  // Calculate rating distribution
+  const ratingDistribution = [5, 4, 3, 2, 1].map((stars) => {
+    const count = reviews.filter((review) => review.rating === stars).length
+    const percentage = reviewCount > 0 ? (count / reviewCount) * 100 : 0
+    return { stars, count, percentage }
+  })
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Customer Reviews</h2>
+      <div>
+        <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
 
-        <div className="flex items-center gap-6">
-          <div className="text-center">
-            <div className="text-4xl font-bold">{rating}</div>
-            <div className="flex items-center justify-center">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    "h-4 w-4",
-                    i < Math.floor(rating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
-                  )}
-                />
-              ))}
-            </div>
-            <div className="text-sm text-muted-foreground mt-1">{reviewCount.toLocaleString()} reviews</div>
-          </div>
-
-          <div className="flex-1 space-y-2">
-            {ratingDistribution.map((item) => (
-              <div key={item.stars} className="flex items-center gap-2 text-sm">
-                <span className="w-8">{item.stars}★</span>
-                <Progress value={item.percentage} className="flex-1 h-2" />
-                <span className="w-8 text-muted-foreground">{item.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Fit Information */}
-        <div className="space-y-2">
-          <h3 className="font-medium">Overall Fit:</h3>
-          <div className="flex gap-8">
-            {fitData.map((fit) => (
-              <div key={fit.label} className="text-center">
-                <div className="text-sm font-medium">{fit.label}</div>
-                <div className="text-xs text-muted-foreground">{fit.percentage}%</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Filter and Sort */}
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm">
-          All Reviews
-        </Button>
-        <Button variant="outline" size="sm">
-          Image
-        </Button>
-        <Button variant="outline" size="sm">
-          5 Stars (850)
-        </Button>
-        <Button variant="outline" size="sm">
-          4 Stars (100)
-        </Button>
-        <Button variant="outline" size="sm">
-          Verified Purchase
-        </Button>
-      </div>
-
-      {/* Reviews List */}
-      <div className="space-y-6">
-        {reviews.map((review) => (
-          <div key={review.id} className="space-y-3 pb-6 border-b last:border-b-0">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{review.author}</span>
-                  {review.verified && (
-                    <Badge variant="secondary" className="text-xs">
-                      Verified Purchase
-                    </Badge>
-                  )}
+        {/* Rating Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="text-4xl font-bold">{rating.toFixed(1)}</div>
+              <div>
+                <div className="flex items-center mb-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={cn(
+                        "h-5 w-5",
+                        i < Math.floor(rating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
+                      )}
+                    />
+                  ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex">
+                <p className="text-sm text-muted-foreground">Based on {reviewCount} reviews</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {ratingDistribution.map(({ stars, count, percentage }) => (
+              <div key={stars} className="flex items-center gap-2 text-sm">
+                <span className="w-8">{stars}★</span>
+                <Progress value={percentage} className="flex-1 h-2" />
+                <span className="w-8 text-right">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Separator />
+      </div>
+
+      {/* Individual Reviews */}
+      <div className="space-y-6">
+        {reviews.length > 0 ? (
+          reviews.map((review) => (
+            <Card key={review.id}>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                      <User className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{review.is_anonymous ? "Anonymous" : "Verified Customer"}</p>
+                      {review.is_verified_purchase && (
+                        <Badge variant="secondary" className="text-xs">
+                          Verified Purchase
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
                         className={cn(
-                          "h-3 w-3",
+                          "h-4 w-4",
                           i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
                         )}
                       />
                     ))}
                   </div>
-                  <span className="text-xs text-muted-foreground">{review.date}</span>
                 </div>
-              </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {review.comment && <p className="text-sm leading-relaxed">{review.comment}</p>}
 
-              {(review.size || review.color || review.fit) && (
-                <div className="text-xs text-muted-foreground space-y-1">
-                  {review.size && <div>Size: {review.size}</div>}
-                  {review.color && <div>Color: {review.color}</div>}
-                  {review.fit && <div>Fit: {review.fit}</div>}
+                {review.fit && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium">Fit:</span>
+                    <Badge variant="outline" className="text-xs">
+                      {review.fit.replace("_", " ")}
+                    </Badge>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-xs text-muted-foreground">
+                    {review.created_at && new Date(review.created_at).toLocaleDateString()}
+                  </p>
+                  <Button variant="ghost" size="sm" className="h-8 px-2">
+                    <ThumbsUp className="h-3 w-3 mr-1" />
+                    <span className="text-xs">Helpful ({review.helpful_votes || 0})</span>
+                  </Button>
                 </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">{review.title}</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">{review.content}</p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="h-8 px-2">
-                <ThumbsUp className="h-3 w-3 mr-1" />
-                Helpful ({review.helpful})
-              </Button>
-            </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No reviews yet. Be the first to review this product!</p>
+            <Button className="mt-4">Write a Review</Button>
           </div>
-        ))}
-      </div>
-
-      <div className="text-center">
-        <Button variant="outline">Load More Reviews</Button>
+        )}
       </div>
     </div>
   )

@@ -4,8 +4,8 @@ import { useState } from "react"
 import { Expand } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Media } from "@/core/generated/schemas"
 import Image from "next/image"
+import { Media } from "@/core/generated/schemas"
 
 interface ProductGalleryProps {
   images?: Media[]
@@ -14,22 +14,6 @@ interface ProductGalleryProps {
 
 export function ProductGallery({ images = [], productName }: ProductGalleryProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-
-
-  console.log("ProductGallery images:", images);
-  // if (!images || images.length === 0) {
-  //   return (
-  //     <div className="relative flex-1 aspect-square overflow-hidden rounded-lg bg-muted">
-  //       <Image
-  //         src={`/placeholder.svg?height=600&width=600&query=${productName}`}
-  //         alt={productName}
-  //         fill
-  //         className="object-cover"
-  //         unoptimized
-  //       />
-  //     </div>
-  //   )
-  // }
 
   return (
     <div className="flex gap-4">
