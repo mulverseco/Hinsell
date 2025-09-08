@@ -1,8 +1,8 @@
 import { type ChangeEvent, type KeyboardEvent, useState } from "react"
 
-import { Button } from "components/ui/button-old"
-import { Input, InputProps } from "components/ui/input"
-import { Label } from "components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "../ui/button"
 
 interface PriceFacetProps {
   minPrice: number | null
@@ -68,19 +68,19 @@ export const PriceFacet = ({ minPrice, maxPrice, setFacet }: PriceFacetProps) =>
     <div className="flex flex-col gap-1 py-1">
       <div className="flex gap-2 lg:flex-col">
         <PriceInput
-          id="min-price"
+          key="min-price"
           label="Min price"
           value={minInput ?? ""}
           onChange={(e) => handlePriceChange(e, "min")}
-          onKeyDown={handleKeyDown}
+          // onKeyDown={handleKeyDown}
         />
 
         <PriceInput
-          id="max-price"
+          key="max-price"
           label="Max price"
           value={maxInput ?? ""}
           onChange={(e) => handlePriceChange(e, "max")}
-          onKeyDown={handleKeyDown}
+          // onKeyDown={handleKeyDown}
         />
       </div>
       <div className="flex gap-2 pt-2">
@@ -105,7 +105,7 @@ export const PriceFacet = ({ minPrice, maxPrice, setFacet }: PriceFacetProps) =>
   )
 }
 
-interface PriceInputProps extends InputProps {
+interface PriceInputProps  {
   value: string
   onChange: (e: ChangeEvent<HTMLInputElement>) => void
   label: string

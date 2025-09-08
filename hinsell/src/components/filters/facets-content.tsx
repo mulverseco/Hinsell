@@ -4,17 +4,16 @@ import { useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { parseAsArrayOf, parseAsInteger, parseAsString, useQueryState } from "nuqs"
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "components/ui/accordion"
-import { HIERARCHICAL_ATRIBUTES, HIERARCHICAL_SEPARATOR } from "constants/index"
-import { cn } from "utils/cn"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { HIERARCHICAL_ATRIBUTES, HIERARCHICAL_SEPARATOR } from "@/constants/index"
 
 import { Facet } from "./facet"
 import { CategoryFacet } from "./category-facet"
 import { PriceFacet } from "./price-facet"
 import { RatingFacet } from "./rating-facet"
 import { VendorsFacet } from "./vendors-facet"
-import { useFilterTransitionStore } from "stores/filter-transition-store"
 import { ActiveFilters } from "./active-filters"
+import { cn } from "@/lib/utils"
 
 export interface FacetsContentProps {
   independentFacetDistribution: Record<string, Record<string, number>> | undefined
@@ -35,10 +34,10 @@ export function FacetsContent({
   const pathname = usePathname()
   const isAiPath = pathname.startsWith("/ai")
   const [showFilterTags, setShowFilterTags] = useState(true)
-  const setLastSelected = useFilterTransitionStore((s) => s.set)
-  const lastSelected = useFilterTransitionStore((s) => s.selected)
+  // const setLastSelected = useFilterTransitionStore((s) => s.set)
+  // const lastSelected = useFilterTransitionStore((s) => s.selected)
 
-  const collections: Record<string, Record<string, number>> = HIERARCHICAL_ATRIBUTES.reduce((acc, key) => {
+  const collections: Record<string, Record<string, number>> = HIERARCHICAL_ATRIBUTES.reduce((acc: { [x: string]: Record<string, number> }, key: string | number) => {
     acc[key] = independentFacetDistribution?.[key] || {}
     return acc
   }, {})
@@ -108,7 +107,7 @@ export function FacetsContent({
       const roundedKey = Math.floor(numKey)
 
       for (let i = 1; i <= roundedKey; i++) {
-        acc[i] = (acc[i] || 0) + value
+        // acc[i] = (acc[i] || 0) + value
       }
 
       return acc
@@ -152,7 +151,7 @@ export function FacetsContent({
       className={cn("overflow-x-hidden", className)}
       type="single"
       collapsible
-      defaultValue={lastSelected || "categories"}
+      // defaultValue={lastSelected || "categories"}
     >
       <div className="mb-2 flex flex-col border-b border-black/5">
         <ActiveFilters
@@ -182,7 +181,7 @@ export function FacetsContent({
             return selectedCategories.some((el) => el.split(HIERARCHICAL_SEPARATOR).includes(category))
           }}
           onCheckedChange={(category) => {
-            setLastSelected("categories")
+            // setLastSelected("categories")
 
             const categoryHandle = category.split(HIERARCHICAL_SEPARATOR).pop()!
             const displayType = categoryDisplayTypes?.[categoryHandle] || "PLP"
@@ -204,7 +203,7 @@ export function FacetsContent({
           isChecked={(vendor) => selectedVendors.includes(vendor)}
           onCheckedChange={(checked, vendor) => {
             setSelectedVendors((prev) => (checked ? [...prev, vendor] : prev.filter((cat) => cat !== vendor)))
-            setLastSelected("vendors")
+            // setLastSelected("vendors")
             setPage(1)
           }}
         />
@@ -218,7 +217,7 @@ export function FacetsContent({
           isChecked={(color) => selectedColors.includes(color)}
           onCheckedChange={(checked, color) => {
             setSelectedColors((prev) => (checked ? [...prev, color] : prev.filter((cat) => cat !== color)))
-            setLastSelected("colors")
+            // setLastSelected("colors")
             setPage(1)
           }}
         />
@@ -232,7 +231,7 @@ export function FacetsContent({
           isChecked={(rating) => selectedRating === parseInt(rating)}
           onCheckedChange={(checked, rating) => {
             setSelectedRating(checked ? parseInt(rating) : 0)
-            setLastSelected("avgRating")
+            // setLastSelected("avgRating")
             setPage(1)
           }}
         />
@@ -247,7 +246,7 @@ export function FacetsContent({
             setFacet={({ minPrice, maxPrice }) => {
               setMinPrice(minPrice)
               setMaxPrice(maxPrice)
-              setLastSelected("price")
+              // setLastSelected("price")
               setPage(1)
             }}
           />

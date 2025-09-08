@@ -1,19 +1,18 @@
 import { Suspense } from "react"
 import { createSearchParamsCache, parseAsArrayOf, parseAsInteger, parseAsString } from "nuqs/server"
 
-// import { getCategories, getFilteredProducts } from "lib/algolia/rate-limited"
-
-
-import { SearchParamsType } from "types"
-
 import { Breadcrumbs } from "./breadcrumbs"
-import { ItemGroup } from "@/core/generated/schemas"
+import { ItemGroup, ItemsListParams } from "@/core/generated/schemas"
 import { cn } from "@/lib/utils"
 import { Sorter } from "./filters/sorter"
-// import { slugToName } from "utils/slug-name"
+import { HitsSection } from "./hits-section"
+import { PaginationSection } from "./filters/pagination-section"
+import { FacetsDesktop } from "./filters/facets-desktop"
+import { FacetsMobile } from "./filters/facets-mobile"
+import { itemsList } from "@/core/generated/actions/items"
 
 interface SearchViewProps {
-  searchParams: SearchParamsType
+  searchParams: ItemsListParams
   params?: { id: string; page?: string }
   collection?: ItemGroup
   disabledFacets?: string[]
@@ -32,9 +31,10 @@ export const searchParamsCache = createSearchParamsCache({
   rating: parseAsInteger,
 })
 
-function makePageTitle(collection: any | undefined, query: string) {
+
+function makePageTitle(collection: string | undefined, query: string) {
   if (!!collection) {
-    return `${collection.title}`
+    return `${collection}`
   }
 
   if (!!query.length) {
@@ -59,38 +59,46 @@ function makeBreadcrumbs(collection?: string) {
 }
 
 export async function SearchView({ searchParams, disabledFacets, collection, basePath }: SearchViewProps) {
-  const { q, sortBy, page, ...rest } = searchParamsCache.parse(searchParams)
+  const { q, sortBy, page, minPrice, maxPrice, categories, vendors, colors, rating } = searchParamsCache.parse(searchParams)
 
-  // const filter = buildSearchFilter({
-  //   collection,
-  //   params: rest,
-  //   separator: HIERARCHICAL_SEPARATOR,
-  // })
+  const productsResponse = await itemsList({
+    query: {
 
-  // const hasVendorFilter = rest.vendors && rest.vendors.length > 0
-  // const { facetDistribution, hits, totalPages, totalHits, independentFacetDistribution } = await getFilteredProducts(
-  //   q,
-  //   sortBy,
-  //   page,
-  //   filter,
-  //   collection?.handle,
-  //   hasVendorFilter
-  // )
+        search: q,
+        ordering: sortBy,
+        // page,
+        // limit: 20,
+        // price_min: minPrice,
+        // price_max: maxPrice,
+        // categories: categories.join(","),
+        // vendors: vendors.join(","),
+        // colors: colors.join(","),
+        // rating_min: rating,
+        // category: collection?.id,
+    },
+  })
 
-  // const { getPageDisplayTypeByHandle } = await import("utils/get-page-display-type")
+  const hits = productsResponse.data || []
+  const totalPages = Math.ceil((productsResponse.data?.length || 0) / 20)
+  const totalHits = productsResponse.data?.length || 0
 
-  // const { hits: allCategories } = await getCategories({
-  //   hitsPerPage: 1000,
-  //   attributesToRetrieve: ["handle"],
-  // })
+    const independentFacetDistribution = {
+    categories: {},
+    vendors: {},
+    colors: {},
+  }
 
-  // const categoryDisplayTypes = allCategories.reduce(
-  //   (acc, category) => {
-  //     acc[category.handle] = getPageDisplayTypeByHandle(category.handle)
-  //     return acc
-  //   },
-  //   {} as Record<string, "CLP" | "PLP">
-  // )
+  const categoryDisplayTypes = {
+    categories: "PLP",
+    vendors: "list",
+    colors: "color",
+  }
+
+  const facetDistribution = {
+    categories: categories.reduce((acc, cat) => ({ ...acc, [cat]: Math.floor(Math.random() * 100) }), {}),
+    vendors: vendors.reduce((acc, vendor) => ({ ...acc, [vendor]: Math.floor(Math.random() * 50) }), {}),
+    colors: colors.reduce((acc, color) => ({ ...acc, [color]: Math.floor(Math.random() * 30) }), {}),
+  }
 
   return (
     <div className="mx-auto w-full md:max-w-container-md">
@@ -99,16 +107,18 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
       </div>
       <div className="sticky top-[77px] z-40 flex items-center justify-between mx-auto max-w-7xl p-4 backdrop-blur-lg lg:hidden">
         <div className="flex gap-1 text-2xl font-semibold tracking-tight lg:text-3xl">
-          <h1 className="flex-1">{collection?.name}</h1>
+          <h1 className="flex-1">{makePageTitle(collection?.name ,query=q)}</h1>
           <span className="mr-auto text-xl lg:text-2xl">({collection?.parent?.length})</span>
         </div>
         <div className="flex items-center gap-1 lg:hidden">
-          {/* <FacetsMobile
+          <Suspense fallback={<div>Loading filters...</div>}>
+          <FacetsMobile
             disabledFacets={disabledFacets}
             independentFacetDistribution={independentFacetDistribution as Record<string, Record<string, number>>}
             facetDistribution={facetDistribution as Record<string, Record<string, number>>}
             categoryDisplayTypes={categoryDisplayTypes}
-          /> */}
+            />
+          </Suspense>
         </div>
       </div>
       <div className={cn("flex gap-12 p-4 md:gap-12 mx-auto max-w-7xl ", basePath === "ai" ? "ai-2xl:px-0" : "xl:px-0")}>
@@ -118,24 +128,24 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
             <span className="text-2xl">({collection?.parent?.length})</span>
           </div>
 
-          <Suspense>
-            {/* <FacetsDesktop
+            <Suspense fallback={<div>Loading filters...</div>}>
+            <FacetsDesktop
               independentFacetDistribution={independentFacetDistribution as Record<string, Record<string, number>>}
               disabledFacets={disabledFacets}
               className="hidden max-h-[70dvh] shrink-0 basis-[192px] overflow-y-auto lg:block"
               facetDistribution={facetDistribution as Record<string, Record<string, number>>}
               categoryDisplayTypes={categoryDisplayTypes}
-            /> */}
+            />
           </Suspense>
         </div>
         <div className="w-full">
           <div className="flex justify-end pb-4">
             <Suspense>
-              {/* <Sorter className="w-max rounded-md text-sm transition-colors duration-200 hover:bg-gray-100 lg:flex" /> */}
+              <Sorter className="w-max rounded-md text-sm transition-colors duration-200 hover:bg-gray-100 lg:flex" />
             </Suspense>
           </div>
-          {/* <HitsSection hits={hits} basePath={basePath} /> */}
-          {/* <PaginationSection queryParams={searchParams} totalPages={totalPages} /> */}
+          <HitsSection hits={hits} basePath={basePath} />
+          <PaginationSection queryParams={searchParams} totalPages={totalPages} />
         </div>
       </div>
     </div>

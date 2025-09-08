@@ -10,6 +10,8 @@ import { ItemCard } from "../item-card"
 interface CategoryLandingPageProps {
   collection: ItemGroup
   products: Item[]
+  totalCount: number
+  hasNextPage: boolean
   basePath?: string
 }
 

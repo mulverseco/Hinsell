@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react"
 import { parseAsInteger, useQueryState } from "nuqs"
 import { useDebounce } from "@uidotdev/usehooks"
-import { cn } from "utils/cn"
-import { CloseIcon } from "components/icons/close-icon"
-import { Button } from "components/ui/button-old"
+import { cn } from "@/lib/utils"
+import { Button } from "../ui/button"
+import { X } from "lucide-react"
 
 export function SearchFacet({ className }: { className?: string }) {
   const [query, setQuery] = useQueryState("q", { shallow: false })
@@ -47,7 +47,7 @@ export function SearchFacet({ className }: { className?: string }) {
           variant="ghost"
           className="absolute right-2 p-2"
         >
-          <CloseIcon />
+          <X />
         </Button>
       )}
     </div>

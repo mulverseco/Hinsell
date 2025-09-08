@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { AccordionContent, AccordionItem, AccordionTrigger } from "components/ui/accordion"
-import { Checkbox } from "components/ui/checkbox"
-import { Label } from "components/ui/label"
-import { Input } from "components/ui/input"
+import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { SearchIcon } from "lucide-react"
 import type Fuse from "fuse.js"
 

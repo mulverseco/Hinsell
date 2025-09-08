@@ -1,5 +1,6 @@
-import { Skeleton } from "components/ui/skeleton"
-import { FacetsContent } from "components/filters/facets-content"
+import { Skeleton } from "../ui/skeleton"
+import { FacetsContent } from "./facets-content"
+
 
 interface FacetsDesktopProps {
   independentFacetDistribution: Record<string, Record<string, number>> | undefined

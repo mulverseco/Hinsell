@@ -1,12 +1,13 @@
 "use client"
 
-import { Button } from "components/ui/button-old"
-import { Placeholder } from "components/generic-modal"
 import dynamic from "next/dynamic"
-import { useModalStore } from "stores/modal-store"
+import { Button } from "../ui/button"
+import { Placeholder } from "../generic-modal"
+import { useModalStore } from "@/core/modal-store"
 
-const FacetsContent = dynamic(() => import("components/filters/facets-content").then((m) => m.FacetsContent))
-const GenericModal = dynamic(() => import("components/generic-modal").then((m) => m.GenericModal), {
+
+const FacetsContent = dynamic(() => import("@/components/filters/facets-content").then((m) => m.FacetsContent))
+const GenericModal = dynamic(() => import("@/components/generic-modal").then((m) => m.GenericModal), {
   loading: Placeholder,
 })
 

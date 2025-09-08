@@ -1,8 +1,8 @@
-import { FadeOutMask } from "components/fade-out-mask"
+import { cn } from "@/lib/utils"
+import { X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { CloseIcon } from "components/icons/close-icon"
-import { cn } from "utils/cn"
-import { slugToName } from "utils/slug-name"
+import { FadeOutMask } from "../fade-out-mask"
+
 
 interface ActiveFiltersProps {
   filtersCount: number
@@ -67,10 +67,10 @@ export function ActiveFilters({
                     onClick={() => removeTag(el)}
                   >
                     <span className="rounded-full border border-gray-300 p-px transition-colors group-hover:border-gray-400">
-                      <CloseIcon className="size-2 fill-gray-300 transition-colors group-hover:fill-gray-400" />
+                      <X className="size-2 fill-gray-300 transition-colors group-hover:fill-gray-400" />
                     </span>
                     <span className="font-medium tracking-tight">
-                      {isCategory && categoryName ? slugToName(categoryName) : el}
+                      {isCategory && categoryName ? categoryName : el}
                     </span>
                   </motion.div>
                 )

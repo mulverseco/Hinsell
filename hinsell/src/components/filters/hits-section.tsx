@@ -1,14 +1,16 @@
 "use client"
 
-import { ProductCard } from "components/product-card"
-import type { CommerceProduct } from "types"
+
 import { usePathname } from "next/navigation"
-import { cn } from "utils/cn"
+
 import Link from "next/link"
-import { useIsMobile } from "utils/use-mobile"
+import { Item } from "@/core/generated/schemas"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
+import { ItemCard } from "../item-card"
 
 interface HitsSectionProps {
-  hits: CommerceProduct[]
+  hits: Item[]
   basePath?: string
 }
 
@@ -49,9 +51,9 @@ export function HitsSection({ hits, basePath }: HitsSectionProps) {
             className="h-full lg:animate-enter lg:opacity-0"
             style={{ "--stagger": idx } as React.CSSProperties}
           >
-            <ProductCard
+            <ItemCard
               item={singleResult}
-              priority={priority}
+              // priority={priority}
               href={basePath ? `/${basePath}/product/${singleResult.id}` : undefined}
             />
           </div>

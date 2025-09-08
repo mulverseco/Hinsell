@@ -1,10 +1,10 @@
 import { usePathname } from "next/navigation"
-import { AccordionContent, AccordionItem, AccordionTrigger } from "components/ui/accordion"
+import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { HIERARCHICAL_ATRIBUTES, HIERARCHICAL_SEPARATOR } from "@/constants"
+import { cn } from "@/lib/utils"
+import { Item } from "@/core/generated/schemas"
+import { useHierarchicalMenu } from "@/hooks/use-hierarchical-menu"
 
-import { HIERARCHICAL_ATRIBUTES, HIERARCHICAL_SEPARATOR } from "constants/index"
-import { cn } from "utils/cn"
-import { slugToName } from "utils/slug-name"
-import { type HierarchicalMenuItem, useHierarchicalMenu } from "utils/use-hierarchical-menu"
 
 interface CategoryFacetProps {
   id: string
@@ -44,7 +44,7 @@ export function CategoryFacet({ id, title, distribution, isChecked, onCheckedCha
 }
 
 interface CategoryTreeProps {
-  items: HierarchicalMenuItem[]
+  items: Item[]
   level: number
   onClick: (value: string) => void
   isChecked: (value: string) => boolean
@@ -67,7 +67,8 @@ const CategoryTree = ({ items, level, onClick, isChecked, className, parent }: C
               )}
               onClick={() => onClick(valueWithParent)}
             >
-              {slugToName(value)}
+              {/* {slugToName(value)} */}
+              {value}
             </button>
             {data && data.length > 0 && (
               <CategoryTree
