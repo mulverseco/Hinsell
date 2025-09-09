@@ -8,16 +8,17 @@ import { useState, useRef } from "react"
 import { Media } from "@/core/generated/schemas"
 
 interface ItemMediaProps {
-  images?: Media[]
+  media?: Media[]
+  alt?: string
   className?: string
 }
 
-export function ItemMedia({ images = [], className }: ItemMediaProps) {
+export function ItemMedia({ media = [],alt, className }: ItemMediaProps) {
   const [imageLoading, setImageLoading] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  const primaryMedia = images?.[0]
+  const primaryMedia = media?.[0]
   const isVideo =
     primaryMedia?.file?.includes(".mp4") ||
     primaryMedia?.file?.includes(".webm") ||
@@ -66,7 +67,7 @@ export function ItemMedia({ images = [], className }: ItemMediaProps) {
         ) : (
           <Image
             src={primaryMedia.file || "/placeholder.svg?height=500&width=400&query=luxury product"}
-            alt={primaryMedia.alt_text || "Product Image"}
+            alt={primaryMedia.alt_text || alt || "Product Image"}
             fill
             className={cn("object-cover", imageLoading && "blur-sm")}
             onLoad={() => setImageLoading(false)}

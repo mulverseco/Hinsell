@@ -8,7 +8,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { ItemMedia } from "./item-media"
 import { Item, ItemVariant, ItemUnit } from "@/core/generated/schemas"
-import { AddToCartButton } from "./AddToCartButton"
+import { AddToCartButton } from "./add-to-cart-button"
 
 interface ItemCardProps {
   item: Item
@@ -61,7 +61,7 @@ export function ItemCard({
           )}
         >
           <div className="relative aspect-square overflow-hidden rounded-t-2xl">
-            <ItemMedia images={item.media} />
+            <ItemMedia media={item.media} />
           </div>
 
           <div className="p-4">
@@ -97,7 +97,7 @@ export function ItemCard({
     >
       <Link href={productUrl} className="block">
         <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer">
-          <ItemMedia images={item.media} />
+          <ItemMedia media={item.media} />
 
           {is_best_selling && (
             <div className="absolute top-6 left-6">
@@ -180,23 +180,7 @@ export function ItemCard({
                 </span>
               )}
             </div>
-
-            {selectedVariant && selectedUnit ? (
-              <AddToCartButton
-                variant={selectedVariant}
-                quantity={1}
-                className={cn(
-                  "gap-2 font-medium tracking-wide bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 py-2.5 shadow-lg border-0",
-                )}
-              />
-            ) : (
-              <Button
-                className="gap-2 font-medium tracking-wide bg-gray-200 text-gray-500 rounded-full px-6 py-2.5 cursor-not-allowed border-0"
-                disabled
-              >
-                Cart disabled
-              </Button>
-            )}
+             <AddToCartButton item={item} variant={item?.variants} />
           </div>
         </div>
       </div>

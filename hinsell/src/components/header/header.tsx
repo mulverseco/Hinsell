@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, ShoppingCart, Zap } from "lucide-react";
+import { Menu, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useActiveSection } from "@/hooks/use-active-section";
 import { NavLink } from "./nav-link";
 import { ItemGroup, StoreGroup } from "@/core/generated/schemas";
 import { useItemGroupsList } from "@/core/generated/hooks/itemGroups";
 import { useStoreGroupsList } from "@/core/generated/hooks/storeGroups";
-import { Badge } from "../ui/badge";
-import CartSheet from "../CartSheet";
+import { CartSheet } from "../cart-sheet";
+
 
 
 interface HeaderProps {
@@ -20,9 +19,8 @@ interface HeaderProps {
 }
 
 export function Header({ initialItemGroups = [], initialStoreGroups = [] }: HeaderProps) {
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navItems = ["Home", "Features", "Pricing", "Testimonials"];
-  const { activeHash } = useActiveSection(navItems);
 
   const { data: itemGroups } = useItemGroupsList(undefined, undefined, {
     initialData: initialItemGroups,
@@ -56,7 +54,7 @@ export function Header({ initialItemGroups = [], initialStoreGroups = [] }: Head
               </Link>
 
               <div className="hidden items-center gap-1 md:flex">
-                {itemGroups?.slice(0, 8).map((group: any) => {
+                {itemGroups?.slice(0, 6).map((group: any) => {
                   const item = group.name ?? group.slug ?? group.code ?? "Item";
                   return (
                     <NavLink key={group.id} href={`/category/plp/${group.id}`}>
@@ -67,7 +65,7 @@ export function Header({ initialItemGroups = [], initialStoreGroups = [] }: Head
               </div>
 
               <div className="hidden items-center gap-3 md:flex">
-              <CartSheet/>
+                <CartSheet />
                 <Button variant="ghost" className="font-medium tracking-wide">
                   Sign in
                 </Button>
@@ -116,6 +114,7 @@ export function Header({ initialItemGroups = [], initialStoreGroups = [] }: Head
                   );
                 })}
               <div className="border-border/50 mt-6 grid grid-cols-2 gap-3 border-t pt-6">
+              <CartSheet />
                 <Button
                   variant="outline"
                   className="w-full font-medium tracking-wide"

@@ -9,7 +9,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProviderClient } from "@/locales/client";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { SessionProvider } from "next-auth/react"
-import { auth } from "@/core/auth";
 import { Session } from "next-auth";
 
 type ProviderProps = {
