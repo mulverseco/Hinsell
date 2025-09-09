@@ -1,84 +1,65 @@
 "use client"
 
-import { cn } from "@/lib/utils"
+import { useState } from "react"
+import { Expand } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, Play, Pause } from "lucide-react"
+import { cn } from "@/lib/utils"
 import Image from "next/image"
-import { useState, useRef } from "react"
 import { Media } from "@/core/generated/schemas"
 
+
 interface ItemMediaProps {
-  media?: Media[]
+  media: Media[]
   alt?: string
   className?: string
 }
 
-export function ItemMedia({ media = [],alt, className }: ItemMediaProps) {
-  const [imageLoading, setImageLoading] = useState(true)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const videoRef = useRef<HTMLVideoElement>(null)
-
-  const primaryMedia = media?.[0]
-  const isVideo =
-    primaryMedia?.file?.includes(".mp4") ||
-    primaryMedia?.file?.includes(".webm") ||
-    primaryMedia?.file?.includes(".mov")
-
-  const toggleVideo = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        videoRef.current.play()
-      }
-      setIsPlaying(!isPlaying)
-    }
-  }
+export function ItemMedia({ media, alt,className }: ItemMediaProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   return (
-    <div className={cn("relative w-full h-full overflow-hidden", className)}>
-      {primaryMedia ? (
-        isVideo ? (
-          <div className="relative w-full h-full">
-            <video
-              ref={videoRef}
-              className={cn("w-full h-full object-cover", imageLoading && "blur-sm")}
-              muted
-              loop
-              playsInline
-              poster="/luxury-product.png"
-              onLoadedData={() => setImageLoading(false)}
+    <div className={cn("flex w-full h-full overflow-hidden gap-4", className)}>
+      {media.length > 1 && (
+        <div className="flex flex-col gap-2 w-20">
+          {media?.map((image, index) => (
+            <button
+              key={image.id || index}
+              onMouseEnter={() => setCurrentImageIndex(index)}
+              className={cn(
+                "aspect-square overflow-hidden rounded-md border-2 transition-all duration-200 hover:border-primary/50",
+                index === currentImageIndex ? "border-primary ring-2 ring-primary/20" : "border-muted",
+              )}
             >
-              <source src={primaryMedia.file} type="video/mp4" />
-            </video>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute bottom-4 left-4 h-10 w-10 p-0 bg-black/70 backdrop-blur-sm hover:bg-black/80 rounded-full shadow-lg border-0 z-10"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                toggleVideo()
-              }}
-            >
-              {isPlaying ? <Pause className="h-4 w-4 text-white" /> : <Play className="h-4 w-4 text-white ml-0.5" />}
-            </Button>
-          </div>
-        ) : (
-          <Image
-            src={primaryMedia.file || "/placeholder.svg?height=500&width=400&query=luxury product"}
-            alt={primaryMedia.alt_text || alt || "Product Image"}
-            fill
-            className={cn("object-cover", imageLoading && "blur-sm")}
-            onLoad={() => setImageLoading(false)}
-            priority
-          />
-        )
-      ) : (
-        <div className="flex h-full w-full items-center justify-center">
-          <ShoppingCart className="h-16 w-16 text-gray-300" />
+              <div className="relative w-full h-full">
+                <Image
+                  src={image.file || `/placeholder.svg?height=80&width=80&query=${alt} thumbnail ${index + 1}`}
+                  alt={image.alt_text || `${alt} view ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+            </button>
+          ))}
         </div>
       )}
+
+      <div className="relative flex-1 aspect-square overflow-hidden rounded-lg bg-muted">
+        <Image
+          src={media[currentImageIndex]?.file || `/placeholder.svg?height=600&width=600&query=${alt}`}
+          alt={media[currentImageIndex]?.alt_text || alt}
+          fill
+          className="object-cover transition-opacity duration-300"
+          unoptimized
+        />
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute right-2 top-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+        >
+          <Expand className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   )
 }

@@ -18,11 +18,11 @@ export default async function ProductPage(props: ProductPageProps) {
   const data = await itemsRead({path:{id:id}})
   const item = data.data
 
-
+console.log("item : ",item)
   return (
-    <div className="min-h-screen bg-background">
-        <Breadcrumbs className="mb-8" items={makeBreadcrumbs(item?.item_group_name, item?.item_group, item?.name)} />
+    <div className="min-h-screen sm:mx-4 md:mx-24 bg-background">
       <div className="container mx-auto px-4 py-6">
+        <Breadcrumbs className="mb-8" items={makeBreadcrumbs(item?.item_group_name, item?.item_group, item?.name)} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-4">
             <ItemMedia media={item?.media || []} alt={item?.name} />
