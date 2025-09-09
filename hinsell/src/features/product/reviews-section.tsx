@@ -1,96 +1,146 @@
-import Link from "next/link"
-
-import { ReviewButton } from "./review-button"
-import { ReviewCard } from "./review-card"
-
-import { UserPublic } from "@/core/generated/schemas"
-import { Rocket, StarIcon } from "lucide-react"
+"use client"
+import { Star, ThumbsUp } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Carousel, CarouselContent, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { itemBarcodesRead } from "@/core/generated/actions"
-import { buttonVariants } from "@/components/ui/button"
+import { Item, ItemReview } from "@/core/generated/schemas"
 
-type ReviewsSectionProps = {
-  productId: string
-  productHandle: string
-  avgRating: string | undefined
-  summary?: string
-  className?: string
+interface DynamicReviewsProps {
+  item: Item
+  reviews?: ItemReview[]
 }
-export const ReviewsSection = async ({
-  productId,
-  productHandle,
-  summary,
-  avgRating,
-  className,
-}: ReviewsSectionProps) => {
-  const res = (await itemBarcodesRead({path : { id: productId }}))
-  const reviews = res?.reviews ?? []
-  const total = res?.total ?? 0
 
-  if (reviews?.length <= 0) {
-    return (
-      <section className={cn("rounded-lg py-12 md:my-10", className)}>
-        <div className="container mx-auto max-w-5xl px-4 md:px-6 xl:px-0">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <h2 className="text-xl font-semibold sm:text-2xl">
-              Have this product? Help others by sharing your experience
-            </h2>
-            <ReviewButton productId={productId} />
-          </div>
-        </div>
-      </section>
+export function ReviewsSection({ item, reviews = [] }: DynamicReviewsProps) {
+  const actualReviews = item.reviews || reviews
+  const averageRating = Number(item.average_rating || 0)
+  const reviewCount = item.review_count || 0
+
+  const getFitDistribution = () => {
+    if (!actualReviews.length) return { too_small: 0, fits_well: 100, too_big: 0 }
+
+    const fitCounts = actualReviews.reduce(
+      (acc, review) => {
+        const fit = review.fit || "fits_well"
+        acc[fit] = (acc[fit] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>,
     )
+
+    const total = actualReviews.length
+    return {
+      too_small: Math.round(((fitCounts.too_small || 0) / total) * 100),
+      fits_well: Math.round(((fitCounts.fits_well || 0) / total) * 100),
+      too_big: Math.round(((fitCounts.too_big || 0) / total) * 100),
+    }
   }
 
+  const fitDistribution = getFitDistribution()
+
   return (
-    <section className={cn("py-12 md:my-10", className)}>
-      <div className="container mx-auto max-w-5xl px-6 xl:pl-0">
-        <div className="space-y-4">
-          <div className="mb-10 flex flex-col items-center justify-between gap-4 md:flex-row">
-            <div className="flex items-center justify-center">
-              <h2 className="text-xl font-semibold sm:text-xl">Customer Reviews</h2>
-              <span className="ml-1 text-sm font-normal text-gray-500">({total})</span>
-              {!!avgRating && (
-                <div className="ml-1 inline-flex items-center">
-                  <StarIcon className="ml-0.5 size-4 fill-gray-400 text-gray-500" />
-                  <span className="ml-0.5 text-sm font-normal">{avgRating}</span>
-                </div>
-              )}
-            </div>
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold">Customer Reviews</h2>
 
-            <ReviewButton productId={productId} />
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <span className="text-3xl font-bold">{averageRating.toFixed(2)}</span>
+          <div className="flex items-center">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star
+                key={i}
+                className={cn(
+                  "h-4 w-4",
+                  i < Math.floor(averageRating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300",
+                )}
+              />
+            ))}
           </div>
-          {!!summary && (
-            <div className="rounded bg-gray-300/25 p-4">
-              <div className="mb-2 flex items-center space-x-2">
-                <Rocket className="size-4" />
-                <h3 className="text-base font-semibold">AI Summary</h3>
-              </div>
-              <p className="text-sm text-gray-600">{summary}</p>
-            </div>
-          )}
-
-          <Carousel opts={{ skipSnaps: true }}>
-            <CarouselPrevious className="absolute -left-20 top-[40%] hidden xl:flex" />
-            <CarouselContent className="ml-0 gap-6">
-              {reviews.map((review: { id: string; author: UserPublic; rating: number; body: string } , index: number) => (
-                <ReviewCard key={index} index={index || review.id} review={review} />
-              ))}
-            </CarouselContent>
-            <CarouselNext className="absolute -right-20 top-[40%] hidden xl:flex" />
-          </Carousel>
+          <span className="text-sm text-muted-foreground">({reviewCount} reviews)</span>
         </div>
-        <div className="mt-10 flex justify-center md:justify-end">
-          <Link
-            href={`/reviews/${productHandle}`}
-            className={cn(buttonVariants({ variant: "outline" }), "w-full bg-white transition-all hover:scale-105")}
-            prefetch={false}
-          >
-            See all reviews
-          </Link>
+
+        <div className="space-y-2">
+          <h3 className="font-medium text-sm">Overall Fit:</h3>
+          <div className="flex items-center justify-between text-xs text-gray-600">
+            <span>Small</span>
+            <span>True to Size</span>
+            <span>Large</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 w-8">{fitDistribution.too_small}%</span>
+            <div className="flex-1 bg-gray-200 h-2 rounded overflow-hidden flex">
+              <div className="bg-red-400 h-full" style={{ width: `${fitDistribution.too_small}%` }} />
+              <div className="bg-green-500 h-full" style={{ width: `${fitDistribution.fits_well}%` }} />
+              <div className="bg-blue-400 h-full" style={{ width: `${fitDistribution.too_big}%` }} />
+            </div>
+            <span className="text-xs text-gray-500 w-8">{fitDistribution.too_big}%</span>
+          </div>
         </div>
       </div>
-    </section>
+
+      {/* Review filters */}
+      <div className="flex items-center gap-6 border-b pb-2">
+        <button className="text-sm font-medium border-b-2 border-black pb-2">All Reviews</button>
+        <button className="text-sm text-gray-500 pb-2">With Images</button>
+        <button className="text-sm text-gray-500 pb-2">Verified Purchase</button>
+      </div>
+
+      <div className="space-y-6">
+        {actualReviews.length > 0 ? (
+          actualReviews.map((review, index) => (
+            <div key={review.id || index} className="border-b pb-4 last:border-b-0">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">
+                  {review.is_anonymous ? "A***" : "U***"}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={cn(
+                            "h-3 w-3",
+                            i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300",
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {new Date(review.created_at || "").toLocaleDateString()}
+                    </span>
+                    {review.is_verified_purchase && (
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Verified Purchase</span>
+                    )}
+                  </div>
+
+                  <div className="text-xs text-gray-600 space-x-4">
+                    {review.fit && (
+                      <span>Overall Fit: {review.fit.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}</span>
+                    )}
+                    {review.reviewer_height && <span>Height: {review.reviewer_height}</span>}
+                    {review.reviewer_weight && <span>Weight: {review.reviewer_weight}</span>}
+                  </div>
+
+                  {review.comment && <p className="text-sm text-gray-800 dark:text-gray-400">{review.comment}</p>}
+
+                  <div className="flex items-center gap-4">
+                    <button className="text-xs text-blue-600 underline">Translate</button>
+                    <div className="flex items-center gap-2 ml-auto">
+                      <button className="flex items-center gap-1 text-xs text-gray-500">
+                        <ThumbsUp className="h-3 w-3" />
+                        {review.helpful_votes || 0}
+                      </button>
+                      <button className="text-xs text-gray-500">⋯</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No reviews yet. Be the first to review this product!</p>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }

@@ -99,7 +99,7 @@ export function CartSheet() {
                       {/* Product Details */}
                       <div className="flex-1 min-w-0">
                         <Link
-                          href={`/items/${cartItem.item.slug || cartItem.item.id}`}
+                          href={`/product/${cartItem.item.id || cartItem.item.slug}`}
                           onClick={closeCart}
                           className="block"
                         >
