@@ -165,7 +165,7 @@ export function FacetsContent({
         />
 
         <button
-          className="my-3 inline-flex cursor-pointer bg-white text-xs text-black underline underline-offset-2"
+          className="my-3 inline-flex cursor-pointer text-xs underline underline-offset-2"
           onClick={() => resetAllFilters()}
         >
           Clear filters

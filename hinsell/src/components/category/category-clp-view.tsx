@@ -14,20 +14,18 @@ export async function CategoryCLPView({ params, basePath, searchParams = {} }: C
   const [collection, products] = await Promise.all([
     itemGroupsRead({ path: { id: params.id } }),
     itemsList({
-      params: {
         query: {
           search: searchParams.q || "",
           ordering: searchParams.sortBy || "",
-          category: params.id, // Filter by category
-          page: searchParams.page || 1,
-          limit: 20, // Add pagination
-        },
+          // category: params.id,
+          // page: searchParams.page || 1,
+          // limit: 20,
       },
     }),
   ])
 
   console.log("[v0] Collection data:", collection?.data?.name)
-  console.log("[v0] Products count:", products?.data?.results?.length || 0)
+  console.log("[v0] Products count:", products?.data?.length || 0)
 
   if (!collection?.data) return notFound()
 

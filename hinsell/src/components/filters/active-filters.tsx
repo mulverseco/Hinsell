@@ -63,10 +63,10 @@ export function ActiveFilters({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9, zIndex: -1, transition: { duration: 0.1, delay: 0 } }}
                     transition={{ duration: 0.2, ease: "easeInOut", delay: 0.02 * index }}
-                    className="group flex grow-0 cursor-pointer items-center gap-1 whitespace-nowrap rounded-md border border-gray-300/60 bg-white py-1 pl-1.5 pr-2 text-xs transition-colors hover:border-gray-400/80 hover:bg-gray-100/70"
+                    className="group flex grow-0 cursor-pointer items-center gap-1 whitespace-nowrap rounded-md py-1 pl-1.5 pr-2 text-xs transition-colors"
                     onClick={() => removeTag(el)}
                   >
-                    <span className="rounded-full border border-gray-300 p-px transition-colors group-hover:border-gray-400">
+                    <span className="rounded-full p-px transition-colors ">
                       <X className="size-2 fill-gray-300 transition-colors group-hover:fill-gray-400" />
                     </span>
                     <span className="font-medium tracking-tight">

@@ -2,14 +2,15 @@ import { Suspense } from "react"
 import { createSearchParamsCache, parseAsArrayOf, parseAsInteger, parseAsString } from "nuqs/server"
 
 import { Breadcrumbs } from "./breadcrumbs"
-import { ItemGroup, ItemsListParams } from "@/core/generated/schemas"
-import { cn } from "@/lib/utils"
+import type { ItemGroup, ItemsListParams } from "@/core/generated/schemas"
 import { Sorter } from "./filters/sorter"
 import { HitsSection } from "./hits-section"
 import { PaginationSection } from "./filters/pagination-section"
 import { FacetsDesktop } from "./filters/facets-desktop"
 import { FacetsMobile } from "./filters/facets-mobile"
 import { itemsList } from "@/core/generated/actions/items"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 interface SearchViewProps {
   searchParams: ItemsListParams
@@ -30,7 +31,6 @@ export const searchParamsCache = createSearchParamsCache({
   colors: parseAsArrayOf(parseAsString).withDefault([]),
   rating: parseAsInteger,
 })
-
 
 function makePageTitle(collection: string | undefined, query: string) {
   if (!!collection) {
@@ -59,22 +59,22 @@ function makeBreadcrumbs(collection?: string) {
 }
 
 export async function SearchView({ searchParams, disabledFacets, collection, basePath }: SearchViewProps) {
-  const { q, sortBy, page, minPrice, maxPrice, categories, vendors, colors, rating } = searchParamsCache.parse(searchParams)
+  const { q, sortBy, page, minPrice, maxPrice, categories, vendors, colors, rating } =
+    searchParamsCache.parse(searchParams)
 
   const productsResponse = await itemsList({
     query: {
-
-        search: q,
-        ordering: sortBy,
-        // page,
-        // limit: 20,
-        // price_min: minPrice,
-        // price_max: maxPrice,
-        // categories: categories.join(","),
-        // vendors: vendors.join(","),
-        // colors: colors.join(","),
-        // rating_min: rating,
-        // category: collection?.id,
+      search: q,
+      ordering: sortBy,
+      page,
+      limit: 20,
+      price_min: minPrice,
+      price_max: maxPrice,
+      categories: categories.join(","),
+      vendors: vendors.join(","),
+      colors: colors.join(","),
+      rating_min: rating,
+      category: collection?.id,
     },
   })
 
@@ -82,7 +82,7 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
   const totalPages = Math.ceil((productsResponse.data?.length || 0) / 20)
   const totalHits = productsResponse.data?.length || 0
 
-    const independentFacetDistribution = {
+  const independentFacetDistribution = productsResponse.facets || {
     categories: {},
     vendors: {},
     colors: {},
@@ -94,59 +94,83 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
     colors: "color",
   }
 
-  const facetDistribution = {
-    categories: categories.reduce((acc, cat) => ({ ...acc, [cat]: Math.floor(Math.random() * 100) }), {}),
-    vendors: vendors.reduce((acc, vendor) => ({ ...acc, [vendor]: Math.floor(Math.random() * 50) }), {}),
-    colors: colors.reduce((acc, color) => ({ ...acc, [color]: Math.floor(Math.random() * 30) }), {}),
+  const facetDistribution = productsResponse.facetDistribution || {
+    categories: {},
+    vendors: {},
+    colors: {},
   }
 
   return (
-    <div className="mx-auto w-full md:max-w-container-md">
-      <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8 overflow-hidden">
-        <Breadcrumbs className="mb-8" items={makeBreadcrumbs(collection?.name)} />
-      </div>
-      <div className="sticky top-[77px] z-40 flex items-center justify-between mx-auto max-w-7xl p-4 backdrop-blur-lg lg:hidden">
-        <div className="flex gap-1 text-2xl font-semibold tracking-tight lg:text-3xl">
-          <h1 className="flex-1">{makePageTitle(collection?.name ,query=q)}</h1>
-          <span className="mr-auto text-xl lg:text-2xl">({collection?.parent?.length})</span>
+    <div className="mx-auto w-full">
+      <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+        <Breadcrumbs className="mb-4" items={makeBreadcrumbs(collection?.name)} />
+
+        {/* Top navigation bar */}
+        <div className="flex items-center justify-between mb-6">
+           <div className="flex gap-1 text-2xl font-semibold tracking-tight lg:text-3xl">
+             <h1 className="flex-1">{makePageTitle(collection?.name ,query=q)}</h1>
+             <span className="mr-auto text-xl lg:text-2xl">({collection?.parent?.length})</span>
+           </div>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" className="lg:hidden bg-transparent">
+              Filter
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Sort By</span>
+              <Suspense>
+                <Sorter className="border-none bg-transparent text-sm" />
+              </Suspense>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-1" />
+                QuickShip
+              </Badge>
+              <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-100">
+                Trends
+              </Badge>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-1 lg:hidden">
-          <Suspense fallback={<div>Loading filters...</div>}>
+      </div>
+
+      <div className="flex mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Left sidebar filters */}
+        <div className="hidden lg:block w-64 pr-8">
+          <div className="sticky top-4">
+            <Suspense fallback={<div>Loading filters...</div>}>
+              <FacetsDesktop
+                independentFacetDistribution={independentFacetDistribution as Record<string, Record<string, number>>}
+                disabledFacets={disabledFacets}
+                className="max-h-[80vh] overflow-y-auto"
+                facetDistribution={facetDistribution as Record<string, Record<string, number>>}
+                categoryDisplayTypes={categoryDisplayTypes}
+              />
+            </Suspense>
+          </div>
+        </div>
+
+        {/* Main content area */}
+        <div className="flex-1">
+          <HitsSection hits={hits} basePath={basePath} />
+          <PaginationSection queryParams={searchParams} totalPages={totalPages} />
+        </div>
+      </div>
+
+      {/* Mobile filter overlay */}
+      <div className="lg:hidden">
+        <Suspense fallback={<div>Loading filters...</div>}>
           <FacetsMobile
             disabledFacets={disabledFacets}
             independentFacetDistribution={independentFacetDistribution as Record<string, Record<string, number>>}
             facetDistribution={facetDistribution as Record<string, Record<string, number>>}
             categoryDisplayTypes={categoryDisplayTypes}
-            />
-          </Suspense>
-        </div>
-      </div>
-      <div className={cn("flex gap-12 p-4 md:gap-12 mx-auto max-w-7xl ", basePath === "ai" ? "ai-2xl:px-0" : "xl:px-0")}>
-        <div className="sticky top-[100px] hidden max-h-[90dvh] w-full px-2 lg:block lg:px-0">
-          <div className="flex gap-1 font-semibold">
-            <h1 className="text-3xl lg:text-4xl">{collection?.name}</h1>
-            <span className="text-2xl">({collection?.parent?.length})</span>
-          </div>
-
-            <Suspense fallback={<div>Loading filters...</div>}>
-            <FacetsDesktop
-              independentFacetDistribution={independentFacetDistribution as Record<string, Record<string, number>>}
-              disabledFacets={disabledFacets}
-              className="hidden max-h-[70dvh] shrink-0 basis-[192px] overflow-y-auto lg:block"
-              facetDistribution={facetDistribution as Record<string, Record<string, number>>}
-              categoryDisplayTypes={categoryDisplayTypes}
-            />
-          </Suspense>
-        </div>
-        <div className="w-full">
-          <div className="flex justify-end pb-4">
-            <Suspense>
-              <Sorter className="w-max rounded-md text-sm transition-colors duration-200 hover:bg-gray-100 lg:flex" />
-            </Suspense>
-          </div>
-          <HitsSection hits={hits} basePath={basePath} />
-          <PaginationSection queryParams={searchParams} totalPages={totalPages} />
-        </div>
+          />
+        </Suspense>
       </div>
     </div>
   )

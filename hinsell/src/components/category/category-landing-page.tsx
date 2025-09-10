@@ -28,7 +28,7 @@ export function CategoryLandingPage({ collection, products, basePath }: Category
       {collection.media && (
         <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg md:aspect-[21/9]">
           <Image
-            src={collection.media[0].file || ""}
+            src={collection.media[0].file || `/placeholder.svg?height=80&width=80&query=${collection.media[0].alt_text}`}
             quality={90}
             alt={collection.media[0].alt_text || collection.name}
             fill
@@ -37,7 +37,7 @@ export function CategoryLandingPage({ collection, products, basePath }: Category
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <div className="absolute bottom-0 left-0 p-6 text-white md:p-8">
+          <div className="absolute bottom-0 left-0 p-6 md:p-8">
             <h1 className="text-3xl font-bold tracking-tight md:text-5xl lg:text-6xl">{collection.name}</h1>
           </div>
         </div>

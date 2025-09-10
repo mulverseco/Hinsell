@@ -85,7 +85,7 @@ export const PriceFacet = ({ minPrice, maxPrice, setFacet }: PriceFacetProps) =>
       </div>
       <div className="flex gap-2 pt-2">
         <Button
-          className="w-full border-none bg-gray-50 text-xs font-medium hover:underline"
+          className="w-full border-none text-xs font-medium hover:underline"
           onClick={() => {
             setMinInput(null)
             setMaxInput(null)
@@ -97,7 +97,7 @@ export const PriceFacet = ({ minPrice, maxPrice, setFacet }: PriceFacetProps) =>
         >
           Reset
         </Button>
-        <Button className="w-full border-none bg-gray-200 text-xs  font-medium hover:bg-gray-300" onClick={applyPrices}>
+        <Button className="w-full border-none  text-xs  font-medium" onClick={applyPrices}>
           Apply
         </Button>
       </div>

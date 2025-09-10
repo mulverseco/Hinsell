@@ -18,7 +18,7 @@ export const HideFilters = () => {
 
         // set("hidden")
       }}
-      className="hidden items-center gap-2 bg-transparent text-base font-normal text-black transition-colors lg:flex"
+      className="hidden items-center gap-2 bg-transparent text-base font-normal transition-colors lg:flex"
     >
       <span>{status === "hidden" ? "Show" : "Hide"} filters</span>
       <Filter/>
