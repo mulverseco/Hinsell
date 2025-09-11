@@ -691,6 +691,138 @@ export const KeyboardShortcutsSchema = z.object({
   updated_by: z.string().uuid("Invalid UUID format").optional()
 })
 export type KeyboardShortcuts = z.infer<typeof KeyboardShortcutsSchema>
+export const TransactionTypeSchema = z.object({
+  id: z.string().uuid("Invalid UUID format").optional(),
+  branch: BranchSchema.optional(),
+  code: z.string().min(1, "Minimum length is 1").optional(),
+  name: z.string().min(1, "Minimum length is 1").max(100, "Maximum length is 100"),
+  category: z.enum(["sales", "purchase", "payment", "receipt", "journal", "adjustment", "transfer"]),
+  affects_inventory: z.boolean().optional(),
+  affects_accounts: z.boolean().optional(),
+  requires_approval: z.boolean().optional(),
+  auto_post: z.boolean().optional(),
+  default_debit_account: AccountSchema.optional(),
+  default_credit_account: AccountSchema.optional(),
+  is_active: z.boolean().optional(),
+  is_deleted: z.boolean().optional(),
+  deleted_at: z.string().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  created_by: z.string().uuid("Invalid UUID format").optional(),
+  updated_by: z.string().uuid("Invalid UUID format").optional()
+})
+export type TransactionType = z.infer<typeof TransactionTypeSchema>
+export const TransactionDetailSchema = z.object({
+  id: z.string().uuid("Invalid UUID format").optional(),
+  header: z.string().uuid("Invalid UUID format"),
+  line_number: z.number().int().min(0, "Minimum value is 0").max(2147483647, "Maximum value is 2147483647"),
+  item: ItemSchema.optional(),
+  item_id: z.string().uuid("Invalid UUID format"),
+  item_unit: ItemUnitSchema.optional(),
+  item_unit_id: z.string().uuid("Invalid UUID format"),
+  quantity: z.string().optional(),
+  base_quantity: z.string().optional(),
+  unit_size: z.string().optional(),
+  bonus_quantity: z.string().optional(),
+  unit_price: z.string().optional(),
+  unit_cost: z.string().optional(),
+  line_total: z.string().optional(),
+  discount_percentage: z.string().optional(),
+  discount_amount: z.string().optional(),
+  tax_percentage: z.string().optional(),
+  tax_amount: z.string().optional(),
+  batch_number: z.string().max(50, "Maximum length is 50").optional(),
+  expiry_date: z.string().optional(),
+  description: z.string().optional(),
+  notes: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_deleted: z.boolean().optional(),
+  deleted_at: z.string().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  created_by: z.string().uuid("Invalid UUID format").optional(),
+  updated_by: z.string().uuid("Invalid UUID format").optional()
+})
+export type TransactionDetail = z.infer<typeof TransactionDetailSchema>
+export const TransactionHeaderSchema = z.object({
+  id: z.string().uuid("Invalid UUID format").optional(),
+  branch: BranchSchema.optional(),
+  branch_id: z.string().uuid("Invalid UUID format"),
+  code: z.string().min(1, "Minimum length is 1").optional(),
+  transaction_type: TransactionTypeSchema.optional(),
+  transaction_type_id: z.string().uuid("Invalid UUID format"),
+  transaction_number: z.string().min(1, "Minimum length is 1").max(50, "Maximum length is 50"),
+  reference_number: z.string().max(50, "Maximum length is 50").optional(),
+  transaction_date: z.string().optional(),
+  due_date: z.string().optional(),
+  status: z.enum(["draft", "pending", "approved", "posted", "cancelled", "reversed"]).optional(),
+  customer_account: AccountSchema.optional(),
+  customer_account_id: z.string().uuid("Invalid UUID format"),
+  supplier_account: AccountSchema.optional(),
+  supplier_account_id: z.string().uuid("Invalid UUID format"),
+  currency: CurrencySchema.optional(),
+  currency_id: z.string().uuid("Invalid UUID format"),
+  exchange_rate: z.string().optional(),
+  subtotal_amount: z.string().optional(),
+  discount_amount: z.string().optional(),
+  tax_amount: z.string().optional(),
+  total_amount: z.string().optional(),
+  paid_amount: z.string().optional(),
+  payment_terms: z.string().max(50, "Maximum length is 50").optional(),
+  credit_days: z.number().int().min(0, "Minimum value is 0").max(2147483647, "Maximum value is 2147483647").optional(),
+  notes: z.string().optional(),
+  internal_notes: z.string().optional(),
+  attachments: z.array(z.string().uuid("Invalid UUID format")).optional(),
+  approved_by: z.string().uuid("Invalid UUID format").optional(),
+  approved_at: z.string().optional(),
+  posted_by: z.string().uuid("Invalid UUID format").optional(),
+  posted_at: z.string().optional(),
+  reversed_by: z.string().uuid("Invalid UUID format").optional(),
+  reversed_at: z.string().optional(),
+  reversal_reason: z.string().optional(),
+  details: z.array(TransactionDetailSchema).optional(),
+  is_active: z.boolean().optional(),
+  is_deleted: z.boolean().optional(),
+  deleted_at: z.string().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  created_by: z.string().uuid("Invalid UUID format").optional(),
+  updated_by: z.string().uuid("Invalid UUID format").optional()
+})
+export type TransactionHeader = z.infer<typeof TransactionHeaderSchema>
+export const LedgerEntrySchema = z.object({
+  id: z.string().uuid("Invalid UUID format").optional(),
+  branch: BranchSchema.optional(),
+  branch_id: z.string().uuid("Invalid UUID format"),
+  code: z.string().min(1, "Minimum length is 1").optional(),
+  transaction_header: TransactionHeaderSchema.optional(),
+  transaction_header_id: z.string().uuid("Invalid UUID format"),
+  account: AccountSchema.optional(),
+  account_id: z.string().uuid("Invalid UUID format"),
+  cost_center: z.string().optional(),
+  cost_center_id: z.string().uuid("Invalid UUID format"),
+  entry_date: z.string(),
+  debit_amount: z.string().optional(),
+  credit_amount: z.string().optional(),
+  foreign_debit_amount: z.string().optional(),
+  foreign_credit_amount: z.string().optional(),
+  currency: CurrencySchema.optional(),
+  currency_id: z.string().uuid("Invalid UUID format"),
+  exchange_rate: z.string().optional(),
+  is_posted: z.boolean().optional(),
+  is_reversed: z.boolean().optional(),
+  reversal_entry: z.string().uuid("Invalid UUID format").optional(),
+  description: z.string().min(1, "Minimum length is 1").max(255, "Maximum length is 255"),
+  reference: z.string().max(100, "Maximum length is 100").optional(),
+  is_active: z.boolean().optional(),
+  is_deleted: z.boolean().optional(),
+  deleted_at: z.string().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  created_by: z.string().uuid("Invalid UUID format").optional(),
+  updated_by: z.string().uuid("Invalid UUID format").optional()
+})
+export type LedgerEntry = z.infer<typeof LedgerEntrySchema>
 export const NotificationTemplateSchema = z.object({
   id: z.string().uuid("Invalid UUID format").optional(),
   code: z.string().min(1, "Minimum length is 1").optional(),
@@ -4588,6 +4720,135 @@ export const KeyboardShortcutsDeleteParamsSchema = z.object({
 
 export type KeyboardShortcutsDeleteParams = z.infer<typeof KeyboardShortcutsDeleteParamsSchema>
 /**
+ * Success response schema for GET /ledger-entries/
+ * Status: 200
+ * 
+ */
+export const LedgerEntriesListResponseSchema = z.array(LedgerEntrySchema)
+
+export type LedgerEntriesListResponse = z.infer<typeof LedgerEntriesListResponseSchema>
+/**
+ * Parameters schema for GET /ledger-entries/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const LedgerEntriesListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type LedgerEntriesListParams = z.infer<typeof LedgerEntriesListParamsSchema>
+/**
+ * Request schema for POST /ledger-entries/
+ */
+export const LedgerEntriesCreateRequestSchema = LedgerEntrySchema
+export type LedgerEntriesCreateRequest = z.infer<typeof LedgerEntriesCreateRequestSchema>
+/**
+ * Success response schema for POST /ledger-entries/
+ * Status: 201
+ * 
+ */
+export const LedgerEntriesCreateResponseSchema = LedgerEntrySchema
+
+export type LedgerEntriesCreateResponse = z.infer<typeof LedgerEntriesCreateResponseSchema>
+/**
+ * Success response schema for GET /ledger-entries/{id}/
+ * Status: 200
+ * 
+ */
+export const LedgerEntriesReadResponseSchema = LedgerEntrySchema
+
+export type LedgerEntriesReadResponse = z.infer<typeof LedgerEntriesReadResponseSchema>
+/**
+ * Parameters schema for GET /ledger-entries/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const LedgerEntriesReadParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type LedgerEntriesReadParams = z.infer<typeof LedgerEntriesReadParamsSchema>
+/**
+ * Request schema for PUT /ledger-entries/{id}/
+ */
+export const LedgerEntriesUpdateRequestSchema = LedgerEntrySchema
+export type LedgerEntriesUpdateRequest = z.infer<typeof LedgerEntriesUpdateRequestSchema>
+/**
+ * Success response schema for PUT /ledger-entries/{id}/
+ * Status: 200
+ * 
+ */
+export const LedgerEntriesUpdateResponseSchema = LedgerEntrySchema
+
+export type LedgerEntriesUpdateResponse = z.infer<typeof LedgerEntriesUpdateResponseSchema>
+/**
+ * Parameters schema for PUT /ledger-entries/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const LedgerEntriesUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type LedgerEntriesUpdateParams = z.infer<typeof LedgerEntriesUpdateParamsSchema>
+/**
+ * Request schema for PATCH /ledger-entries/{id}/
+ */
+export const LedgerEntriesPartialUpdateRequestSchema = LedgerEntrySchema
+export type LedgerEntriesPartialUpdateRequest = z.infer<typeof LedgerEntriesPartialUpdateRequestSchema>
+/**
+ * Success response schema for PATCH /ledger-entries/{id}/
+ * Status: 200
+ * 
+ */
+export const LedgerEntriesPartialUpdateResponseSchema = LedgerEntrySchema
+
+export type LedgerEntriesPartialUpdateResponse = z.infer<typeof LedgerEntriesPartialUpdateResponseSchema>
+/**
+ * Parameters schema for PATCH /ledger-entries/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const LedgerEntriesPartialUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type LedgerEntriesPartialUpdateParams = z.infer<typeof LedgerEntriesPartialUpdateParamsSchema>
+/**
+ * Success response schema for DELETE /ledger-entries/{id}/
+ * Status: 204
+ * 
+ */
+export const LedgerEntriesDeleteResponseSchema = z.void()
+
+export type LedgerEntriesDeleteResponse = z.infer<typeof LedgerEntriesDeleteResponseSchema>
+/**
+ * Parameters schema for DELETE /ledger-entries/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const LedgerEntriesDeleteParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type LedgerEntriesDeleteParams = z.infer<typeof LedgerEntriesDeleteParamsSchema>
+/**
  * Success response schema for GET /license-types/
  * Status: 200
  * 
@@ -6545,6 +6806,471 @@ export const TemplatesDeleteParamsSchema = z.object({
 })
 
 export type TemplatesDeleteParams = z.infer<typeof TemplatesDeleteParamsSchema>
+/**
+ * Success response schema for GET /transaction-details/
+ * Status: 200
+ * 
+ */
+export const TransactionDetailsListResponseSchema = z.array(TransactionDetailSchema)
+
+export type TransactionDetailsListResponse = z.infer<typeof TransactionDetailsListResponseSchema>
+/**
+ * Parameters schema for GET /transaction-details/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const TransactionDetailsListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type TransactionDetailsListParams = z.infer<typeof TransactionDetailsListParamsSchema>
+/**
+ * Request schema for POST /transaction-details/
+ */
+export const TransactionDetailsCreateRequestSchema = TransactionDetailSchema
+export type TransactionDetailsCreateRequest = z.infer<typeof TransactionDetailsCreateRequestSchema>
+/**
+ * Success response schema for POST /transaction-details/
+ * Status: 201
+ * 
+ */
+export const TransactionDetailsCreateResponseSchema = TransactionDetailSchema
+
+export type TransactionDetailsCreateResponse = z.infer<typeof TransactionDetailsCreateResponseSchema>
+/**
+ * Success response schema for GET /transaction-details/{id}/
+ * Status: 200
+ * 
+ */
+export const TransactionDetailsReadResponseSchema = TransactionDetailSchema
+
+export type TransactionDetailsReadResponse = z.infer<typeof TransactionDetailsReadResponseSchema>
+/**
+ * Parameters schema for GET /transaction-details/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionDetailsReadParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionDetailsReadParams = z.infer<typeof TransactionDetailsReadParamsSchema>
+/**
+ * Request schema for PUT /transaction-details/{id}/
+ */
+export const TransactionDetailsUpdateRequestSchema = TransactionDetailSchema
+export type TransactionDetailsUpdateRequest = z.infer<typeof TransactionDetailsUpdateRequestSchema>
+/**
+ * Success response schema for PUT /transaction-details/{id}/
+ * Status: 200
+ * 
+ */
+export const TransactionDetailsUpdateResponseSchema = TransactionDetailSchema
+
+export type TransactionDetailsUpdateResponse = z.infer<typeof TransactionDetailsUpdateResponseSchema>
+/**
+ * Parameters schema for PUT /transaction-details/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionDetailsUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionDetailsUpdateParams = z.infer<typeof TransactionDetailsUpdateParamsSchema>
+/**
+ * Request schema for PATCH /transaction-details/{id}/
+ */
+export const TransactionDetailsPartialUpdateRequestSchema = TransactionDetailSchema
+export type TransactionDetailsPartialUpdateRequest = z.infer<typeof TransactionDetailsPartialUpdateRequestSchema>
+/**
+ * Success response schema for PATCH /transaction-details/{id}/
+ * Status: 200
+ * 
+ */
+export const TransactionDetailsPartialUpdateResponseSchema = TransactionDetailSchema
+
+export type TransactionDetailsPartialUpdateResponse = z.infer<typeof TransactionDetailsPartialUpdateResponseSchema>
+/**
+ * Parameters schema for PATCH /transaction-details/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionDetailsPartialUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionDetailsPartialUpdateParams = z.infer<typeof TransactionDetailsPartialUpdateParamsSchema>
+/**
+ * Success response schema for DELETE /transaction-details/{id}/
+ * Status: 204
+ * 
+ */
+export const TransactionDetailsDeleteResponseSchema = z.void()
+
+export type TransactionDetailsDeleteResponse = z.infer<typeof TransactionDetailsDeleteResponseSchema>
+/**
+ * Parameters schema for DELETE /transaction-details/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionDetailsDeleteParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionDetailsDeleteParams = z.infer<typeof TransactionDetailsDeleteParamsSchema>
+/**
+ * Success response schema for GET /transaction-headers/
+ * Status: 200
+ * 
+ */
+export const TransactionHeadersListResponseSchema = z.array(TransactionHeaderSchema)
+
+export type TransactionHeadersListResponse = z.infer<typeof TransactionHeadersListResponseSchema>
+/**
+ * Parameters schema for GET /transaction-headers/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const TransactionHeadersListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type TransactionHeadersListParams = z.infer<typeof TransactionHeadersListParamsSchema>
+/**
+ * Request schema for POST /transaction-headers/
+ */
+export const TransactionHeadersCreateRequestSchema = TransactionHeaderSchema
+export type TransactionHeadersCreateRequest = z.infer<typeof TransactionHeadersCreateRequestSchema>
+/**
+ * Success response schema for POST /transaction-headers/
+ * Status: 201
+ * 
+ */
+export const TransactionHeadersCreateResponseSchema = TransactionHeaderSchema
+
+export type TransactionHeadersCreateResponse = z.infer<typeof TransactionHeadersCreateResponseSchema>
+/**
+ * Success response schema for GET /transaction-headers/{id}/
+ * Status: 200
+ * 
+ */
+export const TransactionHeadersReadResponseSchema = TransactionHeaderSchema
+
+export type TransactionHeadersReadResponse = z.infer<typeof TransactionHeadersReadResponseSchema>
+/**
+ * Parameters schema for GET /transaction-headers/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionHeadersReadParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionHeadersReadParams = z.infer<typeof TransactionHeadersReadParamsSchema>
+/**
+ * Request schema for PUT /transaction-headers/{id}/
+ */
+export const TransactionHeadersUpdateRequestSchema = TransactionHeaderSchema
+export type TransactionHeadersUpdateRequest = z.infer<typeof TransactionHeadersUpdateRequestSchema>
+/**
+ * Success response schema for PUT /transaction-headers/{id}/
+ * Status: 200
+ * 
+ */
+export const TransactionHeadersUpdateResponseSchema = TransactionHeaderSchema
+
+export type TransactionHeadersUpdateResponse = z.infer<typeof TransactionHeadersUpdateResponseSchema>
+/**
+ * Parameters schema for PUT /transaction-headers/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionHeadersUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionHeadersUpdateParams = z.infer<typeof TransactionHeadersUpdateParamsSchema>
+/**
+ * Request schema for PATCH /transaction-headers/{id}/
+ */
+export const TransactionHeadersPartialUpdateRequestSchema = TransactionHeaderSchema
+export type TransactionHeadersPartialUpdateRequest = z.infer<typeof TransactionHeadersPartialUpdateRequestSchema>
+/**
+ * Success response schema for PATCH /transaction-headers/{id}/
+ * Status: 200
+ * 
+ */
+export const TransactionHeadersPartialUpdateResponseSchema = TransactionHeaderSchema
+
+export type TransactionHeadersPartialUpdateResponse = z.infer<typeof TransactionHeadersPartialUpdateResponseSchema>
+/**
+ * Parameters schema for PATCH /transaction-headers/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionHeadersPartialUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionHeadersPartialUpdateParams = z.infer<typeof TransactionHeadersPartialUpdateParamsSchema>
+/**
+ * Success response schema for DELETE /transaction-headers/{id}/
+ * Status: 204
+ * 
+ */
+export const TransactionHeadersDeleteResponseSchema = z.void()
+
+export type TransactionHeadersDeleteResponse = z.infer<typeof TransactionHeadersDeleteResponseSchema>
+/**
+ * Parameters schema for DELETE /transaction-headers/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionHeadersDeleteParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionHeadersDeleteParams = z.infer<typeof TransactionHeadersDeleteParamsSchema>
+/**
+ * Request schema for POST /transaction-headers/{id}/approve/
+ */
+export const TransactionHeadersApproveRequestSchema = TransactionHeaderSchema
+export type TransactionHeadersApproveRequest = z.infer<typeof TransactionHeadersApproveRequestSchema>
+/**
+ * Success response schema for POST /transaction-headers/{id}/approve/
+ * Status: 201
+ * 
+ */
+export const TransactionHeadersApproveResponseSchema = TransactionHeaderSchema
+
+export type TransactionHeadersApproveResponse = z.infer<typeof TransactionHeadersApproveResponseSchema>
+/**
+ * Parameters schema for POST /transaction-headers/{id}/approve/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionHeadersApproveParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionHeadersApproveParams = z.infer<typeof TransactionHeadersApproveParamsSchema>
+/**
+ * Request schema for POST /transaction-headers/{id}/post/
+ */
+export const TransactionHeadersPostRequestSchema = TransactionHeaderSchema
+export type TransactionHeadersPostRequest = z.infer<typeof TransactionHeadersPostRequestSchema>
+/**
+ * Success response schema for POST /transaction-headers/{id}/post/
+ * Status: 201
+ * 
+ */
+export const TransactionHeadersPostResponseSchema = TransactionHeaderSchema
+
+export type TransactionHeadersPostResponse = z.infer<typeof TransactionHeadersPostResponseSchema>
+/**
+ * Parameters schema for POST /transaction-headers/{id}/post/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionHeadersPostParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionHeadersPostParams = z.infer<typeof TransactionHeadersPostParamsSchema>
+/**
+ * Request schema for POST /transaction-headers/{id}/reverse/
+ */
+export const TransactionHeadersReverseRequestSchema = TransactionHeaderSchema
+export type TransactionHeadersReverseRequest = z.infer<typeof TransactionHeadersReverseRequestSchema>
+/**
+ * Success response schema for POST /transaction-headers/{id}/reverse/
+ * Status: 201
+ * 
+ */
+export const TransactionHeadersReverseResponseSchema = TransactionHeaderSchema
+
+export type TransactionHeadersReverseResponse = z.infer<typeof TransactionHeadersReverseResponseSchema>
+/**
+ * Parameters schema for POST /transaction-headers/{id}/reverse/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionHeadersReverseParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionHeadersReverseParams = z.infer<typeof TransactionHeadersReverseParamsSchema>
+/**
+ * Success response schema for GET /transaction-types/
+ * Status: 200
+ * 
+ */
+export const TransactionTypesListResponseSchema = z.array(TransactionTypeSchema)
+
+export type TransactionTypesListResponse = z.infer<typeof TransactionTypesListResponseSchema>
+/**
+ * Parameters schema for GET /transaction-types/
+ * Path params: none
+ * Query params: search, ordering
+ * Header params: none
+ */
+export const TransactionTypesListParamsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    ordering: z.string().optional()
+  }).optional()
+})
+
+export type TransactionTypesListParams = z.infer<typeof TransactionTypesListParamsSchema>
+/**
+ * Request schema for POST /transaction-types/
+ */
+export const TransactionTypesCreateRequestSchema = TransactionTypeSchema
+export type TransactionTypesCreateRequest = z.infer<typeof TransactionTypesCreateRequestSchema>
+/**
+ * Success response schema for POST /transaction-types/
+ * Status: 201
+ * 
+ */
+export const TransactionTypesCreateResponseSchema = TransactionTypeSchema
+
+export type TransactionTypesCreateResponse = z.infer<typeof TransactionTypesCreateResponseSchema>
+/**
+ * Success response schema for GET /transaction-types/{id}/
+ * Status: 200
+ * 
+ */
+export const TransactionTypesReadResponseSchema = TransactionTypeSchema
+
+export type TransactionTypesReadResponse = z.infer<typeof TransactionTypesReadResponseSchema>
+/**
+ * Parameters schema for GET /transaction-types/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionTypesReadParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionTypesReadParams = z.infer<typeof TransactionTypesReadParamsSchema>
+/**
+ * Request schema for PUT /transaction-types/{id}/
+ */
+export const TransactionTypesUpdateRequestSchema = TransactionTypeSchema
+export type TransactionTypesUpdateRequest = z.infer<typeof TransactionTypesUpdateRequestSchema>
+/**
+ * Success response schema for PUT /transaction-types/{id}/
+ * Status: 200
+ * 
+ */
+export const TransactionTypesUpdateResponseSchema = TransactionTypeSchema
+
+export type TransactionTypesUpdateResponse = z.infer<typeof TransactionTypesUpdateResponseSchema>
+/**
+ * Parameters schema for PUT /transaction-types/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionTypesUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionTypesUpdateParams = z.infer<typeof TransactionTypesUpdateParamsSchema>
+/**
+ * Request schema for PATCH /transaction-types/{id}/
+ */
+export const TransactionTypesPartialUpdateRequestSchema = TransactionTypeSchema
+export type TransactionTypesPartialUpdateRequest = z.infer<typeof TransactionTypesPartialUpdateRequestSchema>
+/**
+ * Success response schema for PATCH /transaction-types/{id}/
+ * Status: 200
+ * 
+ */
+export const TransactionTypesPartialUpdateResponseSchema = TransactionTypeSchema
+
+export type TransactionTypesPartialUpdateResponse = z.infer<typeof TransactionTypesPartialUpdateResponseSchema>
+/**
+ * Parameters schema for PATCH /transaction-types/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionTypesPartialUpdateParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionTypesPartialUpdateParams = z.infer<typeof TransactionTypesPartialUpdateParamsSchema>
+/**
+ * Success response schema for DELETE /transaction-types/{id}/
+ * Status: 204
+ * 
+ */
+export const TransactionTypesDeleteResponseSchema = z.void()
+
+export type TransactionTypesDeleteResponse = z.infer<typeof TransactionTypesDeleteResponseSchema>
+/**
+ * Parameters schema for DELETE /transaction-types/{id}/
+ * Path params: id
+ * Query params: none
+ * Header params: none
+ */
+export const TransactionTypesDeleteParamsSchema = z.object({
+  path: z.object({
+    id: z.string().uuid("Invalid UUID format")
+  })
+})
+
+export type TransactionTypesDeleteParams = z.infer<typeof TransactionTypesDeleteParamsSchema>
 /**
  * Success response schema for GET /user-coupons/
  * Status: 200

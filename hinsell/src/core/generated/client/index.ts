@@ -22,6 +22,7 @@ import { ItemUnitsApiClient } from './itemUnits'
 import { ItemVariantsApiClient } from './itemVariants'
 import { ItemsApiClient } from './items'
 import { KeyboardShortcutsApiClient } from './keyboardShortcuts'
+import { LedgerEntriesApiClient } from './ledgerEntries'
 import { LicenseTypesApiClient } from './licenseTypes'
 import { LicensesApiClient } from './licenses'
 import { LogsApiClient } from './logs'
@@ -36,6 +37,9 @@ import { StoreGroupsApiClient } from './storeGroups'
 import { SubscribersApiClient } from './subscribers'
 import { SystemSettingsApiClient } from './systemSettings'
 import { TemplatesApiClient } from './templates'
+import { TransactionDetailsApiClient } from './transactionDetails'
+import { TransactionHeadersApiClient } from './transactionHeaders'
+import { TransactionTypesApiClient } from './transactionTypes'
 import { UserCouponsApiClient } from './userCoupons'
 import { UsersApiClient } from './users'
 
@@ -66,6 +70,7 @@ export class ApiClient extends BaseApiClient {
   public readonly itemVariants: ItemVariantsApiClient
   public readonly items: ItemsApiClient
   public readonly keyboardShortcuts: KeyboardShortcutsApiClient
+  public readonly ledgerEntries: LedgerEntriesApiClient
   public readonly licenseTypes: LicenseTypesApiClient
   public readonly licenses: LicensesApiClient
   public readonly logs: LogsApiClient
@@ -80,6 +85,9 @@ export class ApiClient extends BaseApiClient {
   public readonly subscribers: SubscribersApiClient
   public readonly systemSettings: SystemSettingsApiClient
   public readonly templates: TemplatesApiClient
+  public readonly transactionDetails: TransactionDetailsApiClient
+  public readonly transactionHeaders: TransactionHeadersApiClient
+  public readonly transactionTypes: TransactionTypesApiClient
   public readonly userCoupons: UserCouponsApiClient
   public readonly users: UsersApiClient
 
@@ -108,6 +116,7 @@ export class ApiClient extends BaseApiClient {
     this.itemVariants = new ItemVariantsApiClient()
     this.items = new ItemsApiClient()
     this.keyboardShortcuts = new KeyboardShortcutsApiClient()
+    this.ledgerEntries = new LedgerEntriesApiClient()
     this.licenseTypes = new LicenseTypesApiClient()
     this.licenses = new LicensesApiClient()
     this.logs = new LogsApiClient()
@@ -122,6 +131,9 @@ export class ApiClient extends BaseApiClient {
     this.subscribers = new SubscribersApiClient()
     this.systemSettings = new SystemSettingsApiClient()
     this.templates = new TemplatesApiClient()
+    this.transactionDetails = new TransactionDetailsApiClient()
+    this.transactionHeaders = new TransactionHeadersApiClient()
+    this.transactionTypes = new TransactionTypesApiClient()
     this.userCoupons = new UserCouponsApiClient()
     this.users = new UsersApiClient()
     
@@ -190,6 +202,7 @@ export { ItemUnitsApiClient } from './itemUnits'
 export { ItemVariantsApiClient } from './itemVariants'
 export { ItemsApiClient } from './items'
 export { KeyboardShortcutsApiClient } from './keyboardShortcuts'
+export { LedgerEntriesApiClient } from './ledgerEntries'
 export { LicenseTypesApiClient } from './licenseTypes'
 export { LicensesApiClient } from './licenses'
 export { LogsApiClient } from './logs'
@@ -204,6 +217,9 @@ export { StoreGroupsApiClient } from './storeGroups'
 export { SubscribersApiClient } from './subscribers'
 export { SystemSettingsApiClient } from './systemSettings'
 export { TemplatesApiClient } from './templates'
+export { TransactionDetailsApiClient } from './transactionDetails'
+export { TransactionHeadersApiClient } from './transactionHeaders'
+export { TransactionTypesApiClient } from './transactionTypes'
 export { UserCouponsApiClient } from './userCoupons'
 export { UsersApiClient } from './users'
 

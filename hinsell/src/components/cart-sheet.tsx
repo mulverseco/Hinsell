@@ -192,9 +192,9 @@ export function CartSheet() {
 
               {/* Action Buttons */}
               <div className="space-y-2">
-                <Button className="w-full" size="lg">
+                <Link href={"/checkout"} className="w-full">
                   Checkout
-                </Button>
+                </Link>
                 <div className="flex gap-2">
                   <Button variant="outline" className="flex-1 bg-transparent" onClick={closeCart}>
                     Continue Shopping
