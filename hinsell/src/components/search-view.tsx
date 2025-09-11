@@ -32,12 +32,12 @@ export const searchParamsCache = createSearchParamsCache({
   rating: parseAsInteger,
 })
 
-function makePageTitle(collection: string | undefined, query: string) {
+function makePageTitle(collection: string | undefined, query?: string) {
   if (!!collection) {
     return `${collection}`
   }
 
-  if (!!query.length) {
+  if (!!query?.length) {
     return `${query}`
   }
 
@@ -66,15 +66,15 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
     query: {
       search: q,
       ordering: sortBy,
-      page,
-      limit: 20,
-      price_min: minPrice,
-      price_max: maxPrice,
-      categories: categories.join(","),
-      vendors: vendors.join(","),
-      colors: colors.join(","),
-      rating_min: rating,
-      category: collection?.id,
+      // page,
+      // limit: 20,
+      // price_min: minPrice,
+      // price_max: maxPrice,
+      // categories: categories.join(","),
+      // vendors: vendors.join(","),
+      // colors: colors.join(","),
+      // rating_min: rating,
+      // category: collection?.id,
     },
   })
 
@@ -105,10 +105,9 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
         <Breadcrumbs className="mb-4" items={makeBreadcrumbs(collection?.name)} />
 
-        {/* Top navigation bar */}
         <div className="flex items-center justify-between mb-6">
            <div className="flex gap-1 text-2xl font-semibold tracking-tight lg:text-3xl">
-             <h1 className="flex-1">{makePageTitle(collection?.name ,query=q)}</h1>
+             <h1 className="flex-1">{makePageTitle(collection?.name )}</h1>
              <span className="mr-auto text-xl lg:text-2xl">({collection?.parent?.length})</span>
            </div>
           <div className="flex items-center gap-4">
@@ -139,7 +138,6 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
       </div>
 
       <div className="flex mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Left sidebar filters */}
         <div className="hidden lg:block w-64 pr-8">
           <div className="sticky top-4">
             <Suspense fallback={<div>Loading filters...</div>}>
@@ -154,14 +152,12 @@ export async function SearchView({ searchParams, disabledFacets, collection, bas
           </div>
         </div>
 
-        {/* Main content area */}
         <div className="flex-1">
           <HitsSection hits={hits} basePath={basePath} />
           <PaginationSection queryParams={searchParams} totalPages={totalPages} />
         </div>
       </div>
 
-      {/* Mobile filter overlay */}
       <div className="lg:hidden">
         <Suspense fallback={<div>Loading filters...</div>}>
           <FacetsMobile

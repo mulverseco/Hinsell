@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Plus, Minus, ShoppingBag, Trash2 } from "lucide-react"
@@ -12,9 +12,15 @@ import { cn } from "@/lib/utils"
 import { useCartStore } from "@/core/store"
 
 export function CartSheet() {
-  const { items, isOpen, closeCart, updateQuantity, removeItem, getTotalItems, getTotalPrice, clearCart } = useCartStore()
-
+  const { items, closeCart, updateQuantity, removeItem, getTotalItems, getTotalPrice, clearCart } = useCartStore()
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({})
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null; 
 
   const totalItems = getTotalItems()
   const totalPrice = getTotalPrice()
@@ -30,18 +36,18 @@ export function CartSheet() {
   }
 
   return (
-    <Sheet open={isOpen} onOpenChange={closeCart}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" className="relative">
-          <ShoppingBag className="h-5 w-5" />
-          {totalItems > 0 && (
-            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-destructive rounded-full">
-              {totalItems}
-            </span>
-          )}
-          <span className="">{totalPrice}</span>
-        </Button>
-      </SheetTrigger>
+    <Sheet onOpenChange={closeCart}>
+    <SheetTrigger asChild>
+      <Button variant="ghost" className="relative">
+        <ShoppingBag className="h-5 w-5" />
+        {totalItems > 0 && (
+          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-destructive rounded-full">
+            {totalItems}
+          </span>
+        )}
+        <span className="">{totalPrice}</span>
+      </Button>
+    </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg  p-4">
         <SheetHeader className="space-y-2.5 pr-6">
           <SheetTitle className="text-left flex items-center gap-2">

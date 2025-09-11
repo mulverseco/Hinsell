@@ -61,7 +61,7 @@ export function ItemCard({
           )}
         >
           <div className="relative aspect-square overflow-hidden rounded-t-2xl">
-            <ItemMedia media={item.media} />
+            <ItemMedia media={item.media || []} />
           </div>
 
           <div className="p-4">
@@ -97,7 +97,7 @@ export function ItemCard({
     >
       <Link href={productUrl} className="block">
         <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer">
-          <ItemMedia media={item.media} />
+          <ItemMedia media={item.media || []} />
 
           {is_best_selling && (
             <div className="absolute top-6 left-6">
@@ -180,7 +180,7 @@ export function ItemCard({
                 </span>
               )}
             </div>
-             <AddToCartButton item={item} variant={item?.variants} />
+             <AddToCartButton item={item} variant={selectedVariant} />
           </div>
         </div>
       </div>

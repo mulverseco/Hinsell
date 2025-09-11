@@ -4,6 +4,7 @@ import { itemsRead } from "@/core/generated/actions/items"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { ItemInfo } from "@/features/product/item-info"
 import { ReviewsSection } from "@/features/product/reviews-section"
+import { Suspense } from "react"
 
 interface EnhancedProductPageProps {
   params: Promise<{ id: string }>
@@ -21,28 +22,30 @@ export default async function EnhancedProductPage(props: EnhancedProductPageProp
   return (
     <div className="min-h-screen mx-24 bg-background">
       <div className="container mx-auto px-4 py-6">
+      <Suspense fallback={<div className="text-sm text-gray-400">Loading...</div>}>
         <Breadcrumbs className="mb-8" items={makeBreadcrumbs(item?.item_group_name, item?.item_group, item?.name)} />
-
+      </Suspense>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-4">
             <ItemMedia media={item?.media || []} alt={item?.name} />
           </div>
-          <ItemInfo item={item} />
+          <div className="sticky top-0 self-start h-fit z-10">
+            <Suspense fallback={<div className="text-sm text-gray-400">Loading...</div>}>
+               <ItemInfo item={item} />
+            </Suspense>
+          </div>
         </div>
-
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ReviewsSection item={item} />
-
+          <Suspense fallback={<div className="text-sm text-gray-400">Loading...</div>}>
+           <ReviewsSection item={item} />
+          </Suspense>
           <div className="space-y-4">
             <Accordion type="multiple" defaultValue={["description"]} className="w-full">
             <AccordionItem value="description" className="">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline">
                   <div className="flex items-center gap-2">
                     <span className="font-medium">Description</span>
-                    <span
-                      className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-sm shadow-sm"
-                      style={{ backgroundColor: "#7c3aed", color: "#ffffff" }}
-                    >
+                    <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-sm text-white shadow-sm bg-purple-600">
                       Trends
                     </span>
                     <span className="text-xs text-purple-600">#CampusStyle</span>
@@ -51,12 +54,9 @@ export default async function EnhancedProductPage(props: EnhancedProductPageProp
                 <AccordionContent className="px-4 pb-4">
                   <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-3 rounded mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <span
-                        className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-sm text-white shadow-sm"
-                        style={{ backgroundColor: "#7c3aed", color: "#ffffff" }}
-                      >
-                        Trends
-                      </span>
+                    <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-sm text-white shadow-sm bg-purple-600">
+                      Trends
+                    </span>
                       <span className="text-xs text-purple-600">#CampusStyle</span>
                     </div>
                     <p className="text-sm">Trendy, comfy campus looks for stylish student life moments.</p>

@@ -100,9 +100,9 @@ export function ItemInfo({ item }: EnhancedItemInfoProps) {
       </div>
 
       {activeOffers.length > 0 && (
-        <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg p-2">
+        <div className="rounded-sm w-full p-4 inline-block">
           {activeOffers.map((offer: any, index) => (
-            <div key={index} className="text-sm text-red-700">
+            <div key={index} className="text-sm">
               <p className="font-medium">{offer.name}</p>
               {offer.description && <p className="text-xs mt-1">{offer.description}</p>}
               {offer.campaign && <p className="text-xs mt-1 italic">Campaign: {offer.campaign.name}</p>}
@@ -214,7 +214,7 @@ export function ItemInfo({ item }: EnhancedItemInfoProps) {
         </div>
       </div>
 
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <span className="text-sm font-medium">Qty.</span>
         <div className="flex items-center border border-border rounded w-fit">
           <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-2 hover:bg-muted text-sm">
@@ -225,7 +225,7 @@ export function ItemInfo({ item }: EnhancedItemInfoProps) {
             +
           </button>
         </div>
-      </div>
+      </div> */}
 
       <div className="space-y-3">
         <AddToCartButton item={item} variant={selectedVariant} className="w-full" />

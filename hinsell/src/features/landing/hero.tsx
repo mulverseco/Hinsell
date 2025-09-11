@@ -1,6 +1,6 @@
 "use client"
 
-import { ShoppingBag, Star, TrendingUp } from "lucide-react"
+import { ShoppingBag } from "lucide-react"
 import { CTAButton } from "@/components/shared/cta-button"
 
 const HeroTitle = () => {
