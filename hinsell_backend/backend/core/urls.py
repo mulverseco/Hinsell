@@ -32,6 +32,7 @@ rest_api_urlpatterns = [
     path('api/', include('apps.accounting.urls')),
     path('api/', include('apps.inventory.urls')),
     path('api/', include('apps.notifications.urls')),
+    path('api/', include('apps.transactions.urls')),
     path('api/', include('apps.webhooks.urls')),
     path('api/health/', health_check, name='health_check'),
 ]
